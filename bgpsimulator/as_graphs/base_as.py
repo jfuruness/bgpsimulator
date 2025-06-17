@@ -2,6 +2,8 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Optional
 from weakref import CallableProxyType, proxy
 
+from frozendict import frozendict
+
 
 class AS:
     """Autonomous System class. Contains attributes of an AS"""
@@ -10,28 +12,27 @@ class AS:
         self,
         *,
         asn: int,
-        tier_1: bool = False,
-        ixp: bool = False,
-        peer_asns: set[int] = set(),
-        provider_asns: set[int] = set(),
-        customer_asns: set[int] = set(),
-        peers: list["AS"] = list(),
-        providers: list["AS"] = list(),
-        customers: list["AS"] = list(),
+        peer_asns: set[int] | None = None,
+        provider_asns: set[int] | None = None,
+        customer_asns: set[int] | None = None,
         provider_cone_asns: set[int] = None,
         propagation_rank: int | None = None,
+        tier_1: bool = False,
+        ixp: bool = False,
+        base_routing_policy_settings: frozendict[str, Any] = frozendict(),
+        overriden_routing_policy_settings: frozendict[str, Any] = frozendict(),
         as_graph: Optional["ASGraph"] = None,
     ) -> None:
         # Make sure you're not accidentally passing in a string here
         self.asn: int = int(asn)
 
-        self.peer_asns: set[int] = peer_asns
-        self.provider_asns: set[int] = provider_asns
-        self.customer_asns: set[int] = customer_asns
+        self.peer_asns: set[int] = peer_asns or set()
+        self.provider_asns: set[int] = provider_asns or set()
+        self.customer_asns: set[int] = customer_asns or set()
 
-        self.peers: list[AS] = peers
-        self.providers: list[AS] = providers
-        self.customers: list[AS] = customers
+        self.peers: list[AS] = []
+        self.providers: list[AS] = []
+        self.customers: list[AS] = []
 
         # Read Caida's paper to understand these
         self.tier_1: bool = tier_1
@@ -43,7 +44,7 @@ class AS:
         # Hash in advance and only once since this gets called a lot
         self.hashed_asn = hash(self.asn)
 
-        self.routing_policy: RoutingPolicy = RoutingPolicy(proxy(self))
+        self.routing_policy: RoutingPolicy = RoutingPolicy(proxy(self), base_routing_policy_settings, overriden_routing_policy_settings)
 
         # This is useful for some policies to have knowledge of the graph
         if as_graph is not None:
@@ -51,6 +52,15 @@ class AS:
         else:
             # Ignoring this because it gets set properly immediatly
             self.as_graph = None  # type: ignore
+
+    def set_relations(self) -> None:
+        """Sets the relations for the AS"""
+        if not self.as_graph:
+            raise ValueError("AS graph not set")
+
+        self.peers = [self.as_graph[asn] for asn in self.peer_asns]
+        self.providers = [self.as_graph[asn] for asn in self.provider_asns]
+        self.customers = [self.as_graph[asn] for asn in self.customer_asns]
 
     def __lt__(self, as_obj: Any) -> bool:
         if isinstance(as_obj, AS):
@@ -122,5 +132,5 @@ class AS:
             "ixp": self.ixp,
             "provider_cone_asns": self.provider_cone_asns,
             "propagation_rank": self.propagation_rank,
-            "policy": self.policy.to_json() if self.policy else None,
+            "routing_policy": self.routing_policy.to_json(),
         }

@@ -9,13 +9,7 @@ from typing import cast
 import requests
 from bs4 import BeautifulSoup as Soup
 
-from bgpsimulator.shared import SINGLE_DAY_CACHE_DIR
-
-
-class NoCAIDAURLError(Exception):
-    """Raised when no CAIDA URL is found"""
-    pass
-
+from bgpsimulator.shared import SINGLE_DAY_CACHE_DIR, NoCAIDAURLError
 
 class CAIDAASGraphCollector:
     """Downloads relationships from CAIDA and caches file"""
