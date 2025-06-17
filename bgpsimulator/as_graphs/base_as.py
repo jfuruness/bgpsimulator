@@ -4,6 +4,8 @@ from weakref import CallableProxyType, proxy
 
 from frozendict import frozendict
 
+from bgpsimulator.shared import Relationships
+
 
 class AS:
     """Autonomous System class. Contains attributes of an AS"""
@@ -19,8 +21,8 @@ class AS:
         propagation_rank: int | None = None,
         tier_1: bool = False,
         ixp: bool = False,
-        base_routing_policy_settings: frozendict[str, Any] = frozendict(),
-        overriden_routing_policy_settings: frozendict[str, Any] = frozendict(),
+        base_routing_policy_settings: frozendict[str, bool] = frozendict(),
+        overriden_routing_policy_settings: frozendict[str, bool] = frozendict(),
         as_graph: Optional["ASGraph"] = None,
     ) -> None:
         # Make sure you're not accidentally passing in a string here
@@ -61,6 +63,18 @@ class AS:
         self.peers = [self.as_graph[asn] for asn in self.peer_asns]
         self.providers = [self.as_graph[asn] for asn in self.provider_asns]
         self.customers = [self.as_graph[asn] for asn in self.customer_asns]
+
+    def get_neighbor(self, rel: Relationships) -> list[AS]:
+        """Returns the neighbors of the AS based on the relationship enum"""
+
+        if rel == Relationships.PEERS:
+            return self.peers
+        elif rel == Relationships.PROVIDERS:
+            return self.providers
+        elif rel == Relationships.CUSTOMERS:
+            return self.customers
+        else:
+            raise ValueError(f"Invalid relationship: {rel}")
 
     def __lt__(self, as_obj: Any) -> bool:
         if isinstance(as_obj, AS):
@@ -117,7 +131,7 @@ class AS:
         return set([x.asn for x in self.neighbors])
 
     ##############
-    # Yaml funcs #
+    # JSON funcs #
     ##############
 
     def to_json(self) -> dict[str, Any]:
@@ -134,3 +148,19 @@ class AS:
             "propagation_rank": self.propagation_rank,
             "routing_policy": self.routing_policy.to_json(),
         }
+
+    @classmethod
+    def from_json(cls, json_obj: dict[str, Any]) -> "AS":
+        """Converts the AS to a JSON object"""
+
+        return cls(
+            asn=json_obj["asn"],
+            customer_asns=set(json_obj["customer_asns"]),
+            peer_asns=set(json_obj["peer_asns"]),
+            provider_asns=set(json_obj["provider_asns"]),
+            tier_1=json_obj["tier_1"],
+            ixp=json_obj["ixp"],
+            provider_cone_asns=json_obj["provider_cone_asns"],
+            propagation_rank=json_obj["propagation_rank"],
+            routing_policy=RoutingPolicy.from_json(json_obj["routing_policy"]) if json_obj["routing_policy"] else None,
+        )

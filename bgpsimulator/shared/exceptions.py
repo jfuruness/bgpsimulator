@@ -4,3 +4,16 @@ class CycleError(RuntimeError):
 class NoCAIDAURLError(Exception):
     """Raised when no CAIDA URL is found"""
     pass
+
+class GaoRexfordError(RuntimeError):
+    """Error that occurs during gao rexford, such as failing to choose an ann"""
+
+    pass
+
+class AnnouncementNotFoundError(RuntimeError):
+    """Exception that covers when an Announcement isn't findable
+
+    ex: in local RIB, in RIBsIn, etc
+    """
+
+    pass
