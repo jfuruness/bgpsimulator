@@ -1,5 +1,4 @@
 from .base_as import AS
-from frozendict import frozendict
 from typing import Any
 from weakref import proxy
 
@@ -18,7 +17,7 @@ class ASGraph:
 
     def __init__(
         self,
-        graph_data: dict[int, dict[str, Any]],
+        graph_data: dict[str, Any],
     ) -> None:
         """Reads in relationship data from a JSON and generate graph"""
 
@@ -26,6 +25,8 @@ class ASGraph:
         ASGraphUtils.add_extra_setup(graph_data)
         # populate basic info
         self.as_dict = {asn: AS(as_graph=self, **info) for asn, info in graph_data["ases"].items()}
+        # Populate ASN groups
+        self.asn_groups = {asn_group_key: set(asn_group) for asn_group_key, asn_group in graph_data["asn_groups"].items()}
         # populate objects
         self._populate_objects()
         # Add propagation ranks
@@ -49,7 +50,7 @@ class ASGraph:
     def __len__(self) -> int:
         return len(self.as_dict)
 
-    #
+    ##############
     # JSON funcs #
     ##############
 
@@ -58,6 +59,7 @@ class ASGraph:
 
         return {
             "ases": {asn: as_obj.to_json() for asn, as_obj in self.as_dict.items()},
+            "asn_groups": {asn_group_key: list(asn_group) for asn_group_key, asn_group in self.asn_groups.items()},
             "extra_setup_complete": True,
             "cycles_detected": False,
             "propagation_ranks": [[x.asn for x in rank] for rank in self.propagation_ranks],

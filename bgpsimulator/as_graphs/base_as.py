@@ -2,13 +2,13 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Optional
 from weakref import CallableProxyType, proxy
 
-from frozendict import frozendict
-
 from bgpsimulator.shared import Relationships
 
 
 class AS:
     """Autonomous System class. Contains attributes of an AS"""
+
+    __slots__ = ("asn", "peer_asns", "provider_asns", "customer_asns", "peers", "providers", "customers", "tier_1", "ixp", "provider_cone_asns", "propagation_rank", "hashed_asn", "routing_policy", "as_graph")
 
     def __init__(
         self,
@@ -21,8 +21,8 @@ class AS:
         propagation_rank: int | None = None,
         tier_1: bool = False,
         ixp: bool = False,
-        base_routing_policy_settings: frozendict[str, bool] = frozendict(),
-        overriden_routing_policy_settings: frozendict[str, bool] = frozendict(),
+        base_routing_policy_settings: dict[str, bool] | None = None,
+        overriden_routing_policy_settings: dict[str, bool] | None = None,
         as_graph: Optional["ASGraph"] = None,
     ) -> None:
         # Make sure you're not accidentally passing in a string here
@@ -46,7 +46,7 @@ class AS:
         # Hash in advance and only once since this gets called a lot
         self.hashed_asn = hash(self.asn)
 
-        self.routing_policy: RoutingPolicy = RoutingPolicy(proxy(self), base_routing_policy_settings, overriden_routing_policy_settings)
+        self.routing_policy: RoutingPolicy = RoutingPolicy(self, base_routing_policy_settings, overriden_routing_policy_settings)
 
         # This is useful for some policies to have knowledge of the graph
         if as_graph is not None:
@@ -93,23 +93,32 @@ class AS:
 
     @cached_property
     def stub(self) -> bool:
-        """Returns True if AS is a stub by RFC1772"""
+        """Returns True if AS is a stub by RFC1772
+        
+        Use neighbor_asns instead of neighbors so you can use this during graph construction
+        """
 
-        return len(self.neighbors) == 1
+        return len(self.neighbor_asns) == 1
 
     @cached_property
     def multihomed(self) -> bool:
-        """Returns True if AS is multihomed by RFC1772"""
+        """Returns True if AS is multihomed by RFC1772
+        
+        Use customer_asns instead of customers so you can use this during graph construction
+        """
 
-        return len(self.customers) == 0 and len(self.peers) + len(self.providers) > 1
+        return len(self.customer_asns) == 0 and len(self.peer_asns) + len(self.provider_asns) > 1
 
     @cached_property
     def transit(self) -> bool:
-        """Returns True if AS is a transit AS by RFC1772"""
+        """Returns True if AS is a transit AS by RFC1772
+        
+        Use customer_asns instead of customers so you can use this during graph construction
+        """
 
         return (
-            len(self.customers) > 0
-            and len(self.customers) + len(self.peers) + len(self.providers) > 1
+            len(self.customer_asns) > 0
+            and len(self.customer_asns) + len(self.peer_asns) + len(self.provider_asns) > 1
         )
 
     @cached_property
@@ -128,7 +137,7 @@ class AS:
     def neighbor_asns(self) -> set[int]:
         """Returns neighboring ASNs (useful for ASRA)"""
 
-        return set([x.asn for x in self.neighbors])
+        return self.customer_asns | self.peer_asns | self.provider_asns
 
     ##############
     # JSON funcs #

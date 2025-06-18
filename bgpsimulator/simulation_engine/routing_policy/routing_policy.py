@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING, Any
 from warnings import warn
-
-from frozendict import frozendict
+from weakref import proxy
 
 from bgpsimulator.shared.exceptions import GaoRexfordError  
 from bgpsimulator.simulation_engine.announcement import Announcement as Ann
 from bgpsimulator.shared import Relationships
+from bgpsimulator.shared import RoutingPolicySettings
 
 if TYPE_CHECKING:
     from weakref import CallableProxyType
@@ -14,11 +14,13 @@ if TYPE_CHECKING:
 
 class RoutingPolicy:
 
+    __slots__ = ("local_rib", "recv_q", "base_routing_policy_settings", "overriden_routing_policy_settings", "as_")
+
     def __init__(
         self,
         as_: "AS",
-        base_routing_policy_settings: frozendict[str, bool] = frozendict(),
-        overriden_routing_policy_settings: frozendict[str, bool] = frozendict(),
+        base_routing_policy_settings: dict[str, bool] | None = None,
+        overriden_routing_policy_settings: dict[str, bool] | None = None,
         local_rib: dict[str, Ann] | None = None,
     ) -> None:
         """Add local rib and data structures here
@@ -31,10 +33,15 @@ class RoutingPolicy:
 
         self.local_rib: dict[str, Ann] = local_rib or dict()
         self.recv_q: defaultdict[str, list[Ann]] = defaultdict(list)
-        self.base_routing_policy_settings: frozendict[str, bool] = base_routing_policy_settings
-        self.overriden_routing_policy_settings: frozendict[str, bool] = overriden_routing_policy_settings
-        # This gets set within the AS class so it's fine
-        self.as_: CallableProxyType[AS] = as_
+        default_routing_policy_settings: dict[RoutingPolicySettings, bool] = {
+            x: False for x in RoutingPolicySettings
+        }
+        # Base routing policy settings are the default settings for all ASes
+        self.base_routing_policy_settings: dict[RoutingPolicySettings, bool] = base_routing_policy_settings or default_routing_policy_settings
+        # Overriden routing policy settings are the settings that will be applied to the ASes
+        self.overriden_routing_policy_settings: dict[RoutingPolicySettings, bool] = overriden_routing_policy_settings or dict()
+        # The AS object that this routing policy is associated with
+        self.as_: CallableProxyType[AS] = proxy(as_)
 
     def __eq__(self, other) -> bool:
         if isinstance(other, RoutingPolicy):
@@ -92,7 +99,7 @@ class RoutingPolicy:
 
         if self._valid_ann(new_ann, from_rel):
             new_ann_processed = new_ann.copy(
-                as_path=[self.as_.asn, *new_ann.as_path],
+                as_path=(self.as_.asn, *new_ann.as_path),
                 recv_relationship=from_rel,
             )
             return self._get_best_ann_by_gao_rexford(current_ann, new_ann_processed)
@@ -204,7 +211,7 @@ class RoutingPolicy:
             # Copying announcements is a bottleneck for sims,
             # so we try to do this as little as possible
             if neighbor_ases and unprocessed_ann.recv_relationship in send_rels:
-                ann = unprocessed_ann.copy({"next_hop_asn": self.as_.asn})
+                ann = unprocessed_ann.copy(next_hop_asn=self.as_.asn})
             else:
                 continue
 

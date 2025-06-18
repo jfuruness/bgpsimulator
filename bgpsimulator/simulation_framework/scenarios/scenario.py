@@ -1,0 +1,369 @@
+import math
+import random
+from dataclasses import replace
+from functools import cached_property
+from ipaddress import IPv4Network, IPv6Network, ip_network
+from typing import TYPE_CHECKING, Any, Optional
+from warnings import warn
+
+from roa_checker import ROA
+
+from bgpsimulator.simulation_engine import Announcement as Ann
+from bgpsimulator.simulation_engine import RoutingPolicy, SimulationEngine
+from bgpsimulator.simulation_framework.scenarios.scenario_config import ScenarioConfig
+
+if TYPE_CHECKING:
+    from bgpsimulator.as_graphs import AS
+
+
+class Scenario:
+    """Contains information regarding a scenario/attack
+
+    This represents a single trial and a single engine run
+    """
+
+    min_propagation_rounds: int = 1
+
+    # Used when dumping the scenario_config to JSON
+    name_to_cls_dict: dict[str, type["Scenario"]] = {}
+
+    def __init_subclass__(cls, **kwargs):
+        """Used when dumping the scenario_config to JSON
+        
+        NOTE: When converting to rust, just keep a hardcoded list of scenarios
+        """
+        super().__init_subclass__(**kwargs)
+        Scenario.name_to_cls_dict[cls.__name__] = cls
+
+
+    def __init__(
+        self,
+        *,
+        scenario_config: ScenarioConfig,
+        engine: SimulationEngine,
+        percent_ases_randomly_adopting: float = 0,
+        attacker_asns: frozenset[int] | None = None,
+        victim_asns: frozenset[int] | None = None,
+        adopting_asns: frozenset[int] | None = None,
+    ):
+        """inits attrs
+
+        Any kwarg prefixed with default is only required for the test suite/YAML
+        """
+
+        # Config's ScenarioCls must be the same as instantiated Scenario
+        assert scenario_config.ScenarioCls == self.__class__, (
+            "The config's scenario class is "
+            f"{scenario_config.ScenarioCls.__name__}, but the scenario used is "
+            f"{self.__class__.__name__}"
+        )
+
+        self.scenario_config: ScenarioConfig = scenario_config
+        self.percent_ases_randomly_adopting: float = percent_ases_randomly_adopting
+
+        self.attacker_asns: set[int] = self._get_attacker_asns(
+            scenario_config.override_attacker_asns,
+            attacker_asns,
+            engine,
+        )
+
+        self.victim_asns: set[int] = self._get_victim_asns(
+            scenario_config.override_victim_asns, victim_asns, engine
+        )
+        self.adopting_asns: set[int] = self._get_adopting_asns(
+            scenario_config.override_adopting_asns,
+            adopting_asns,
+            engine,
+        )
+
+        if self.scenario_config.override_announcements is not None:
+            self.announcements: dict[int, list[Ann]] = self.scenario_config.override_announcements.copy()
+        else:
+            self.announcements = self._get_announcements(engine=engine)
+
+        if self.scenario_config.override_roas is not None:
+            self.roas: list[ROA] = self.scenario_config.override_roas.copy()
+        else:
+            self.roas = self._get_roas(announcements=self.announcements, engine=engine)
+        self._reset_and_add_roas_to_roa_checker()
+
+    def _reset_and_add_roas_to_roa_checker(self) -> None:
+        """Clears & adds ROAs to roa_checker which serves as RPKI+Routinator combo"""
+
+        RoutingPolicy.roa_checker.clear()
+        for roa in self.roas:
+            RoutingPolicy.roa_checker.add_roa(roa)
+
+    #################
+    # Get attackers #
+    #################
+
+    def _get_attacker_asns(
+        self,
+        override_attacker_asns: set[int] | None,
+        prev_attacker_asns: set[int] | None,
+        engine: SimulationEngine,
+    ) -> set[int]:
+        """Returns attacker ASN at random"""
+
+        # This is hardcoded, do not recalculate
+        if override_attacker_asns is not None:
+            attacker_asns = override_attacker_asns.copy()
+            branch = 0
+        # Reuse the attacker from the last scenario for comparability
+        elif (
+            prev_attacker_asns
+            and len(prev_attacker_asns) == self.scenario_config.num_attackers
+        ):
+            attacker_asns = prev_attacker_asns
+            branch = 1
+        # This is being initialized for the first time, or old scenario has a different number of attackers
+        else:
+            branch = 3
+            assert engine
+            possible_attacker_asns = self._get_possible_attacker_asns(
+                engine, self.percent_ases_randomly_adopting
+            )
+
+            assert len(possible_attacker_asns) >= self.scenario_config.num_attackers
+            # https://stackoverflow.com/a/15837796/8903959
+            attacker_asns = set(
+                random.sample(
+                    tuple(possible_attacker_asns), self.scenario_config.num_attackers
+                )
+            )
+
+        # Validate attacker asns
+        err = f"Number of attackers is different from attacker length: Branch {branch}"
+        assert len(attacker_asns) == self.scenario_config.num_attackers, err
+
+        return attacker_asns
+
+    def _get_possible_attacker_asns(
+        self,
+        engine: SimulationEngine,
+        percent_ases_randomly_adopting: float,
+    ) -> set[int]:
+        """Returns possible attacker ASNs, defaulted from config"""
+
+        possible_asns = engine.as_graph.asn_groups[
+            self.scenario_config.attacker_subcategory_attr
+        ]
+        return possible_asns
+
+    ###############
+    # Get Victims #
+    ###############
+
+    def _get_victim_asns(
+        self,
+        override_victim_asns: set[int] | None,
+        prev_victim_asns: set[int] | None,
+        engine: SimulationEngine,
+    ) -> set[int]:
+        """Returns victim ASN at random"""
+
+        # This is coming from YAML, do not recalculate
+        if override_victim_asns is not None:
+            victim_asns = override_victim_asns.copy()
+        # Reuse the victim from the last scenario for comparability
+        elif (
+            prev_victim_asns
+            and len(prev_victim_asns) == self.scenario_config.num_victims
+        ):
+            victim_asns = prev_victim_asns
+        # This is being initialized for the first time
+        else:
+            assert engine
+            possible_victim_asns = self._get_possible_victim_asns(
+                engine, self.percent_ases_randomly_adopting
+            )
+            # https://stackoverflow.com/a/15837796/8903959
+            victim_asns = set(
+                random.sample(
+                    tuple(possible_victim_asns), self.scenario_config.num_victims
+                )
+            )
+
+        err = "Number of victims is different from victim length"
+        assert len(victim_asns) == self.scenario_config.num_victims, err
+
+        return victim_asns
+
+    def _get_possible_victim_asns(
+        self,
+        engine: SimulationEngine,
+        percent_ases_randomly_adopting: float,
+    ) -> set[int]:
+        """Returns possible victim ASNs, defaulted from config"""
+
+        possible_asns = engine.as_graph.asn_groups[
+            self.scenario_config.victim_subcategory_attr
+        ]
+        # Remove attackers from possible victims
+        possible_asns = possible_asns.difference(self.attacker_asns)
+        return possible_asns
+
+    #######################
+    # Adopting ASNs funcs #
+    #######################
+
+    def _get_adopting_asns(
+        self,
+        override_adopting_asns: set[int] | None,
+        adopting_asns: set[int] | None,
+        engine: SimulationEngine,
+    ) -> set[int]:
+        """Returns all asns that will be adopting self.AdoptPolicyCls"""
+
+        if override_adopting_asns is not None:
+            return override_adopting_asns.copy()
+        # By default use the same adopting ASes as the last scenario config
+        elif adopting_asns:
+            return adopting_asns
+        else:
+            adopting_asns = self._get_randomized_adopting_asns(engine)
+
+        return adopting_asns
+
+    def _get_randomized_adopting_asns(
+        self,
+        engine: SimulationEngine,
+    ) -> set[int]:
+        """Returns the set of adopting ASNs (aside from hardcoded ASNs)"""
+
+        adopting_asns: list[int] = list()
+        # Randomly adopt in all three subcategories
+        for subcategory in self.scenario_config.adoption_subcategory_attrs:
+            asns = engine.as_graph.asn_groups[subcategory]
+            # Remove ASes that are already pre-set
+            # Ex: Attackers and victims, self.scenario_config.hardcoded_asn_cls_dict
+            possible_adopters = asns.difference(self._preset_asns)
+
+            # Get how many ASes should be adopting (store as k)
+            if self.percent_ases_randomly_adopting == 0:
+                k = 0
+            else:
+                k = math.ceil(len(possible_adopters) * self.percent_ases_randomly_adopting / 100)
+
+            try:
+                # https://stackoverflow.com/a/15837796/8903959
+                adopting_asns.extend(random.sample(tuple(possible_adopters), k))
+            except ValueError as e:
+                raise ValueError(
+                    f"{k} can't be sampled from {len(possible_adopters)}"
+                ) from e
+        return set(adopting_asns)
+
+    @cached_property
+    def _default_adopters(self) -> set[int]:
+        """By default, victim always adopts"""
+
+        return self.victim_asns
+
+    @cached_property
+    def _default_non_adopters(self) -> set[int]:
+        """By default, attacker always does not adopt"""
+
+        return self.attacker_asns
+
+    @cached_property
+    def _preset_asns(self) -> set[int]:
+        """ASNs that have a preset adoption policy"""
+
+        # Returns the union of default adopters and non adopters
+        hardcoded_asns = set(self.scenario_config.override_adopting_routing_policy_settings)
+        return self._default_adopters | self._default_non_adopters | hardcoded_asns
+
+    @property
+    def untracked_asns(self) -> set[int]:
+        """Returns ASNs that shouldn't be tracked by the graphing tools
+
+        By default just the default adopters and non adopters, and hardcoded ASNs
+        """
+
+        return self._default_adopters | self._default_non_adopters
+
+    #############################
+    # Engine Manipulation Funcs #
+    #############################
+
+    def set_routing_policy_settings(self, as_obj: "AS") -> None:
+        """Sets the routing policy settings for a given AS"""
+
+        # NOTE: Most important updates go last
+
+
+        if as_obj.asn in self.scenario_config.override_base_routing_policy_settings:
+            as_obj.policy.base_routing_policy_settings = self.scenario_config.override_base_routing_policy_settings[as_obj.asn]
+        else:
+            as_obj.policy.base_routing_policy_settings = self.scenario_config.default_base_routing_policy_settings
+
+        trial_settings = as_obj.policy.base_routing_policy_settings.copy()
+
+        if as_obj.asn in self.scenario_config.override_adopt_routing_policy_settings:
+            trial_settings.update(self.scenario_config.override_adopt_routing_policy_settings[as_obj.asn])
+        elif as_obj.asn in self._adopting_asns or as_obj.asn in self._default_adopters:
+            trial_settings.update(self.scenario_config.default_adopt_routing_policy_settings)
+
+        if as_obj.asn in self.attacker_asns:
+            trial_settings.update(self.scenario_config.default_attacker_routing_policy_settings)
+        elif as_obj.asn in self.victim_asns:
+            trial_settings.update(self.scenario_config.default_victim_routing_policy_settings)
+
+        as_obj.policy.overriden_routing_policy_settings = trial_settings
+
+
+    ##################
+    # Subclass Funcs #
+    ##################
+
+    def _get_announcements(
+        self,
+        *,
+        engine: SimulationEngine,
+    ) -> dict[int, list[Ann]]:
+        """Returns announcements
+
+        Empty by default for testing, typically subclassed
+        """
+
+        return {}
+
+    def _get_roas(
+        self,
+        *,
+        announcements: dict[int, list[Ann]],
+        engine: SimulationEngine,
+    ) -> list[ROA]:
+        """Returns a tuple of ROA's
+
+        Not abstract and by default does nothing for
+        backwards compatability
+        """
+        return []
+
+    def pre_aggregation_hook(
+        self,
+        engine: SimulationEngine,
+        percent_ases_randomly_adopting: float,
+        trial: int,
+        propagation_round: int,
+    ) -> None:
+        """Useful hook for changes/checks
+        prior to results aggregation.
+        """
+        pass
+
+    def post_propagation_hook(
+        self,
+        engine: SimulationEngine,
+        percent_ases_randomly_adopting: float,
+        trial: int,
+        propagation_round: int,
+    ) -> None:
+        """Useful hook for post propagation"""
+
+        pass
+
+    # NOTE: No JSON funcs since you can't store the engine

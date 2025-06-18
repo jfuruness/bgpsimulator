@@ -10,26 +10,28 @@ from bgpy.shared.enums import Relationships
 class Announcement:
     """BGP Announcement"""
 
+    __slots__ = ("prefix", "as_path", "next_hop_asn", "recv_relationship", "timestamp", "bgpsec_next_asn", "bgpsec_as_path", "only_to_customers", "rovpp_blackhole")
+
     def __init__(
         self,
         prefix: str,
-        as_path: list[int],
+        as_path: tuple[int, ...],
         next_hop_asn: int | None = None,
         recv_relationship: Relationships = Relationships.ORIGIN,
         timestamp: int = 0,
         bgpsec_next_asn: int | None = None,
-        bgpsec_as_path: list[int] | None = None,
+        bgpsec_as_path: tuple[int, ...] | None = None,
         only_to_customers: int | None = None,
         rovpp_blackhole: bool = False,
     ):
         self.prefix: str = prefix
-        self.as_path: list[int] = as_path
+        self.as_path: tuple[int, ...] = as_path
         # Equivalent to the next hop in a normal BGP announcement
         self.next_hop_asn: int = next_hop_asn or as_path[-1]
         self.recv_relationship: Relationships = recv_relationship
         self.timestamp: int = timestamp
         self.bgpsec_next_asn: int | None = bgpsec_next_asn
-        self.bgpsec_as_path: list[int] = bgpsec_as_path or []
+        self.bgpsec_as_path: tuple[int, ...] = bgpsec_as_path or ()
         self.only_to_customers: int | None = only_to_customers
         self.rovpp_blackhole: bool = rovpp_blackhole
 
@@ -53,12 +55,12 @@ class Announcement:
     def copy(
         self,
         prefix: str | None = None,
-        as_path: list[int] | None = None,
+        as_path: tuple[int, ...] | None = None,
         next_hop_asn: int | None = None,
         recv_relationship: Relationships | None = None,
         timestamp: int | None = None,
         bgpsec_next_asn: int | None = None,
-        bgpsec_as_path: list[int] | None = None,
+        bgpsec_as_path: tuple[int, ...] | None = None,
         only_to_customers: int | None = None,
         rovpp_blackhole: bool | None = None,
     ) -> "Announcement":

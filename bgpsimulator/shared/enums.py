@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, StrEnum   
 
 
 class Relationships(IntEnum):
@@ -14,3 +14,40 @@ class Relationships(IntEnum):
     ORIGIN = 4
     # Unknown for external programs like extrapolator
     UNKNOWN = 5
+
+
+class ASNGroups(StrEnum):
+    """ASN groups"""
+
+    TIER_1 = "tier_1"
+    ETC = "etc"
+    STUBS_OR_MH = "stubs_or_mh"
+    ALL_WOUT_IXPS = "all_wout_ixps"
+    STUBS = "stubs"
+    MULTIHOMED = "multihomed"
+    TRANSIT = "transit"
+    IXPS = "ixps"
+
+class RoutingPolicySettings(IntEnum):
+    """Routing policy settings"""
+
+    ASPA = 1
+    ASPAPP = 2
+    ASPA_W_N = 3
+    AS_PATH_EDGE_FILTER = 4
+    ASRA = 5
+    BGP_I_SEC = 6
+    BGP_I_SEC_TRANSITIVE = 7
+    BGP_SEC = 8
+    ENFORCE_FIRST_AS = 9
+    FIRST_ASN_STRIPPING_PREFIX_ASPA_ATTACKER = 10
+    ONLY_TO_CUSTOMERS = 11
+    PATH_END = 12
+    PEERLOCK_LITE = 13
+    PEERROV = 14
+    PROVIDER_CONE_ID = 15
+    ROV = 16
+    ROVPP_V1_LITE = 17
+    ROVPP_V2I_LITE = 18
+    ROVPP_V2_LITE = 19
+    SHORTEST_PATH_PREFIX_ASPA_ATTACKER = 20
