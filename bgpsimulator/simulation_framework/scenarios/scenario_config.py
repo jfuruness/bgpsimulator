@@ -22,18 +22,18 @@ class ScenarioConfig:
         scenario_cls: type["Scenario"],
         propagation_rounds: int | None = None,
         attacker_routing_policy_settings: dict[RoutingPolicySettings, bool] | None = None,
-        victim_routing_policy_settings: dict[RoutingPolicySettings, bool] | None = None,
+        legitimate_origin_routing_policy_settings: dict[RoutingPolicySettings, bool] | None = None,
         override_adopt_routing_policy_settings: dict[int, dict[RoutingPolicySettings, bool]] | None = None,
         override_base_routing_policy_settings: dict[int, dict[RoutingPolicySettings, bool]] | None = None,
         default_adopt_routing_policy_settings: dict[RoutingPolicySettings, bool] | None = None,
         default_base_routing_policy_settings: dict[RoutingPolicySettings, bool] | None = None,
         num_attackers: int = 1,
-        num_victims: int = 1,
+        num_legitimate_origins: int = 1,
         attacker_asn_group: str = ASNGroups.STUBS_OR_MH.value,
-        victim_asn_group: str = ASNGroups.STUBS_OR_MH.value,
+        legitimate_origin_asn_group: str = ASNGroups.STUBS_OR_MH.value,
         adoption_asn_groups: list[str] | None = None,
         override_attacker_asns: set[int] | None = None,
-        override_victim_asns: set[int] | None = None,
+        override_legitimate_origin_asns: set[int] | None = None,
         override_adopting_asns: set[int] | None = None,
         override_announcements: set[Ann] | None = None,
         override_roas: set[ROA] | None = None,
@@ -45,7 +45,7 @@ class ScenarioConfig:
         if self.propagation_rounds is None:
             # BGP-iSec needs this.
             for routing_policy_setting in [RoutingPolicySettings.BGP_I_SEC, RoutingPolicySettings.BGP_I_SEC_TRANSITIVE]:
-                if (any(x[routing_policy_setting] for x in [attacker_routing_policy_settings, victim_routing_policy_settings, override_adopt_routing_policy_settings, override_base_routing_policy_settings, default_adopt_routing_policy_settings, default_base_routing_policy_settings])):
+                if (any(x[routing_policy_setting] for x in [attacker_routing_policy_settings, legitimate_origin_routing_policy_settings, override_adopt_routing_policy_settings, override_base_routing_policy_settings, default_adopt_routing_policy_settings, default_base_routing_policy_settings])):
                     from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import ShortestPathPrefixHijack
 
                     if issubclass(self.ScenarioCls, ShortestPathPrefixHijack):
@@ -61,7 +61,7 @@ class ScenarioConfig:
         ###########################
 
         # When determining if an AS is using a setting, the following order is used:
-        # 1. attacker_routing_policy_settings or victim_routing_policy_settings (if AS is an attacker or victim)
+        # 1. attacker_routing_policy_settings or legitimate_origin_routing_policy_settings (if AS is an attacker or legitimate_origin)
         # 2. override_adopt_routing_policy_settings (if set)
         # 3. override_base_routing_policy_settings
         # 4. default_adopt_routing_policy_settings
@@ -69,8 +69,8 @@ class ScenarioConfig:
 
         # 1a. This will update the base routing policy settings for the attacker ASes
         self.attacker_routing_policy_settings: dict[RoutingPolicySettings, bool] = attacker_routing_policy_settings or dict()
-        # 1v. This will update the base routing policy settings for the victim ASes
-        self.victim_routing_policy_settings: dict[RoutingPolicySettings, bool] = victim_routing_policy_settings or dict()
+        # 1v. This will update the base routing policy settings for the legitimate_origin ASes
+        self.legitimate_origin_routing_policy_settings: dict[RoutingPolicySettings, bool] = legitimate_origin_routing_policy_settings or dict()
         # 2. This will completely override the default adopt routing policy settings
         self.override_adopt_routing_policy_settings: dict[int, dict[str, bool]] = override_adopt_routing_policy_settings or dict()
         # 3. This will completely override the default base routing policy settings
@@ -82,23 +82,23 @@ class ScenarioConfig:
             x: False for x in RoutingPolicySettings
         }
 
-        # Number of attackers/victims/adopting ASes
+        # Number of attackers/legitimate_origins/adopting ASes
         self.num_attackers: int = num_attackers
-        self.num_victims: int = num_victims
+        self.num_legitimate_origins: int = num_legitimate_origins
 
         # Attackers are randomly selected from this ASN group
         self.attacker_asn_group: str = attacker_asn_group
         # Victims are randomly selected from this ASN group
-        self.victim_asn_group: str = victim_asn_group
+        self.legitimate_origin_asn_group: str = legitimate_origin_asn_group
         # Adoption is equal across these ASN groups
         self.adoption_asn_groups: list[str] = adoption_asn_groups or [ASNGroups.STUBS_OR_MH.value, ASNGroups.ETC.value, ASNGroups.TIER_1.value]
 
-        # Forces the attackers/victims/adopting ASes to be a specific set of ASes rather than random
+        # Forces the attackers/legitimate_origins/adopting ASes to be a specific set of ASes rather than random
         self.override_attacker_asns: set[int] | None = override_attacker_asns
-        self.override_victim_asns: set[int] | None = override_victim_asns
+        self.override_legitimate_origin_asns: set[int] | None = override_legitimate_origin_asns
         self.override_adopting_asns: set[int] | None = override_adopting_asns
         # Forces the announcements/roas to be a specific set of announcements/roas
-        # rather than generated dynamically based on attackers/victims
+        # rather than generated dynamically based on attackers/legitimate_origins
         self.override_announcements: set[Ann] | None = override_announcements
         self.override_roas: set[ROA] | None = override_roas
 

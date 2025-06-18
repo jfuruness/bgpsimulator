@@ -43,7 +43,7 @@ class Scenario:
         engine: SimulationEngine,
         percent_ases_randomly_adopting: float = 0,
         attacker_asns: frozenset[int] | None = None,
-        victim_asns: frozenset[int] | None = None,
+        legitimate_origin_asns: frozenset[int] | None = None,
         adopting_asns: frozenset[int] | None = None,
     ):
         """inits attrs
@@ -67,8 +67,8 @@ class Scenario:
             engine,
         )
 
-        self.victim_asns: set[int] = self._get_victim_asns(
-            scenario_config.override_victim_asns, victim_asns, engine
+        self.legitimate_origin_asns: set[int] = self._get_legitimate_origin_asns(
+            scenario_config.override_legitimate_origin_asns, legitimate_origin_asns, engine
         )
         self.adopting_asns: set[int] = self._get_adopting_asns(
             scenario_config.override_adopting_asns,
@@ -155,52 +155,52 @@ class Scenario:
     # Get Victims #
     ###############
 
-    def _get_victim_asns(
+    def _get_legitimate_origin_asns(
         self,
-        override_victim_asns: set[int] | None,
-        prev_victim_asns: set[int] | None,
+        override_legitimate_origin_asns: set[int] | None,
+        prev_legitimate_origin_asns: set[int] | None,
         engine: SimulationEngine,
     ) -> set[int]:
-        """Returns victim ASN at random"""
+        """Returns legitimate_origin ASN at random"""
 
         # This is coming from YAML, do not recalculate
-        if override_victim_asns is not None:
-            victim_asns = override_victim_asns.copy()
-        # Reuse the victim from the last scenario for comparability
+        if override_legitimate_origin_asns is not None:
+            legitimate_origin_asns = override_legitimate_origin_asns.copy()
+        # Reuse the legitimate_origin from the last scenario for comparability
         elif (
-            prev_victim_asns
-            and len(prev_victim_asns) == self.scenario_config.num_victims
+            prev_legitimate_origin_asns
+            and len(prev_legitimate_origin_asns) == self.scenario_config.num_legitimate_origins
         ):
-            victim_asns = prev_victim_asns
+            legitimate_origin_asns = prev_legitimate_origin_asns
         # This is being initialized for the first time
         else:
             assert engine
-            possible_victim_asns = self._get_possible_victim_asns(
+            possible_legitimate_origin_asns = self._get_possible_legitimate_origin_asns(
                 engine, self.percent_ases_randomly_adopting
             )
             # https://stackoverflow.com/a/15837796/8903959
-            victim_asns = set(
+            legitimate_origin_asns = set(
                 random.sample(
-                    tuple(possible_victim_asns), self.scenario_config.num_victims
+                    tuple(possible_legitimate_origin_asns), self.scenario_config.num_legitimate_origins
                 )
             )
 
-        err = "Number of victims is different from victim length"
-        assert len(victim_asns) == self.scenario_config.num_victims, err
+        err = "Number of legitimate_origins is different from legitimate_origin length"
+        assert len(legitimate_origin_asns) == self.scenario_config.num_legitimate_origins, err
 
-        return victim_asns
+        return legitimate_origin_asns
 
-    def _get_possible_victim_asns(
+    def _get_possible_legitimate_origin_asns(
         self,
         engine: SimulationEngine,
         percent_ases_randomly_adopting: float,
     ) -> set[int]:
-        """Returns possible victim ASNs, defaulted from config"""
+        """Returns possible legitimate_origin ASNs, defaulted from config"""
 
         possible_asns = engine.as_graph.asn_groups[
-            self.scenario_config.victim_subcategory_attr
+            self.scenario_config.legitimate_origin_subcategory_attr
         ]
-        # Remove attackers from possible victims
+        # Remove attackers from possible legitimate_origins
         possible_asns = possible_asns.difference(self.attacker_asns)
         return possible_asns
 
@@ -237,7 +237,7 @@ class Scenario:
         for subcategory in self.scenario_config.adoption_subcategory_attrs:
             asns = engine.as_graph.asn_groups[subcategory]
             # Remove ASes that are already pre-set
-            # Ex: Attackers and victims, self.scenario_config.hardcoded_asn_cls_dict
+            # Ex: Attackers and legitimate_origins, self.scenario_config.hardcoded_asn_cls_dict
             possible_adopters = asns.difference(self._preset_asns)
 
             # Get how many ASes should be adopting (store as k)
@@ -257,9 +257,9 @@ class Scenario:
 
     @cached_property
     def _default_adopters(self) -> set[int]:
-        """By default, victim always adopts"""
+        """By default, legitimate_origin always adopts"""
 
-        return self.victim_asns
+        return self.legitimate_origin_asns
 
     @cached_property
     def _default_non_adopters(self) -> set[int]:
@@ -308,8 +308,8 @@ class Scenario:
 
         if as_obj.asn in self.attacker_asns:
             trial_settings.update(self.scenario_config.default_attacker_routing_policy_settings)
-        elif as_obj.asn in self.victim_asns:
-            trial_settings.update(self.scenario_config.default_victim_routing_policy_settings)
+        elif as_obj.asn in self.legitimate_origin_asns:
+            trial_settings.update(self.scenario_config.default_legitimate_origin_routing_policy_settings)
 
         as_obj.policy.overriden_routing_policy_settings = trial_settings
 
