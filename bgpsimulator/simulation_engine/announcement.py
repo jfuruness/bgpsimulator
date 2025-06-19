@@ -5,6 +5,7 @@ from warnings import warn
 from yamlable import YamlAble, yaml_info
 
 from bgpy.shared.enums import Relationships
+from bgpsimulator.shared import Prefix
 
 
 class Announcement:
@@ -14,7 +15,7 @@ class Announcement:
 
     def __init__(
         self,
-        prefix: str,
+        prefix: Prefix,
         as_path: tuple[int, ...],
         next_hop_asn: int | None = None,
         recv_relationship: Relationships = Relationships.ORIGIN,
@@ -24,7 +25,7 @@ class Announcement:
         only_to_customers: int | None = None,
         rovpp_blackhole: bool = False,
     ):
-        self.prefix: str = prefix
+        self.prefix: Prefix = prefix
         self.as_path: tuple[int, ...] = as_path
         # Equivalent to the next hop in a normal BGP announcement
         self.next_hop_asn: int = next_hop_asn or as_path[-1]
@@ -54,7 +55,7 @@ class Announcement:
 
     def copy(
         self,
-        prefix: str | None = None,
+        prefix: Prefix | None = None,
         as_path: tuple[int, ...] | None = None,
         next_hop_asn: int | None = None,
         recv_relationship: Relationships | None = None,

@@ -6,6 +6,7 @@ from bgpsimulator.shared.exceptions import GaoRexfordError
 from bgpsimulator.simulation_engine.announcement import Announcement as Ann
 from bgpsimulator.shared import Relationships
 from bgpsimulator.shared import RoutingPolicySettings
+from bgpsimulator.shared import Prefix
 
 if TYPE_CHECKING:
     from weakref import CallableProxyType
@@ -31,8 +32,8 @@ class RoutingPolicy:
         This is also useful for regenerating an AS from YAML
         """
 
-        self.local_rib: dict[str, Ann] = local_rib or dict()
-        self.recv_q: defaultdict[str, list[Ann]] = defaultdict(list)
+        self.local_rib: dict[Prefix, Ann] = local_rib or dict()
+        self.recv_q: defaultdict[Prefix, list[Ann]] = defaultdict(list)
         default_routing_policy_settings: dict[RoutingPolicySettings, bool] = {
             x: False for x in RoutingPolicySettings
         }

@@ -17,3 +17,7 @@ class AnnouncementNotFoundError(RuntimeError):
     """
 
     pass
+
+class ReservedPrefixError(ValueError):
+    """Exception that covers when a prefix is reserved"""
+    pass
