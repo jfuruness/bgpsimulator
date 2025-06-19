@@ -15,13 +15,13 @@ if TYPE_CHECKING:
 
 class RoutingPolicy:
 
-    __slots__ = ("local_rib", "recv_q", "base_routing_policy_settings", "overriden_routing_policy_settings", "as_")
+    __slots__ = ("local_rib", "recv_q", "base_settings", "overriden_settings", "as_")
 
     def __init__(
         self,
         as_: "AS",
-        base_routing_policy_settings: dict[str, bool] | None = None,
-        overriden_routing_policy_settings: dict[str, bool] | None = None,
+        base_settings: dict[str, bool] | None = None,
+        overriden_settings: dict[str, bool] | None = None,
         local_rib: dict[str, Ann] | None = None,
     ) -> None:
         """Add local rib and data structures here
@@ -34,13 +34,13 @@ class RoutingPolicy:
 
         self.local_rib: dict[Prefix, Ann] = local_rib or dict()
         self.recv_q: defaultdict[Prefix, list[Ann]] = defaultdict(list)
-        default_routing_policy_settings: dict[RoutingPolicySettings, bool] = {
+        default_settings: dict[RoutingPolicySettings, bool] = {
             x: False for x in RoutingPolicySettings
         }
         # Base routing policy settings are the default settings for all ASes
-        self.base_routing_policy_settings: dict[RoutingPolicySettings, bool] = base_routing_policy_settings or default_routing_policy_settings
+        self.base_settings: dict[RoutingPolicySettings, bool] = base_settings or default_settings
         # Overriden routing policy settings are the settings that will be applied to the ASes
-        self.overriden_routing_policy_settings: dict[RoutingPolicySettings, bool] = overriden_routing_policy_settings or dict()
+        self.overriden_settings: dict[RoutingPolicySettings, bool] = overriden_settings or dict()
         # The AS object that this routing policy is associated with
         self.as_: CallableProxyType[AS] = proxy(as_)
 
@@ -255,14 +255,14 @@ class RoutingPolicy:
         """Converts the routing policy to a JSON object"""
         return {
             "local_rib": self.local_rib,
-            "base_routing_policy_settings": self.base_routing_policy_settings,
-            "overriden_routing_policy_settings": self.overriden_routing_policy_settings,
+            "base_settings": self.base_settings,
+            "overriden_settings": self.overriden_settings,
         }
 
     @classmethod
     def from_json(cls, json_obj: dict[str, Any]) -> "RoutingPolicy":
         return cls(
             local_rib=json_obj["local_rib"],
-            base_routing_policy_settings=json_obj["base_routing_policy_settings"],
-            overriden_routing_policy_settings=json_obj["overriden_routing_policy_settings"],
+            base_settings=json_obj["base_settings"],
+            overriden_settings=json_obj["overriden_settings"],
         )

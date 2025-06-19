@@ -272,7 +272,7 @@ class Scenario:
         """ASNs that have a preset adoption policy"""
 
         # Returns the union of default adopters and non adopters
-        hardcoded_asns = set(self.scenario_config.override_adopting_routing_policy_settings)
+        hardcoded_asns = set(self.scenario_config.override_adopting_settings)
         return self._default_adopters | self._default_non_adopters | hardcoded_asns
 
     @property
@@ -288,30 +288,30 @@ class Scenario:
     # Engine Manipulation Funcs #
     #############################
 
-    def set_routing_policy_settings(self, as_obj: "AS") -> None:
+    def set_settings(self, as_obj: "AS") -> None:
         """Sets the routing policy settings for a given AS"""
 
         # NOTE: Most important updates go last
 
 
-        if as_obj.asn in self.scenario_config.override_base_routing_policy_settings:
-            as_obj.policy.base_routing_policy_settings = self.scenario_config.override_base_routing_policy_settings[as_obj.asn]
+        if as_obj.asn in self.scenario_config.override_base_settings:
+            as_obj.policy.base_settings = self.scenario_config.override_base_settings[as_obj.asn]
         else:
-            as_obj.policy.base_routing_policy_settings = self.scenario_config.default_base_routing_policy_settings
+            as_obj.policy.base_settings = self.scenario_config.default_base_settings
 
-        trial_settings = as_obj.policy.base_routing_policy_settings.copy()
+        trial_settings = as_obj.policy.base_settings.copy()
 
-        if as_obj.asn in self.scenario_config.override_adopt_routing_policy_settings:
-            trial_settings.update(self.scenario_config.override_adopt_routing_policy_settings[as_obj.asn])
+        if as_obj.asn in self.scenario_config.override_adopt_settings:
+            trial_settings.update(self.scenario_config.override_adopt_settings[as_obj.asn])
         elif as_obj.asn in self._adopting_asns or as_obj.asn in self._default_adopters:
-            trial_settings.update(self.scenario_config.default_adopt_routing_policy_settings)
+            trial_settings.update(self.scenario_config.default_adopt_settings)
 
         if as_obj.asn in self.attacker_asns:
-            trial_settings.update(self.scenario_config.default_attacker_routing_policy_settings)
+            trial_settings.update(self.scenario_config.default_attacker_settings)
         elif as_obj.asn in self.legitimate_origin_asns:
-            trial_settings.update(self.scenario_config.default_legitimate_origin_routing_policy_settings)
+            trial_settings.update(self.scenario_config.default_legitimate_origin_settings)
 
-        as_obj.policy.overriden_routing_policy_settings = trial_settings
+        as_obj.policy.overriden_settings = trial_settings
 
 
     ##################
