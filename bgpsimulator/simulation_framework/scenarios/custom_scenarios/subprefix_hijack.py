@@ -6,6 +6,7 @@ from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.simulation_engine import SimulationEngine
 from bgpsimulator.shared.enums import CommonPrefixes, Relationships, Timestamps
 from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
+from bgpsimulator.shared import IPAddr
 
 
 class SubprefixHijack(Scenario):
@@ -47,3 +48,8 @@ class SubprefixHijack(Scenario):
         """Returns a tuple of ROAs"""
 
         return [ROA(CommonPrefixes.PREFIX.value, x) for x in self.victim_asns]
+
+    def _get_dest_ip_addr(self) -> IPAddr:
+        """Returns the destination IP address for the scenario"""
+
+        return IPAddr("1.2.3.4")

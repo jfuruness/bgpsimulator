@@ -17,6 +17,19 @@ class RoutingPolicy:
 
     __slots__ = ("local_rib", "recv_q", "base_routing_policy_settings", "overriden_routing_policy_settings", "as_")
 
+    most_specific_prefix_cache: dict[tuple[IPAddr, tuple[Prefix, ...]], Prefix | None] = dict()
+
+    # Used when dumping the routing policy to JSON
+    name_to_cls_dict: dict[str, type["RoutingPolicy"]] = {}
+
+    def __init_subclass__(cls, **kwargs):
+        """Used when dumping the routing policy to JSON
+        
+        NOTE: Rust should not support this
+        """
+        super().__init_subclass__(**kwargs)
+        RoutingPolicy.name_to_cls_dict[cls.__name__] = cls
+
     def __init__(
         self,
         as_: "AS",
@@ -246,6 +259,47 @@ class RoutingPolicy:
 
         # Add the new ann to the incoming anns for that prefix
         neighbor_as.policy.receive_ann(ann)
+
+    #########################
+    # Data Plane Validation #
+    #########################
+
+    def get_most_specific_ann(self, dest_ip_addr: IPAddr) -> Ann | None:
+        """Returns the most specific announcement for a destination IP address
+        
+        Uses caching whenever possible to avoid expensive lookups at each AS
+        however, don't cache large RIBs, there won't be duplicates,
+        and don't keep too many in the cache, there won't be duplicates
+        We need to watch our RAM here
+        """
+
+        most_specific_prefix = None
+
+        # Dont' cache massive RIBs, there won't be duplicates
+        if len(self.local_rib) < 10:
+            most_specific_prefix = self.most_specific_prefix_cache.get((dest_ip_addr, tuple(list(self.local_rib.keys())))
+
+        if most_specific_prefix is None:
+            matching_prefixes = sorted(
+                (p for p in self.local_rib if dest_ip_addr in p),
+                key=lambda p: p.prefixlen,
+                reverse=True
+            )
+            most_specific_prefix = matching_prefixes[0] if matching_prefixes else None
+
+        # Don't cache massive ribs, pointless, there won't be duplicates
+        if len(self.local_rib) < 10:
+            self.most_specific_prefix_cache[(dest_ip_addr, tuple(list(self.local_rib.keys())))] = most_specific_prefix
+            # Don't cache too many, it's pointless
+            if len(self.most_specific_prefix_cache) > 10:
+                self.most_specific_prefix_cache.pop()
+
+        return self.local_rib[most_specific_prefix] if most_specific_prefix else None
+
+    def passes_sav(self, dest_ip_addr: IPAddr, most_specific_ann: Ann) -> bool:
+        """Determines if the AS passes the source address validation check"""
+
+        return True
 
     ##############
     # JSON funcs #

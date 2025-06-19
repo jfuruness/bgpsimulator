@@ -11,6 +11,7 @@ from roa_checker import ROA
 from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.simulation_engine import RoutingPolicy, SimulationEngine
 from bgpsimulator.simulation_framework.scenarios.scenario_config import ScenarioConfig
+from bgpsimulator.shared import IPAddr
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -87,12 +88,17 @@ class Scenario:
             self.roas = self._get_roas(announcements=self.announcements, engine=engine)
         self._reset_and_add_roas_to_roa_checker()
 
+        if self.scenario_config.override_dest_ip_addr is not None:
+            self.dest_ip_addr: IPAddr = self.scenario_config.override_dest_ip_addr
+        else:
+            self.dest_ip_addr: IPAddr = self._get_dest_ip_addr()
+
     def _reset_and_add_roas_to_roa_checker(self) -> None:
         """Clears & adds ROAs to roa_checker which serves as RPKI+Routinator combo"""
 
-        RoutingPolicy.roa_checker.clear()
+        self.scenario_config.RoutingPolicyCls.roa_checker.clear()
         for roa in self.roas:
-            RoutingPolicy.roa_checker.add_roa(roa)
+            self.scenario_config.RoutingPolicyCls.roa_checker.add_roa(roa)
 
     #################
     # Get attackers #
@@ -337,6 +343,13 @@ class Scenario:
         backwards compatability
         """
         return []
+
+    def _get_dest_ip_addr(self) -> IPAddr:
+        """Returns the destination IP address for the scenario
+        
+        Subclass must implement this"""
+
+        raise NotImplementedError("Subclass must implement this")
 
     def pre_aggregation_hook(
         self,

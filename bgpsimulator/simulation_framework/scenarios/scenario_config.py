@@ -8,6 +8,7 @@ from roa_checker import ROA
 
 from bgpsimulator.shared import ASNGroups, RoutingPolicySettings
 from bgpsimulator.simulation_engine import RoutingPolicy, Announcement as Ann
+from bgpsimulator.shared import IPAddr
 
 if TYPE_CHECKING:
     from .scenario import Scenario
@@ -20,6 +21,7 @@ class ScenarioConfig:
         self,
         scenario_label: str,
         scenario_cls: type["Scenario"],
+        routing_policy_cls: type[RoutingPolicy] = RoutingPolicy,    
         propagation_rounds: int | None = None,
         attacker_routing_policy_settings: dict[RoutingPolicySettings, bool] | None = None,
         legitimate_origin_routing_policy_settings: dict[RoutingPolicySettings, bool] | None = None,
@@ -37,10 +39,12 @@ class ScenarioConfig:
         override_adopting_asns: set[int] | None = None,
         override_announcements: set[Ann] | None = None,
         override_roas: set[ROA] | None = None,
+        override_dest_ip_addr: IPAddr | None = None,
     ):
         # Label used for graphing, typically name it after the adopting policy
         self.scenario_label: str = scenario_label
         self.ScenarioCls: type["Scenario"] = scenario_cls
+        self.RoutingPolicyCls: type[RoutingPolicy] = routing_policy_cls
         self.propagation_rounds: int | None = propagation_rounds
         if self.propagation_rounds is None:
             # BGP-iSec needs this.
@@ -101,6 +105,9 @@ class ScenarioConfig:
         # rather than generated dynamically based on attackers/legitimate_origins
         self.override_announcements: set[Ann] | None = override_announcements
         self.override_roas: set[ROA] | None = override_roas
+        # Every AS will attempt to send a packet to this IP address post propagation
+        # This is used for the ASGraphAnalyzer to determine the outcome of a packet
+        self.override_dest_ip_addr: IPAddr | None = override_dest_ip_addr
 
         if self.ScenarioCls.min_propagation_rounds > self.propagation_rounds:
             raise ValueError(

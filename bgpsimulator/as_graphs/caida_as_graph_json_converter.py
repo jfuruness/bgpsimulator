@@ -6,6 +6,7 @@ from frozendict import frozendict
 from .base_as import AS
 from .caida_as_graph_collector import CAIDAASGraphCollector
 from bgpsimulator.shared import ASNGroups
+from bgpsimulator.simulation_engine.routing_policy import RoutingPolicy
 
 
 class CAIDAASGraphJSONConverter:
@@ -20,6 +21,7 @@ class CAIDAASGraphJSONConverter:
         additional_asn_group_filters: frozendict[
             str, Callable[[dict[int, AS]], frozenset[int]]
         ] = frozendict(),
+        RoutingPolicyCls: type[RoutingPolicy] = RoutingPolicy,
     ) -> dict[str, Any]:
         """Generates AS graph in the following steps:
 
@@ -35,11 +37,12 @@ class CAIDAASGraphJSONConverter:
             self._write_as_graph_json(
                 caida_as_graph_path,
                 json_cache_path,
-                additional_asn_group_filters
+                additional_asn_group_filters,
+                RoutingPolicyCls
             )
         return json.loads(json_cache_path.read_text())
 
-    def _write_as_graph_json(self, caida_as_graph_path: Path, json_cache_path: Path, additional_asn_group_filters: frozendict[int, Callable[[dict[int, AS]], frozenset[AS]]]) -> None:
+    def _write_as_graph_json(self, caida_as_graph_path: Path, json_cache_path: Path, additional_asn_group_filters: frozendict[int, Callable[[dict[int, AS]], frozenset[AS]]], RoutingPolicyCls: type[RoutingPolicy]) -> None:
         """Writes as graph JSON from CAIDAs raw file"""
 
         asn_to_as : dict[int, AS] = dict()
@@ -63,7 +66,7 @@ class CAIDAASGraphJSONConverter:
         asn_groups = self._get_asn_groups(asn_to_as, additional_asn_group_filters)
 
         final_json = {
-            "ases": {k: as_.to_json() for k, as_ in asn_to_as.items()},
+            "ases": {k: {**as_.to_json(), "routing_policy_cls": RoutingPolicyCls.__name__} for k, as_ in asn_to_as.items()},
             "asn_groups": asn_groups
         }
         ASGraphUtils.add_extra_setup(final_json)

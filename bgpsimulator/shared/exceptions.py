@@ -21,3 +21,7 @@ class AnnouncementNotFoundError(RuntimeError):
 class ReservedPrefixError(ValueError):
     """Exception that covers when a prefix is reserved"""
     pass
+
+class InvalidIPAddressError(ValueError):
+    """Exception that covers when an IP address is invalid"""
+    pass
