@@ -96,3 +96,17 @@ class ROARouted(IntEnum):
     # A ROA is Non Routed if it is for an origin of ASN 0
     # This means that the prefix for this ROA should never be announced
     NON_ROUTED = 2
+
+
+class CommonPrefixes(Enum):
+    """Prefixes for attacks. Prefixes tend to be in reference to the legitimate origin"""
+
+    SUPERPREFIX: Prefix = Prefix("1.0.0.0/8")
+    PREFIX: Prefix = Prefix("1.2.0.0/16")
+    SUBPREFIX: Prefix = Prefix("1.2.3.0/24")
+
+class Timestamps(IntEnum):
+    """Timestamps for announcements. Victim is always first."""
+
+    VICTIM: int = 0
+    ATTACKER: int = 1

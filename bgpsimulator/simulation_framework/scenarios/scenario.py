@@ -318,11 +318,7 @@ class Scenario:
     # Subclass Funcs #
     ##################
 
-    def _get_announcements(
-        self,
-        *,
-        engine: SimulationEngine,
-    ) -> dict[int, list[Ann]]:
+    def _get_announcements(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
         """Returns announcements
 
         Empty by default for testing, typically subclassed
@@ -332,11 +328,10 @@ class Scenario:
 
     def _get_roas(
         self,
-        *,
         announcements: dict[int, list[Ann]],
         engine: SimulationEngine,
     ) -> list[ROA]:
-        """Returns a tuple of ROA's
+        """Returns a list of ROA's
 
         Not abstract and by default does nothing for
         backwards compatability
