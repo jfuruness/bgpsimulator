@@ -21,8 +21,8 @@ class AS:
         propagation_rank: int | None = None,
         tier_1: bool = False,
         ixp: bool = False,
-        base_settings: dict[str, bool] | None = None,
-        overriden_settings: dict[str, bool] | None = None,
+        base_routing_policy_settings: dict[str, bool] | None = None,
+        overriden_routing_policy_settings: dict[str, bool] | None = None,
         as_graph: Optional["ASGraph"] = None,
     ) -> None:
         # Make sure you're not accidentally passing in a string here
@@ -46,7 +46,7 @@ class AS:
         # Hash in advance and only once since this gets called a lot
         self.hashed_asn = hash(self.asn)
 
-        self.routing_policy: RoutingPolicy = RoutingPolicy(self, base_settings, overriden_settings)
+        self.routing_policy: RoutingPolicy = RoutingPolicy(self, base_routing_policy_settings, overriden_routing_policy_settings)
 
         # This is useful for some policies to have knowledge of the graph
         if as_graph is not None:
