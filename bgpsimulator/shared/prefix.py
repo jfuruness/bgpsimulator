@@ -21,7 +21,8 @@ class Prefix(IPv6Network):
             prefix = f"::ffff:{temp_prefix.network_address}/{96 + temp_prefix.prefixlen}"
         
         # Prefix is used as a key in dicts, so hash it in advance as it gets called millions of times
-        self._hash: int = hash((int(ip_network(prefix).network_address), temp_prefix.prefixlen))
+        # We multiply the network address by 1000 to avoid collisions with IPv6 prefix lengths (max 128)
+        self._hash: int = hash(int(ip_network(prefix).network_address) * 1000 + temp_prefix.prefixlen)
 
         super().__init__(prefix, *args, **kwargs)
     

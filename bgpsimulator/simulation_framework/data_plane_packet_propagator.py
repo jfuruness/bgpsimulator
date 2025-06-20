@@ -3,11 +3,13 @@ from bgpsimulator.as_graphs import AS
 from bgpsimulator.simulation_engine import Announcement as Ann, SimulationEngine
 from bgpsimulator.shared import IPAddr
 
-class ASGraphAnalyzer:
+class DataPlanePacketPropagator:
     def get_as_outcomes_for_data_plane_packet(self, dest_ip_addr: IPAddr, simulation_engine: SimulationEngine) -> dict[int, Outcomes]:
         """For each AS, determine the outcome of a packet sent to the destination IP address
         
-        See ROV++ paper as to why the control plane is a bad metric"""
+        See ROV++ paper as to why the control plane is a bad metric;
+        so we only focus on the data plane
+        """
 
         outcomes: dict[int, Outcomes] = dict()
         for as_obj in simulation_engine.as_graph:

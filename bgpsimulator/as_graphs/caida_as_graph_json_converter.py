@@ -1,4 +1,6 @@
 from dataclasses import dataclass, field
+import json
+from pathlib import Path
 from typing import Any
 
 from frozendict import frozendict
@@ -22,7 +24,7 @@ class CAIDAASGraphJSONConverter:
             str, Callable[[dict[int, AS]], frozenset[int]]
         ] = frozendict(),
         RoutingPolicyCls: type[RoutingPolicy] = RoutingPolicy,
-    ) -> dict[str, Any]:
+    ) -> tuple[dict[str, Any], Path]:
         """Generates AS graph in the following steps:
 
         1. download file from source using the GraphCollector if you haven't already
@@ -40,7 +42,7 @@ class CAIDAASGraphJSONConverter:
                 additional_asn_group_filters,
                 RoutingPolicyCls
             )
-        return json.loads(json_cache_path.read_text())
+        return json.loads(json_cache_path.read_text()), json_cache_path
 
     def _write_as_graph_json(self, caida_as_graph_path: Path, json_cache_path: Path, additional_asn_group_filters: frozendict[int, Callable[[dict[int, AS]], frozenset[AS]]], RoutingPolicyCls: type[RoutingPolicy]) -> None:
         """Writes as graph JSON from CAIDAs raw file"""

@@ -117,3 +117,8 @@ class Outcomes(IntEnum):
     DISCONNECTED: int = 2
     UNDETERMINED: int = 3
     DATA_PLANE_LOOP: int = 4
+
+class InAdoptingAsns(StrEnum):
+    TRUE: str = "True"
+    FALSE: str = "False"
+    ANY: str = "Any"

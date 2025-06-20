@@ -12,7 +12,7 @@ from bgpsimulator.shared import IPAddr
 class SubprefixHijack(Scenario):
     """Victim announces a prefix, attacker announces a more specific subprefix"""
 
-    def _get_announcements(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
+    def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
 
         anns = dict()
         for victim_asn in self.victim_asns:
@@ -42,10 +42,10 @@ class SubprefixHijack(Scenario):
     def _get_roas(
         self,
         *,
-        announcements: dict[int, list[Ann]],
+        seed_asn_ann_dict: dict[int, list[Ann]],
         engine: SimulationEngine,
     ) -> list[ROA]:
-        """Returns a tuple of ROAs"""
+        """Returns a list of ROAs"""
 
         return [ROA(CommonPrefixes.PREFIX.value, x) for x in self.victim_asns]
 

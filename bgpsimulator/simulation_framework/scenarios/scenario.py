@@ -78,14 +78,14 @@ class Scenario:
         )
 
         if self.scenario_config.override_announcements is not None:
-            self.announcements: dict[int, list[Ann]] = self.scenario_config.override_announcements.copy()
+            self.seed_asn_ann_dict: dict[int, list[Ann]] = self.scenario_config.override_announcements.copy()
         else:
-            self.announcements = self._get_announcements(engine=engine)
+            self.seed_asn_ann_dict = self._get_seed_asn_ann_dict(engine=engine)
 
         if self.scenario_config.override_roas is not None:
             self.roas: list[ROA] = self.scenario_config.override_roas.copy()
         else:
-            self.roas = self._get_roas(announcements=self.announcements, engine=engine)
+            self.roas = self._get_roas(seed_asn_ann_dict=self.seed_asn_ann_dict, engine=engine)
         self._reset_and_add_roas_to_roa_checker()
 
         if self.scenario_config.override_dest_ip_addr is not None:
@@ -319,13 +319,16 @@ class Scenario:
 
         as_obj.policy.overriden_routing_policy_settings = trial_settings
 
+    def setup_engine(self, engine: SimulationEngine) -> None:
+        """Nice hook func for setting up the engine with adopting ASes, routing policy settings, etc"""
+        engine.setup(self)
 
     ##################
     # Subclass Funcs #
     ##################
 
-    def _get_announcements(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
-        """Returns announcements
+    def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
+        """Returns a dict of ASNs to announcements
 
         Empty by default for testing, typically subclassed
         """
@@ -334,7 +337,7 @@ class Scenario:
 
     def _get_roas(
         self,
-        announcements: dict[int, list[Ann]],
+        seed_asn_ann_dict: dict[int, list[Ann]],
         engine: SimulationEngine,
     ) -> list[ROA]:
         """Returns a list of ROA's

@@ -7,7 +7,7 @@ class ASGraph:
 
     def __eq__(self, other) -> bool:
         if isinstance(other, ASGraph):
-            return self.to_json() == other.to_json()
+            return self.as_dict == other.as_dict
         else:
             return NotImplemented
 
