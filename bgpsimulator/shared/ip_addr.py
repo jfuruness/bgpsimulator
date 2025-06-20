@@ -11,5 +11,5 @@ class IPAddr(Prefix):
 
     def __init__(self, address: str): 
         super().__init__(address)
-        if self.prefix_len != 32 and self.prefix_len != 128:
+        if self.prefixlen != 32 and self.prefixlen != 128:
             raise InvalidIPAddressError(f"Invalid IP address: {address}")

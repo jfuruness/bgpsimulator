@@ -12,6 +12,7 @@ from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.simulation_engine import RoutingPolicy, SimulationEngine
 from bgpsimulator.simulation_framework.scenarios.scenario_config import ScenarioConfig
 from bgpsimulator.shared import IPAddr
+from bgpsimulator.route_validator import RouteValidator
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -36,12 +37,12 @@ class Scenario:
         super().__init_subclass__(**kwargs)
         Scenario.name_to_cls_dict[cls.__name__] = cls
 
-
     def __init__(
         self,
         *,
         scenario_config: ScenarioConfig,
         engine: SimulationEngine,
+        route_validator: RouteValidator,
         percent_ases_randomly_adopting: float = 0,
         attacker_asns: frozenset[int] | None = None,
         legitimate_origin_asns: frozenset[int] | None = None,
@@ -86,19 +87,19 @@ class Scenario:
             self.roas: list[ROA] = self.scenario_config.override_roas.copy()
         else:
             self.roas = self._get_roas(seed_asn_ann_dict=self.seed_asn_ann_dict, engine=engine)
-        self._reset_and_add_roas_to_roa_checker()
+        self._reset_and_add_roas_to_route_validator(route_validator)
 
         if self.scenario_config.override_dest_ip_addr is not None:
             self.dest_ip_addr: IPAddr = self.scenario_config.override_dest_ip_addr
         else:
             self.dest_ip_addr: IPAddr = self._get_dest_ip_addr()
 
-    def _reset_and_add_roas_to_roa_checker(self) -> None:
-        """Clears & adds ROAs to roa_checker which serves as RPKI+Routinator combo"""
+    def _reset_and_add_roas_to_route_validator(self, route_validator) -> None:
+        """Clears & adds ROAs to route_validator which serves as RPKI+Routinator combo"""
 
-        self.scenario_config.RoutingPolicyCls.roa_checker.clear()
+        route_validator.clear()
         for roa in self.roas:
-            self.scenario_config.RoutingPolicyCls.roa_checker.add_roa(roa)
+            route_validator.add_roa(roa)
 
     #################
     # Get attackers #
@@ -153,7 +154,7 @@ class Scenario:
         """Returns possible attacker ASNs, defaulted from config"""
 
         possible_asns = engine.as_graph.asn_groups[
-            self.scenario_config.attacker_subcategory_attr
+            self.scenario_config.attacker_asn_group
         ]
         return possible_asns
 
@@ -204,7 +205,7 @@ class Scenario:
         """Returns possible legitimate_origin ASNs, defaulted from config"""
 
         possible_asns = engine.as_graph.asn_groups[
-            self.scenario_config.legitimate_origin_subcategory_attr
+            self.scenario_config.legitimate_origin_asn_group
         ]
         # Remove attackers from possible legitimate_origins
         possible_asns = possible_asns.difference(self.attacker_asns)
@@ -240,7 +241,7 @@ class Scenario:
 
         adopting_asns: list[int] = list()
         # Randomly adopt in all three subcategories
-        for subcategory in self.scenario_config.adoption_subcategory_attrs:
+        for subcategory in self.scenario_config.adoption_asn_groups:
             asns = engine.as_graph.asn_groups[subcategory]
             # Remove ASes that are already pre-set
             # Ex: Attackers and legitimate_origins, self.scenario_config.hardcoded_asn_cls_dict
@@ -278,7 +279,7 @@ class Scenario:
         """ASNs that have a preset adoption policy"""
 
         # Returns the union of default adopters and non adopters
-        hardcoded_asns = set(self.scenario_config.override_adopting_routing_policy_settings)
+        hardcoded_asns = set(self.scenario_config.override_adopt_routing_policy_settings)
         return self._default_adopters | self._default_non_adopters | hardcoded_asns
 
     @property
@@ -300,12 +301,13 @@ class Scenario:
         # NOTE: Most important updates go last
 
 
+        input(as_obj.routing_policy)
         if as_obj.asn in self.scenario_config.override_base_routing_policy_settings:
-            as_obj.policy.base_routing_policy_settings = self.scenario_config.override_base_routing_policy_settings[as_obj.asn]
+            as_obj.routing_policy.default_routing_policy_settings = self.scenario_config.override_base_routing_policy_settings[as_obj.asn]
         else:
-            as_obj.policy.base_routing_policy_settings = self.scenario_config.default_base_routing_policy_settings
+            as_obj.routing_policy.default_routing_policy_settings = self.scenario_config.default_base_routing_policy_settings
 
-        trial_settings = as_obj.policy.base_routing_policy_settings.copy()
+        trial_settings = as_obj.routing_policy.base_routing_policy_settings.copy()
 
         if as_obj.asn in self.scenario_config.override_adopt_routing_policy_settings:
             trial_settings.update(self.scenario_config.override_adopt_routing_policy_settings[as_obj.asn])
@@ -317,7 +319,7 @@ class Scenario:
         elif as_obj.asn in self.legitimate_origin_asns:
             trial_settings.update(self.scenario_config.default_legitimate_origin_routing_policy_settings)
 
-        as_obj.policy.overriden_routing_policy_settings = trial_settings
+        as_obj.routing_policy.overriden_routing_policy_settings = trial_settings
 
     def setup_engine(self, engine: SimulationEngine) -> None:
         """Nice hook func for setting up the engine with adopting ASes, routing policy settings, etc"""

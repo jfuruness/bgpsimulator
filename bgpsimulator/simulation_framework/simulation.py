@@ -22,7 +22,7 @@ from bgpsimulator.as_graphs import CAIDAASGraphCollector, CAIDAASGraphJSONConver
 from .data_tracker.line_filter import LineFilter
 from .data_tracker.data_tracker import DataTracker
 from .scenarios.scenario_config import ScenarioConfig
-from bgpsimulator.simulation_engine import SimulationEngine
+from bgpsimulator.simulation_engine import SimulationEngine, RoutingPolicy
 from .data_plane_packet_propagator import DataPlanePacketPropagator
 from .scenarios.scenario import Scenario
 from .scenarios import SubprefixHijack
@@ -80,6 +80,7 @@ class Simulation:
         DataPlanePacketPropagatorCls: type[DataPlanePacketPropagator] = DataPlanePacketPropagator,
         DataTrackerCls: type[DataTracker] = DataTracker,
         line_filters: tuple[LineFilter, ...] = (),
+        RoutingPolicyCls: type[RoutingPolicy] = RoutingPolicy
     ) -> None:
         self.output_dir: Path = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -89,10 +90,14 @@ class Simulation:
         self.parse_cpus: int = parse_cpus
         self.python_hash_seed: int | None = python_hash_seed
         self._seed_random()
+        self.RoutingPolicyCls = RoutingPolicyCls
 
         if not as_graph_data_json_path:
             caida_path: Path = CAIDAASGraphCollector().run()
-            _, as_graph_data_json_path = CAIDAASGraphJSONConverter().run(caida_as_graph_path=caida_path)
+            _, as_graph_data_json_path = CAIDAASGraphJSONConverter().run(
+                caida_as_graph_path=caida_path,
+                RoutingPolicyCls=RoutingPolicyCls
+            )
         self.as_graph_data_json_path: Path = as_graph_data_json_path
 
         self.SimulationEngineCls = SimulationEngineCls
@@ -318,7 +323,7 @@ class Simulation:
         for trial_index, trial in self._get_run_chunk_iter(trials):
             # Use the same attacker victim pairs across all percent adoptions
             trial_attacker_asns = None
-            trial_victim_asns = None
+            trial_legitimate_origin_asns = None
             for percent_adopt_index, percent_adopt in enumerate(self.percent_ases_randomly_adopting):
                 # Use the same adopting asns across all scenarios configs
                 adopting_asns = None
@@ -328,8 +333,9 @@ class Simulation:
                         scenario_config=scenario_config,
                         percent_ases_randomly_adopting=percent_adopt,
                         engine=engine,
+                        route_validator = self.RoutingPolicyCls.route_validator,
                         attacker_asns=trial_attacker_asns,
-                        victim_asns=trial_victim_asns,
+                        legitimate_origin_asns=trial_legitimate_origin_asns,
                         adopting_asns=adopting_asns,
                     )
 
@@ -349,7 +355,7 @@ class Simulation:
                     if self.reuse_attacker_asns:
                         trial_attacker_asns = scenario.attacker_asns
                     if self.reuse_legitimate_origin_asns:
-                        trial_victim_asns = scenario.victim_asns
+                        trial_legitimate_origin_asns = scenario.legitimate_origin_asns
                     # Use the same adopting ASes across all scenarios configs
                     if self.reuse_adopting_asns:
                         adopting_asns = scenario.adopting_asns
@@ -507,7 +513,7 @@ class Simulation:
 
     @cached_property
     def scenario_labels(self) -> tuple[str, ...]:
-        return tuple([x.scenario_label for x in self.scenario_configs])
+        return tuple([x.label for x in self.scenario_configs])
 
     
     @cached_property

@@ -51,6 +51,7 @@ class DataTracker:
                 line_filter: {}
                 for line_filter in line_filters
             }
+            for label in self.scenario_labels
         }
 
     def _create_new_unaggregated_data(self) -> dict:

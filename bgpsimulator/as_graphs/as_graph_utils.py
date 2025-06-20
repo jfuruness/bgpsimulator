@@ -11,6 +11,8 @@ class ASGraphUtils:
         """Adds cycles, provider cone, and propagation ranks to the AS graph"""
 
         if not as_graph_json.get("extra_setup_complete", False):
+            # Conver to ints when pulling from JSON
+            as_graph_json["ases"] = {int(asn): info for asn, info in as_graph_json["ases"].items()}
             ASGraphUtils.check_for_cycles(as_graph_json)
             ASGraphUtils.add_provider_cone_asns(as_graph_json)
             ASGraphUtils.assign_as_propagation_rank(as_graph_json)

@@ -18,10 +18,9 @@ class AS:
         propagation_rank: int | None = None,
         tier_1: bool = False,
         ixp: bool = False,
-        base_routing_policy_settings: dict[str, bool] | None = None,
-        overriden_routing_policy_settings: dict[str, bool] | None = None,
         as_graph: Optional["ASGraph"] = None,
-        RoutingPolicyCls: type[RoutingPolicy] = RoutingPolicy,
+        routing_policy: RoutingPolicy | None = None,
+        RoutingPolicyCls: type[RoutingPolicy] = RoutingPolicy
     ) -> None:
         # Make sure you're not accidentally passing in a string here
         self.asn: int = int(asn)
@@ -44,7 +43,7 @@ class AS:
         # Hash in advance and only once since this gets called a lot
         self.hashed_asn = hash(self.asn)
 
-        self.routing_policy: RoutingPolicy = RoutingPolicyCls(self, base_routing_policy_settings, overriden_routing_policy_settings)
+        self.routing_policy: RoutingPolicy = routing_policy or RoutingPolicyCls(self)
 
         # This is useful for some policies to have knowledge of the graph
         if as_graph is not None:
@@ -160,7 +159,7 @@ class AS:
     def from_json(cls, json_obj: dict[str, Any]) -> "AS":
         """Converts the AS to a JSON object"""
 
-        RoutingPolicyCls = RoutingPolicy.name_to_cls[json_obj["routing_policy_cls"]]
+        RoutingPolicyCls = RoutingPolicy.name_to_cls[json_obj["RoutingPolicyCls"]]
 
         return cls(
             asn=json_obj["asn"],

@@ -16,9 +16,10 @@ class RouteValidator:
         """Clears the trie"""
         self.__init__()
 
-    def insert(self, prefix: Prefix, roa: ROA) -> None:
+    def add_roa(self, roa: ROA) -> None:
         """Inserts a prefix into the trie"""
-        bits = self._get_binary_str_from_prefix(prefix.network_address)
+        prefix = roa.prefix
+        bits = self._get_binary_str_from_prefix(prefix)
         node = self.root
         for bit in bits[: prefix.prefixlen]:
             if bool(int(bit)):

@@ -15,14 +15,14 @@ class SubprefixHijack(Scenario):
     def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
 
         anns = dict()
-        for victim_asn in self.victim_asns:
+        for victim_asn in self.legitimate_origin_asns:
             anns[victim_asn] = [
                 Ann(
                     prefix=CommonPrefixes.PREFIX.value,
                     as_path=(victim_asn,),
                     next_hop_asn=victim_asn,
                     recv_relationship=Relationships.ORIGIN,
-                    timestamp=Timestamps.VICTIM.value,
+                    timestamp=Timestamps.VICTIM,
                 )
             ]
 
@@ -32,8 +32,8 @@ class SubprefixHijack(Scenario):
                     prefix=CommonPrefixes.SUBPREFIX.value,
                     as_path=(attacker_asn,),
                     next_hop_asn=attacker_asn,
-                    recv_relationship=Relationships.ATTACKER,
-                    timestamp=Timestamps.ATTACKER.value,
+                    recv_relationship=Relationships.ORIGIN,
+                    timestamp=Timestamps.ATTACKER,
                 )
             ]
 
@@ -47,7 +47,7 @@ class SubprefixHijack(Scenario):
     ) -> list[ROA]:
         """Returns a list of ROAs"""
 
-        return [ROA(CommonPrefixes.PREFIX.value, x) for x in self.victim_asns]
+        return [ROA(CommonPrefixes.PREFIX.value, x) for x in self.legitimate_origin_asns]
 
     def _get_dest_ip_addr(self) -> IPAddr:
         """Returns the destination IP address for the scenario"""

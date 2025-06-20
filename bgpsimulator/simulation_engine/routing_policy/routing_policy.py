@@ -8,6 +8,7 @@ from bgpsimulator.simulation_engine.announcement import Announcement as Ann
 from bgpsimulator.shared import Relationships
 from bgpsimulator.shared import RoutingPolicySettings
 from bgpsimulator.shared import Prefix, IPAddr
+from bgpsimulator.route_validator import RouteValidator
 
 if TYPE_CHECKING:
     from weakref import CallableProxyType
@@ -22,6 +23,8 @@ class RoutingPolicy:
 
     # Used when dumping the routing policy to JSON
     name_to_cls_dict: dict[str, type["RoutingPolicy"]] = {}
+
+    route_validator = RouteValidator()
 
     def __init_subclass__(cls, **kwargs):
         """Used when dumping the routing policy to JSON

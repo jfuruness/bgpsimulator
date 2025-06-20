@@ -44,7 +44,10 @@ class CAIDAASGraphJSONConverter:
                 RoutingPolicyCls
             )
         try:
-            return json.loads(json_cache_path.read_text()), json_cache_path
+            as_graph_info = json.loads(json_cache_path.read_text())
+            # Must convert keys to ints when coming from JSON
+            as_graph_info["ases"] = {int(asn): info for asn, info in as_graph_info["ases"].items()}
+            return as_graph_info, json_cache_path
         except json.JSONDecodeError:
             bgpsimulator_logger.error(f"JSON file {json_cache_path} is corrupted, it will now be deleted")
             json_cache_path.unlink()
@@ -74,7 +77,7 @@ class CAIDAASGraphJSONConverter:
         asn_groups = self._get_asn_groups(asn_to_as, additional_asn_group_filters)
 
         final_json = {
-            "ases": {k: {**as_.to_json(), "routing_policy_cls": RoutingPolicyCls.__name__} for k, as_ in asn_to_as.items()},
+            "ases": {k: {**as_.to_json(), "RoutingPolicyCls": RoutingPolicyCls.__name__} for k, as_ in asn_to_as.items()},
             "asn_groups": {k: list(asn_group) for k, asn_group in asn_groups.items()}
         }
         ASGraphUtils.add_extra_setup(final_json)
