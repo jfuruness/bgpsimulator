@@ -3,16 +3,13 @@ from typing import TYPE_CHECKING, Any, Optional
 from weakref import CallableProxyType, proxy
 
 from bgpsimulator.shared import Relationships
-
+from bgpsimulator.simulation_engine import RoutingPolicy
 
 class AS:
     """Autonomous System class. Contains attributes of an AS"""
 
-    __slots__ = ("asn", "peer_asns", "provider_asns", "customer_asns", "peers", "providers", "customers", "tier_1", "ixp", "provider_cone_asns", "propagation_rank", "hashed_asn", "routing_policy", "as_graph")
-
     def __init__(
         self,
-        *,
         asn: int,
         peer_asns: set[int] | None = None,
         provider_asns: set[int] | None = None,
@@ -24,6 +21,7 @@ class AS:
         base_routing_policy_settings: dict[str, bool] | None = None,
         overriden_routing_policy_settings: dict[str, bool] | None = None,
         as_graph: Optional["ASGraph"] = None,
+        RoutingPolicyCls: type[RoutingPolicy] = RoutingPolicy,
     ) -> None:
         # Make sure you're not accidentally passing in a string here
         self.asn: int = int(asn)
@@ -39,14 +37,14 @@ class AS:
         # Read Caida's paper to understand these
         self.tier_1: bool = tier_1
         self.ixp: bool = ixp
-        self.provider_cone_asns: set[int] | None = provider_cone_asns
+        self.provider_cone_asns: set[int] | None = provider_cone_asns or set()
         # Propagation rank. 0 is a leaf, highest is the input clique/t1 ASes
         self.propagation_rank: int | None = propagation_rank
 
         # Hash in advance and only once since this gets called a lot
         self.hashed_asn = hash(self.asn)
 
-        self.routing_policy: RoutingPolicy = RoutingPolicy(self, base_routing_policy_settings, overriden_routing_policy_settings)
+        self.routing_policy: RoutingPolicy = RoutingPolicyCls(self, base_routing_policy_settings, overriden_routing_policy_settings)
 
         # This is useful for some policies to have knowledge of the graph
         if as_graph is not None:
@@ -64,7 +62,7 @@ class AS:
         self.providers = [self.as_graph[asn] for asn in self.provider_asns]
         self.customers = [self.as_graph[asn] for asn in self.customer_asns]
 
-    def get_neighbor(self, rel: Relationships) -> list[AS]:
+    def get_neighbor(self, rel: Relationships) -> list["AS"]:
         """Returns the neighbors of the AS based on the relationship enum"""
 
         if rel == Relationships.PEERS:
@@ -94,7 +92,7 @@ class AS:
     @cached_property
     def stub(self) -> bool:
         """Returns True if AS is a stub by RFC1772
-        
+
         Use neighbor_asns instead of neighbors so you can use this during graph construction
         """
 
@@ -103,7 +101,7 @@ class AS:
     @cached_property
     def multihomed(self) -> bool:
         """Returns True if AS is multihomed by RFC1772
-        
+
         Use customer_asns instead of customers so you can use this during graph construction
         """
 
@@ -112,7 +110,7 @@ class AS:
     @cached_property
     def transit(self) -> bool:
         """Returns True if AS is a transit AS by RFC1772
-        
+
         Use customer_asns instead of customers so you can use this during graph construction
         """
 
@@ -148,12 +146,12 @@ class AS:
 
         return {
             "asn": self.asn,
-            "customer_asns": [asn for x in self.customer_asns],
-            "peer_asns": [asn for x in self.peer_asns],
-            "provider_asns": [asn for x in self.provider_asns],
+            "customer_asns": list(self.customer_asns),
+            "peer_asns": list(self.peer_asns),
+            "provider_asns": list(self.provider_asns),
             "tier_1": self.tier_1,
             "ixp": self.ixp,
-            "provider_cone_asns": self.provider_cone_asns,
+            "provider_cone_asns": list(self.provider_cone_asns),
             "propagation_rank": self.propagation_rank,
             "routing_policy": self.routing_policy.to_json(),
         }
@@ -162,6 +160,8 @@ class AS:
     def from_json(cls, json_obj: dict[str, Any]) -> "AS":
         """Converts the AS to a JSON object"""
 
+        RoutingPolicyCls = RoutingPolicy.name_to_cls[json_obj["routing_policy_cls"]]
+
         return cls(
             asn=json_obj["asn"],
             customer_asns=set(json_obj["customer_asns"]),
@@ -169,7 +169,7 @@ class AS:
             provider_asns=set(json_obj["provider_asns"]),
             tier_1=json_obj["tier_1"],
             ixp=json_obj["ixp"],
-            provider_cone_asns=json_obj["provider_cone_asns"],
+            provider_cone_asns=set(json_obj["provider_cone_asns"]),
             propagation_rank=json_obj["propagation_rank"],
-            routing_policy=RoutingPolicy.from_json(json_obj["routing_policy"]) if json_obj["routing_policy"] else None,
+            routing_policy=RoutingPolicyCls.from_json(json_obj["routing_policy"]),
         )

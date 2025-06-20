@@ -2,9 +2,7 @@ from dataclasses import asdict, dataclass, replace
 from typing import Any, Optional
 from warnings import warn
 
-from yamlable import YamlAble, yaml_info
-
-from bgpy.shared.enums import Relationships
+from bgpsimulator.shared import Relationships
 from bgpsimulator.shared import Prefix
 
 

@@ -1,13 +1,14 @@
 from dataclasses import dataclass, field
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from frozendict import frozendict
 
 from .base_as import AS
 from .caida_as_graph_collector import CAIDAASGraphCollector
-from bgpsimulator.shared import ASNGroups
+from .as_graph_utils import ASGraphUtils
+from bgpsimulator.shared import ASNGroups, SINGLE_DAY_CACHE_DIR, bgpsimulator_logger
 from bgpsimulator.simulation_engine.routing_policy import RoutingPolicy
 
 
@@ -42,7 +43,12 @@ class CAIDAASGraphJSONConverter:
                 additional_asn_group_filters,
                 RoutingPolicyCls
             )
-        return json.loads(json_cache_path.read_text()), json_cache_path
+        try:
+            return json.loads(json_cache_path.read_text()), json_cache_path
+        except json.JSONDecodeError:
+            bgpsimulator_logger.error(f"JSON file {json_cache_path} is corrupted, it will now be deleted")
+            json_cache_path.unlink()
+            raise
 
     def _write_as_graph_json(self, caida_as_graph_path: Path, json_cache_path: Path, additional_asn_group_filters: frozendict[int, Callable[[dict[int, AS]], frozenset[AS]]], RoutingPolicyCls: type[RoutingPolicy]) -> None:
         """Writes as graph JSON from CAIDAs raw file"""
@@ -69,7 +75,7 @@ class CAIDAASGraphJSONConverter:
 
         final_json = {
             "ases": {k: {**as_.to_json(), "routing_policy_cls": RoutingPolicyCls.__name__} for k, as_ in asn_to_as.items()},
-            "asn_groups": asn_groups
+            "asn_groups": {k: list(asn_group) for k, asn_group in asn_groups.items()}
         }
         ASGraphUtils.add_extra_setup(final_json)
 
@@ -83,7 +89,7 @@ class CAIDAASGraphJSONConverter:
     # Parsing funcs #
     #################
 
-    def _extract_input_clique_asns(self, line: str, asn_to_as: dict[int, AS]) -> None:
+    def _extract_tier_1_asns(self, line: str, asn_to_as: dict[int, AS]) -> None:
         """Adds all ASNs within input clique line to ases dict"""
 
         # Gets all input ASes for clique
@@ -131,11 +137,12 @@ class CAIDAASGraphJSONConverter:
         asn_group_filters: dict[str, Callable[[dict[int, AS]], frozenset[int]]] = dict(
             **self._default_as_group_filters,
             **additional_asn_group_filters
-        )   
-        
+        )
+
         asn_groups: frozendict[str, frozenset[int]] = frozendict({
             asn_group_key: filter_func(asn_to_as) for asn_group_key, filter_func in asn_group_filters.items()
         }
+        )
 
         return asn_groups
 

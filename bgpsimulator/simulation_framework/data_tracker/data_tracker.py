@@ -1,3 +1,11 @@
+from bgpsimulator.simulation_engine import SimulationEngine
+from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
+from .line_filter import LineFilter
+from bgpsimulator.shared import Outcomes
+from math import sqrt
+from statistics import stdev
+
+
 class DataTracker:
     """Tracks data for later use in creating line charts"""
 
@@ -99,7 +107,7 @@ class DataTracker:
                     # The default for the numerator simply checks that the outcome is the same as the line filter
                     if line_filter.as_in_numerator(as_obj, engine.as_graph, scenario, propagation_round, outcome):
                         unaggregated_scenario_data[line_filter][scenario.percent_ases_randomly_adopting][-1]["numerator"] += 1
-                    unaggregated_scenario_data[line_filter][scenario.percent
+                    unaggregated_scenario_data[line_filter][scenario.percent_ases_randomly_adopting][-1]["denominator"] += 1
 
     def aggregate_data(self) -> None:
         """Aggregates the data"""

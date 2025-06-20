@@ -4,8 +4,8 @@ from warnings import warn
 import importlib
 
 from frozendict import frozendict
-from roa_checker import ROA
 
+from bgpsimulator.route_validator import ROA
 from bgpsimulator.shared import ASNGroups, RoutingPolicySettings
 from bgpsimulator.simulation_engine import RoutingPolicy, Announcement as Ann
 from bgpsimulator.shared import IPAddr
@@ -19,9 +19,9 @@ class ScenarioConfig:
 
     def __init__(
         self,
-        scenario_label: str,
-        scenario_cls: type["Scenario"],
-        routing_policy_cls: type[RoutingPolicy] = RoutingPolicy,    
+        label: str,
+        ScenarioCls: type["Scenario"],
+        routing_policy_cls: type[RoutingPolicy] = RoutingPolicy,
         propagation_rounds: int | None = None,
         attacker_routing_policy_settings: dict[RoutingPolicySettings, bool] | None = None,
         legitimate_origin_routing_policy_settings: dict[RoutingPolicySettings, bool] | None = None,
@@ -42,23 +42,11 @@ class ScenarioConfig:
         override_dest_ip_addr: IPAddr | None = None,
     ):
         # Label used for graphing, typically name it after the adopting policy
-        self.scenario_label: str = scenario_label
-        self.ScenarioCls: type["Scenario"] = scenario_cls
+        self.label: str = label
+        self.ScenarioCls: type["Scenario"] = ScenarioCls
         self.RoutingPolicyCls: type[RoutingPolicy] = routing_policy_cls
         self.propagation_rounds: int | None = propagation_rounds
-        if self.propagation_rounds is None:
-            # BGP-iSec needs this.
-            for routing_policy_setting in [RoutingPolicySettings.BGP_I_SEC, RoutingPolicySettings.BGP_I_SEC_TRANSITIVE]:
-                if (any(x[routing_policy_setting] for x in [attacker_routing_policy_settings, legitimate_origin_routing_policy_settings, override_adopt_routing_policy_settings, override_base_routing_policy_settings, default_adopt_routing_policy_settings, default_base_routing_policy_settings])):
-                    from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import ShortestPathPrefixHijack
 
-                    if issubclass(self.ScenarioCls, ShortestPathPrefixHijack):
-                        # ShortestPathPrefixHijack needs 2 propagation rounds
-                        self.propagation_rounds = 2
-                    else:
-                        self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
-            if self.propagation_rounds is None:
-                self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
 
         ###########################
         # Routing Policy Settings #
@@ -108,7 +96,19 @@ class ScenarioConfig:
         # Every AS will attempt to send a packet to this IP address post propagation
         # This is used for the ASGraphAnalyzer to determine the outcome of a packet
         self.override_dest_ip_addr: IPAddr | None = override_dest_ip_addr
+        if self.propagation_rounds is None:
+            # BGP-iSec needs this.
+            for routing_policy_setting in [RoutingPolicySettings.BGP_I_SEC, RoutingPolicySettings.BGP_I_SEC_TRANSITIVE]:
+                if (any(x.get(routing_policy_setting) for x in [self.attacker_routing_policy_settings, self.legitimate_origin_routing_policy_settings, self.override_adopt_routing_policy_settings, self.override_base_routing_policy_settings, self.default_adopt_routing_policy_settings, self.default_base_routing_policy_settings])):
+                    from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import ShortestPathPrefixHijack
 
+                    if issubclass(self.ScenarioCls, ShortestPathPrefixHijack):
+                        # ShortestPathPrefixHijack needs 2 propagation rounds
+                        self.propagation_rounds = 2
+                    else:
+                        self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
+            if self.propagation_rounds is None:
+                self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
         if self.ScenarioCls.min_propagation_rounds > self.propagation_rounds:
             raise ValueError(
                 f"{self.ScenarioCls.__name__} requires a minimum of "

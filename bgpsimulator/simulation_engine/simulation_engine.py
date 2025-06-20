@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Any
 
 from bgpsimulator.shared.enums import Relationships
-from bgpsimulator.as_graphs import ASGraph
 
 if TYPE_CHECKING:
+    from bgpsimulator.as_graphs import ASGraph
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_framework import Scenario
 
@@ -38,7 +38,7 @@ class SimulationEngine:
         for as_obj in self.as_graph:
             scenario.set_routing_policy_settings(as_obj)
 
-    def _seed_announcements(self, seed_asn_ann_dict: dict[int, list[Ann]]) -> None:
+    def _seed_announcements(self, seed_asn_ann_dict: dict[int, list["Ann"]]) -> None:
         """Seeds announcement at the proper AS
 
         Since this is the simulator engine, we should

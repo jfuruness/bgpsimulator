@@ -6,7 +6,7 @@ from ipaddress import IPv4Network, IPv6Network, ip_network
 from typing import TYPE_CHECKING, Any, Optional
 from warnings import warn
 
-from roa_checker import ROA
+from bgpsimulator.route_validator.roa import ROA
 
 from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.simulation_engine import RoutingPolicy, SimulationEngine

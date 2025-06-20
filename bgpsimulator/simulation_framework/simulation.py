@@ -14,11 +14,23 @@ import shutil
 from tqdm import tqdm
 import psutil
 from warnings import warn
+from typing import TYPE_CHECKING, Iterable
+from multiprocessing import cpu_count
+import json
 
-from bgpsimulator.as_graphs import CAIDAASGraphCollector
-from bgpsimulator.as_graphs import CAIDAASGraphJSONConverter
-from bgpsimulator.simulation_framework import LineFilter, ScenarioConfig, DataTracker, SimulationEngine, DataPlanePacketPropagator, GraphFactory
-from bgpsimulator.shared import bgpsimulator_logger, ASGroups, InAdoptingASNs, Outcomes
+from bgpsimulator.as_graphs import CAIDAASGraphCollector, CAIDAASGraphJSONConverter, ASGraph
+from .data_tracker.line_filter import LineFilter
+from .data_tracker.data_tracker import DataTracker
+from .scenarios.scenario_config import ScenarioConfig
+from bgpsimulator.simulation_engine import SimulationEngine
+from .data_plane_packet_propagator import DataPlanePacketPropagator
+from .scenarios.scenario import Scenario
+from .scenarios import SubprefixHijack
+from .graph_factory import GraphFactory
+from bgpsimulator.shared import bgpsimulator_logger, ASNGroups, InAdoptingAsns, Outcomes, RoutingPolicySettings
+
+if TYPE_CHECKING:
+    from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 
 parser = argparse.ArgumentParser(description="Runs BGPy simulations")
 parser.add_argument(
@@ -26,12 +38,19 @@ parser.add_argument(
     "--trials",
     dest="trials",
     type=int,
-    default=1,
+    default=10,
     help="Number of trials to run",
+)
+parser.add_argument(
+    "--parse_cpus",
+    "--cpus",
+    dest="cpus",
+    type=int,
+    default=max(cpu_count() - 1, 1),
+    help="Number of CPUs to use for parsing",
 )
 # parse known args to avoid crashing during pytest
 args, _unknown = parser.parse_known_args()
-
 
 class Simulation:
     """A simulation of a BGP routing policy"""
@@ -47,13 +66,14 @@ class Simulation:
         scenario_configs: tuple[ScenarioConfig, ...] = (
             ScenarioConfig(
                 label="Subprefix Hijack; ROV Adopting",
+                ScenarioCls=SubprefixHijack,
                 default_adopt_routing_policy_settings={
                     RoutingPolicySettings.ROV: True,
                 },
-            )
+            ),
         ),
         num_trials: int = args.trials,
-        parse_cpus: int = max(cpu_count() - 1, 1),
+        parse_cpus: int = args.cpus,
         python_hash_seed: int | None = None,
         as_graph_data_json_path: Path | None = None,
         SimulationEngineCls: type[SimulationEngine] = SimulationEngine,
@@ -72,7 +92,7 @@ class Simulation:
 
         if not as_graph_data_json_path:
             caida_path: Path = CAIDAASGraphCollector().run()
-            _, as_graph_data_json_path = CAIDAASGraphJSONConverter(caida_path).run()
+            _, as_graph_data_json_path = CAIDAASGraphJSONConverter().run(caida_as_graph_path=caida_path)
         self.as_graph_data_json_path: Path = as_graph_data_json_path
 
         self.SimulationEngineCls = SimulationEngineCls
@@ -82,8 +102,8 @@ class Simulation:
         if not self.line_filters:
             max_prop_round = max(x.propagation_rounds for x in self.scenario_configs)
             line_filters: list[LineFilter] = []
-            for as_group in ASGroups:
-                for in_adopting_asns in InAdoptingASNs:
+            for as_group in ASNGroups:
+                for in_adopting_asns in InAdoptingAsns:
                     for outcome in Outcomes:
                         line_filters.append(
                             LineFilter(
@@ -242,7 +262,7 @@ class Simulation:
             # return p.starmap(self._run_chunk, enumerate(self._get_chunks(parse_cpus)))
             chunks = self._get_chunks(self.parse_cpus)
             desc = f"Simulating {self.output_dir.name}"
-            total = sum(len(x) for x in chunks) * len(self.percent_adoptions)
+            total = sum(len(x) for x in chunks) * len(self.percent_ases_randomly_adopting)
             with tqdm(total=total, desc=desc) as pbar:
                 tasks: list[ApplyResult[DataTracker]] = [
                     p.apply_async(self._run_chunk, x) for x in enumerate(chunks)
@@ -288,7 +308,7 @@ class Simulation:
         self._seed_random(seed_suffix=str(chunk_id))
 
         # ASGraph is not picklable, so we need to create it here
-        engine = self.SimulationEngineCls(ASGraph(self.as_graph_data_json_path))
+        engine = self.SimulationEngineCls(ASGraph(json.loads(self.as_graph_data_json_path.read_text())))
 
         data_tracker = self.DataTrackerCls(
             line_filters=self.line_filters,
@@ -335,11 +355,11 @@ class Simulation:
                         adopting_asns = scenario.adopting_asns
                 # Used to track progress with tqdm
                 total_completed = (
-                    trial_index * len(self.percent_adoptions) + percent_adopt_index + 1
+                    trial_index * len(self.percent_ases_randomly_adopting) + percent_adopt_index + 1
                 )
                 self._write_tqdm_progress(chunk_id, total_completed)
 
-        self._write_tqdm_progress(chunk_id, len(trials) * len(self.percent_adoptions))
+        self._write_tqdm_progress(chunk_id, len(trials) * len(self.percent_ases_randomly_adopting))
 
         return data_tracker
 
@@ -397,7 +417,7 @@ class Simulation:
         engine: SimulationEngine,
         percent_ases_randomly_adopting: float,
         trial: int,
-        scenario: Scenario,
+        scenario: "Scenario",
         propagation_round: int,
         data_tracker: DataTracker,
     ) -> None:
@@ -436,7 +456,7 @@ class Simulation:
         engine: SimulationEngine,
         percent_ases_randomly_adopting: float,
         trial: int,
-        scenario: Scenario,
+        scenario: "Scenario",
         propagation_round: int,
         data_tracker: DataTracker,
     ) -> dict[int, dict[int, int]]:

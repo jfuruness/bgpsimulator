@@ -1,4 +1,5 @@
-from enum import IntEnum, StrEnum   
+from enum import Enum, IntEnum, StrEnum
+from .prefix import Prefix
 
 
 class Relationships(IntEnum):

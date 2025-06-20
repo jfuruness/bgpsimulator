@@ -1,6 +1,6 @@
 from typing import Any
 
-from bgpsimulator.as_graphs.shared import CycleError
+from bgpsimulator.shared import CycleError
 
 
 class ASGraphUtils:
@@ -55,7 +55,7 @@ class ASGraphUtils:
             # Visit all the providers (similar to graph neighbors) recursively
             for neighbor_asn in as_info[key]:
                 if neighbor_asn not in visited:
-                    self._validate_no_cycles_helper(
+                    ASGraphUtils._validate_no_cycles_helper(
                         neighbor_asn, as_graph_json["ases"][neighbor_asn], as_graph_json, visited, rec_stack, key
                     )
                 elif neighbor_asn in rec_stack:
@@ -76,7 +76,7 @@ class ASGraphUtils:
             provider_cone: set[int] = ASGraphUtils._get_cone_helper(
                 as_info, cone_dict, as_graph_json, "provider_asns"
             )
-            as_info["provider_cone_asns"] = provider_cone
+            as_info["provider_cone_asns"] = list(provider_cone)
 
 
     @staticmethod

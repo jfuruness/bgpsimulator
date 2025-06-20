@@ -1,4 +1,5 @@
 from .base_as import AS
+from .as_graph_utils import ASGraphUtils
 from typing import Any
 from weakref import proxy
 
@@ -59,7 +60,7 @@ class ASGraph:
 
         return {
             "ases": {asn: as_obj.to_json() for asn, as_obj in self.as_dict.items()},
-            "asn_groups": {asn_group_key: list(asn_group) for asn_group_key, asn_group in self.asn_groups.items()},
+            "asn_groups": {asn_group_key: set(asn_group) for asn_group_key, asn_group in self.asn_groups.items()},
             "extra_setup_complete": True,
             "cycles_detected": False,
             "propagation_ranks": [[x.asn for x in rank] for rank in self.propagation_ranks],

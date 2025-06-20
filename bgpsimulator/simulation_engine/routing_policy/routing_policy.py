@@ -1,12 +1,13 @@
+from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 from warnings import warn
 from weakref import proxy
 
-from bgpsimulator.shared.exceptions import GaoRexfordError  
+from bgpsimulator.shared.exceptions import GaoRexfordError
 from bgpsimulator.simulation_engine.announcement import Announcement as Ann
 from bgpsimulator.shared import Relationships
 from bgpsimulator.shared import RoutingPolicySettings
-from bgpsimulator.shared import Prefix
+from bgpsimulator.shared import Prefix, IPAddr
 
 if TYPE_CHECKING:
     from weakref import CallableProxyType
@@ -24,7 +25,7 @@ class RoutingPolicy:
 
     def __init_subclass__(cls, **kwargs):
         """Used when dumping the routing policy to JSON
-        
+
         NOTE: Rust should not support this
         """
         super().__init_subclass__(**kwargs)
@@ -38,7 +39,7 @@ class RoutingPolicy:
         local_rib: dict[str, Ann] | None = None,
     ) -> None:
         """Add local rib and data structures here
-        
+
         This way they can be easily cleared later without having to redo
         the graph
 
@@ -55,7 +56,7 @@ class RoutingPolicy:
         # Overriden routing policy settings are the settings that will be applied to the ASes
         self.overriden_routing_policy_settings: dict[RoutingPolicySettings, bool] = overriden_routing_policy_settings or dict()
         # The AS object that this routing policy is associated with
-        self.as_: CallableProxyType[AS] = proxy(as_)
+        self.as_: CallableProxyType["AS"] = proxy(as_)
 
     def __eq__(self, other) -> bool:
         if isinstance(other, RoutingPolicy):
@@ -225,7 +226,7 @@ class RoutingPolicy:
             # Copying announcements is a bottleneck for sims,
             # so we try to do this as little as possible
             if neighbor_ases and unprocessed_ann.recv_relationship in send_rels:
-                ann = unprocessed_ann.copy(next_hop_asn=self.as_.asn})
+                ann = unprocessed_ann.copy(next_hop_asn=self.as_.asn)
             else:
                 continue
 
@@ -239,7 +240,7 @@ class RoutingPolicy:
 
     def _policy_propagate(
         self,
-        neighbor_as: AS,
+        neighbor_as: "AS",
         ann: Ann,
         propagate_to: Relationships,
         send_rels: set[Relationships],
@@ -250,7 +251,7 @@ class RoutingPolicy:
 
     def _process_outgoing_ann(
         self,
-        neighbor_as: AS,
+        neighbor_as: "AS",
         ann: Ann,
         propagate_to: Relationships,
         send_rels: set[Relationships],
@@ -266,7 +267,7 @@ class RoutingPolicy:
 
     def get_most_specific_ann(self, dest_ip_addr: IPAddr) -> Ann | None:
         """Returns the most specific announcement for a destination IP address
-        
+
         Uses caching whenever possible to avoid expensive lookups at each AS
         however, don't cache large RIBs, there won't be duplicates,
         and don't keep too many in the cache, there won't be duplicates
@@ -277,7 +278,7 @@ class RoutingPolicy:
 
         # Dont' cache massive RIBs, there won't be duplicates
         if len(self.local_rib) < 10:
-            most_specific_prefix = self.most_specific_prefix_cache.get((dest_ip_addr, tuple(list(self.local_rib.keys())))
+            most_specific_prefix = self.most_specific_prefix_cache.get((dest_ip_addr, tuple(list(self.local_rib.keys()))))
 
         if most_specific_prefix is None:
             matching_prefixes = sorted(
