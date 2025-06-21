@@ -92,7 +92,7 @@ class Scenario:
         if self.scenario_config.override_dest_ip_addr is not None:
             self.dest_ip_addr: IPAddr = self.scenario_config.override_dest_ip_addr
         else:
-            self.dest_ip_addr: IPAddr = self._get_dest_ip_addr()
+            self.dest_ip_addr = self._get_dest_ip_addr()
 
     def _reset_and_add_roas_to_route_validator(self, route_validator) -> None:
         """Clears & adds ROAs to route_validator which serves as RPKI+Routinator combo"""
@@ -245,7 +245,7 @@ class Scenario:
             asns = engine.as_graph.asn_groups[subcategory]
             # Remove ASes that are already pre-set
             # Ex: Attackers and legitimate_origins, self.scenario_config.hardcoded_asn_cls_dict
-            possible_adopters = asns.difference(self._preset_asns)
+            possible_adopters = asns.difference(self.preset_asns)
 
             # Get how many ASes should be adopting (store as k)
             if self.percent_ases_randomly_adopting == 0:
@@ -263,24 +263,24 @@ class Scenario:
         return set(adopting_asns)
 
     @cached_property
-    def _default_adopters(self) -> set[int]:
+    def default_adopters(self) -> set[int]:
         """By default, legitimate_origin always adopts"""
 
         return self.legitimate_origin_asns
 
     @cached_property
-    def _default_non_adopters(self) -> set[int]:
+    def default_non_adopters(self) -> set[int]:
         """By default, attacker always does not adopt"""
 
         return self.attacker_asns
 
     @cached_property
-    def _preset_asns(self) -> set[int]:
+    def preset_asns(self) -> set[int]:
         """ASNs that have a preset adoption policy"""
 
         # Returns the union of default adopters and non adopters
         hardcoded_asns = set(self.scenario_config.override_adopt_routing_policy_settings)
-        return self._default_adopters | self._default_non_adopters | hardcoded_asns
+        return self.default_adopters | self.default_non_adopters | hardcoded_asns
 
     @property
     def untracked_asns(self) -> set[int]:
@@ -289,7 +289,7 @@ class Scenario:
         By default just the default adopters and non adopters, and hardcoded ASNs
         """
 
-        return self._default_adopters | self._default_non_adopters
+        return self.default_adopters | self.default_non_adopters
 
     #############################
     # Engine Manipulation Funcs #
@@ -301,23 +301,22 @@ class Scenario:
         # NOTE: Most important updates go last
 
 
-        input(as_obj.routing_policy)
         if as_obj.asn in self.scenario_config.override_base_routing_policy_settings:
-            as_obj.routing_policy.default_routing_policy_settings = self.scenario_config.override_base_routing_policy_settings[as_obj.asn]
+            as_obj.routing_policy.base_routing_policy_settings = self.scenario_config.override_base_routing_policy_settings[as_obj.asn]
         else:
-            as_obj.routing_policy.default_routing_policy_settings = self.scenario_config.default_base_routing_policy_settings
+            as_obj.routing_policy.base_routing_policy_settings = self.scenario_config.default_base_routing_policy_settings
 
         trial_settings = as_obj.routing_policy.base_routing_policy_settings.copy()
 
         if as_obj.asn in self.scenario_config.override_adopt_routing_policy_settings:
             trial_settings.update(self.scenario_config.override_adopt_routing_policy_settings[as_obj.asn])
-        elif as_obj.asn in self._adopting_asns or as_obj.asn in self._default_adopters:
+        elif as_obj.asn in self.adopting_asns or as_obj.asn in self.default_adopters:
             trial_settings.update(self.scenario_config.default_adopt_routing_policy_settings)
 
         if as_obj.asn in self.attacker_asns:
-            trial_settings.update(self.scenario_config.default_attacker_routing_policy_settings)
+            trial_settings.update(self.scenario_config.attacker_routing_policy_settings)
         elif as_obj.asn in self.legitimate_origin_asns:
-            trial_settings.update(self.scenario_config.default_legitimate_origin_routing_policy_settings)
+            trial_settings.update(self.scenario_config.legitimate_origin_routing_policy_settings)
 
         as_obj.routing_policy.overriden_routing_policy_settings = trial_settings
 

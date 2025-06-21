@@ -88,12 +88,12 @@ class DataTracker:
 
         # Initialize the trial data
         for label, inner_dict in self.unaggregated_data.items():
-            for line_filter, trial_data in inner_dict:
-                trail_data.set_default(scenario.percent_ases_randomly_adopting, []).append(
+            for line_filter, trial_data in inner_dict.items():
+                trial_data.setdefault(scenario.percent_ases_randomly_adopting, []).append(
                     {"numerator": 0, "denominator": 0}
                 )
 
-        unaggregated_scenario_data = self.unaggregated_data[scenario.label]
+        unaggregated_scenario_data = self.unaggregated_data[scenario.scenario_config.label]
 
         for line_filter in unaggregated_scenario_data:
             # We don't need this (since this is also checked in LineFilter), but it saves some time

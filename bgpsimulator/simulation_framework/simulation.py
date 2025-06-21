@@ -313,7 +313,7 @@ class Simulation:
         self._seed_random(seed_suffix=str(chunk_id))
 
         # ASGraph is not picklable, so we need to create it here
-        engine = self.SimulationEngineCls(ASGraph(json.loads(self.as_graph_data_json_path.read_text())))
+        engine = self.SimulationEngineCls(ASGraph.from_json(json.loads(self.as_graph_data_json_path.read_text())))
 
         data_tracker = self.DataTrackerCls(
             line_filters=self.line_filters,
@@ -345,7 +345,7 @@ class Simulation:
                     for propagation_round in range(scenario_config.propagation_rounds):
                         self._single_engine_run(
                             engine=engine,
-                            percent_adopt=percent_adopt,
+                            percent_ases_randomly_adopting=percent_adopt,
                             trial=trial,
                             scenario=scenario,
                             propagation_round=propagation_round,
@@ -390,7 +390,7 @@ class Simulation:
     @cached_property
     def reuse_adopting_asns(self) -> bool:
         adoption_asn_groups_set = {
-            x.adoption_asn_groups for x in self.scenario_configs
+            tuple(x.adoption_asn_groups) for x in self.scenario_configs
         }
         return len(adoption_asn_groups_set) == 1
 
@@ -421,7 +421,7 @@ class Simulation:
         self,
         *,
         engine: SimulationEngine,
-        percent_ases_randomly_adopting: float,
+        percent_ases_randomly_adopting: float,  
         trial: int,
         scenario: "Scenario",
         propagation_round: int,
@@ -470,15 +470,17 @@ class Simulation:
         # The reason we aggregate info right now, instead of saving
         # the engine and doing it later, is because doing it all
         # in RAM is MUCH faster, and speed is important
-        outcomes = self.DataPlanePacketPropagatorCls(
-            engine=engine,
+        outcomes = self.DataPlanePacketPropagatorCls().get_as_outcomes_for_data_plane_packet(
+            dest_ip_addr=scenario.dest_ip_addr,
+            simulation_engine=engine,
+            legitimate_origin_asns=scenario.legitimate_origin_asns,
+            attacker_asns=scenario.attacker_asns,
             scenario=scenario,
-        ).analyze()
+        )
+
 
         data_tracker.store_trial_data(
             engine=engine,
-            percent_ases_randomly_adopting=percent_ases_randomly_adopting,
-            trial=trial,
             scenario=scenario,
             propagation_round=propagation_round,
             outcomes_dict=outcomes,

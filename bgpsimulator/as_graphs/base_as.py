@@ -19,7 +19,7 @@ class AS:
         tier_1: bool = False,
         ixp: bool = False,
         as_graph: Optional["ASGraph"] = None,
-        routing_policy: RoutingPolicy | None = None,
+        routing_policy_json: dict[str, Any] | None = None,
         RoutingPolicyCls: type[RoutingPolicy] = RoutingPolicy
     ) -> None:
         # Make sure you're not accidentally passing in a string here
@@ -43,7 +43,7 @@ class AS:
         # Hash in advance and only once since this gets called a lot
         self.hashed_asn = hash(self.asn)
 
-        self.routing_policy: RoutingPolicy = routing_policy or RoutingPolicyCls(self)
+        self.routing_policy: RoutingPolicy = RoutingPolicyCls.from_json(routing_policy_json, self) if routing_policy_json else RoutingPolicyCls(self)
 
         # This is useful for some policies to have knowledge of the graph
         if as_graph is not None:
@@ -156,12 +156,13 @@ class AS:
         }
 
     @classmethod
-    def from_json(cls, json_obj: dict[str, Any]) -> "AS":
+    def from_json(cls, json_obj: dict[str, Any], as_graph: "ASGraph | None" = None) -> "AS":
         """Converts the AS to a JSON object"""
 
-        RoutingPolicyCls = RoutingPolicy.name_to_cls[json_obj["RoutingPolicyCls"]]
+        RoutingPolicyCls = RoutingPolicy.name_to_cls_dict[json_obj["RoutingPolicyCls"]]
 
         return cls(
+            as_graph=as_graph,
             asn=json_obj["asn"],
             customer_asns=set(json_obj["customer_asns"]),
             peer_asns=set(json_obj["peer_asns"]),
@@ -170,5 +171,6 @@ class AS:
             ixp=json_obj["ixp"],
             provider_cone_asns=set(json_obj["provider_cone_asns"]),
             propagation_rank=json_obj["propagation_rank"],
-            routing_policy=RoutingPolicyCls.from_json(json_obj["routing_policy"]),
+            routing_policy_json=json_obj["routing_policy"],
+            RoutingPolicyCls=RoutingPolicyCls,
         )

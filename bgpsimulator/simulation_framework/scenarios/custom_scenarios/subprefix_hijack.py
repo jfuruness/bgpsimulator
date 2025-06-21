@@ -15,14 +15,14 @@ class SubprefixHijack(Scenario):
     def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
 
         anns = dict()
-        for victim_asn in self.legitimate_origin_asns:
-            anns[victim_asn] = [
+        for legitimate_origin_asn in self.legitimate_origin_asns:
+            anns[legitimate_origin_asn] = [
                 Ann(
                     prefix=CommonPrefixes.PREFIX.value,
-                    as_path=(victim_asn,),
-                    next_hop_asn=victim_asn,
+                    as_path=(legitimate_origin_asn,),
+                    next_hop_asn=legitimate_origin_asn,
                     recv_relationship=Relationships.ORIGIN,
-                    timestamp=Timestamps.VICTIM,
+                    timestamp=Timestamps.LEGITIMATE_ORIGIN,
                 )
             ]
 

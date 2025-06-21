@@ -107,14 +107,14 @@ class CommonPrefixes(Enum):
     SUBPREFIX: Prefix = Prefix("1.2.3.0/24")
 
 class Timestamps(IntEnum):
-    """Timestamps for announcements. Victim is always first."""
+    """Timestamps for announcements. Legitimate origin is always first."""
 
-    VICTIM: int = 0
+    LEGITIMATE_ORIGIN: int = 0
     ATTACKER: int = 1
 
 class Outcomes(IntEnum):
     ATTACKER_SUCCESS: int = 0
-    VICTIM_SUCCESS: int = 1
+    LEGITIMATE_ORIGIN_SUCCESS: int = 1
     DISCONNECTED: int = 2
     UNDETERMINED: int = 3
     DATA_PLANE_LOOP: int = 4

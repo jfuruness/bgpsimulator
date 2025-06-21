@@ -67,6 +67,12 @@ class RoutingPolicy:
         else:
             return NotImplemented
 
+    def clear(self) -> None:
+        """Clears the routing policy"""
+
+        self.local_rib.clear()
+        self.recv_q.clear()
+
     #########################
     # Process Incoming Anns #
     #########################
@@ -90,6 +96,7 @@ class RoutingPolicy:
         *,
         from_rel: Relationships,
         propagation_round: int = 0,
+        **kwargs,
     ) -> None:
         """Process all announcements that were incoming from a specific rel"""
 
@@ -106,7 +113,7 @@ class RoutingPolicy:
             # This is a new best ann. Process it and add it to the local rib
             if og_ann != current_ann:
                 # Save to local rib
-                self.local_rib[ann.prefix] = current_ann
+                self.local_rib[current_ann.prefix] = current_ann
 
         self.recv_q.clear()
 
@@ -262,7 +269,7 @@ class RoutingPolicy:
         """Adds ann to the neighbors recv q"""
 
         # Add the new ann to the incoming anns for that prefix
-        neighbor_as.policy.receive_ann(ann)
+        neighbor_as.routing_policy.receive_ann(ann)
 
     #########################
     # Data Plane Validation #
@@ -318,9 +325,13 @@ class RoutingPolicy:
         }
 
     @classmethod
-    def from_json(cls, json_obj: dict[str, Any]) -> "RoutingPolicy":
+    def from_json(cls, json_obj: dict[str, Any], as_: "AS") -> "RoutingPolicy":
         return cls(
+            as_=as_,
             local_rib=json_obj["local_rib"],
             base_routing_policy_settings=json_obj["base_routing_policy_settings"],
             overriden_routing_policy_settings=json_obj["overriden_routing_policy_settings"],
         )
+
+
+RoutingPolicy.name_to_cls_dict["RoutingPolicy"] = RoutingPolicy

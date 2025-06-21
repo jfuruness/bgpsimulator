@@ -25,7 +25,7 @@ class ASGraph:
         # Always add cycles, provider cones, and propagation ranks if it hasn't been done already
         ASGraphUtils.add_extra_setup(graph_data)
         # populate basic info
-        self.as_dict = {int(asn): AS(as_graph=self, **info) for asn, info in graph_data["ases"].items()}
+        self.as_dict = {int(asn): AS.from_json(info, as_graph=self) for asn, info in graph_data["ases"].items()}
         # Populate ASN groups
         self.asn_groups = {asn_group_key: set(asn_group) for asn_group_key, asn_group in graph_data["asn_groups"].items()}
         # populate objects
