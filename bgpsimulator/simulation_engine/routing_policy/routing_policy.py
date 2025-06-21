@@ -319,7 +319,7 @@ class RoutingPolicy:
     def to_json(self) -> dict[str, Any]:
         """Converts the routing policy to a JSON object"""
         return {
-            "local_rib": self.local_rib,
+            "local_rib": {prefix: ann.to_json() for prefix, ann in self.local_rib.items()},
             "base_routing_policy_settings": self.base_routing_policy_settings,
             "overriden_routing_policy_settings": self.overriden_routing_policy_settings,
         }
@@ -328,7 +328,7 @@ class RoutingPolicy:
     def from_json(cls, json_obj: dict[str, Any], as_: "AS") -> "RoutingPolicy":
         return cls(
             as_=as_,
-            local_rib=json_obj["local_rib"],
+            local_rib={prefix: Ann.from_json(ann) for prefix, ann in json_obj["local_rib"].items()},
             base_routing_policy_settings=json_obj["base_routing_policy_settings"],
             overriden_routing_policy_settings=json_obj["overriden_routing_policy_settings"],
         )
