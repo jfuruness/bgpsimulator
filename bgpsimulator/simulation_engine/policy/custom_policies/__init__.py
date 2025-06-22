@@ -14,7 +14,8 @@ from .rovpp_v2i_lite import ROVPPV2iLite
 from .bgpsec import BGPSec
 from .bgpisec_transitive import BGPiSecTransitive
 from .provider_cone_id import ProviderConeID
-from .origin_hijack_customers import OriginHijackCustomers
+from .origin_prefix_hijack_customers import OriginPrefixHijackCustomers
+from .first_asn_stripping_prefix_hijack_customers import FirstASNStrippingPrefixHijackCustomers
 
 __all__ = [
     "ASPathEdgeFilter",
@@ -33,5 +34,6 @@ __all__ = [
     "BGPSec",
     "BGPiSecTransitive",
     "ProviderConeID",
-    "OriginHijackCustomers",
+    "OriginPrefixHijackCustomers",
+    "FirstASNStrippingPrefixHijackCustomers",
 ]

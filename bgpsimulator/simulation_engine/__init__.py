@@ -17,7 +17,8 @@ from .policy import (
     BGPSec,
     BGPiSecTransitive,
     ProviderConeID,
-    OriginHijackCustomers,
+    OriginPrefixHijackCustomers,
+    FirstASNStrippingPrefixHijackCustomers,
 )
 from .simulation_engine import SimulationEngine
 
@@ -41,5 +42,6 @@ __all__ = [
     "BGPSec",
     "BGPiSecTransitive",
     "ProviderConeID",
-    "OriginHijackCustomers",
+    "OriginPrefixHijackCustomers",
+    "FirstASNStrippingPrefixHijackCustomers",
 ]

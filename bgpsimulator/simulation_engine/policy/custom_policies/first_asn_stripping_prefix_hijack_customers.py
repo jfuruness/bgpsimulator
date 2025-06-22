@@ -7,16 +7,15 @@ if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
-class OriginHijackCustomers:
-    """A Policy that performs origin hijacks against customers
+class FirstASNStrippingPrefixHijackCustomers:
+    """A Policy that performs prefix origin hijacks against customers, but strips the first ASN
     
-    This is particularly useful against ASPA, which doesn't validate anns
-    coming from providers. ASRA and ASPAwN thwards this, as do some other policies
+    ASPA and enforce-first-asn prevent this
     """
     
     @staticmethod
     def policy_propagate_vals(policy: "Policy", neighbor_as: "AS", ann: "Ann", propagate_to: Relationships, send_rels: set[Relationships]) -> PolicyPropagateInfo:
-        """Performs origin hijacks against customers"""
+        """Performs prefix origin hijacks against customers, but strips the first ASN"""
 
         # This ann is originating from here, the attacker, so it's an attacker's ann
         # If as path length is 1 (like it would be against BGP), don't modify it
@@ -25,10 +24,10 @@ class OriginHijackCustomers:
             and ann.recv_relationship == Relationships.ORIGIN
             and len(ann.as_path) > 1
         ):
-            # Only need origin hijack when sending to customers
+            # Only need when sending to customers
             return PolicyPropagateInfo(
                 policy_propagate_bool=True
-                ann=ann.copy(as_path=(policy.as_.asn, ann.origin)),
+                ann=ann.copy(as_path=(ann.origin,)),
                 send_ann_bool=True,
             )
         else:

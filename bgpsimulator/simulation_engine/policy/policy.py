@@ -26,7 +26,8 @@ from .custom_policies import (
     BGPSec,
     BGPiSecTransitive,
     ProviderConeID,
-    OriginHijackCustomers,
+    OriginPrefixHijackCustomers,
+    FirstASNStrippingPrefixHijackCustomers,
 )
 
 if TYPE_CHECKING:
@@ -422,7 +423,15 @@ class Policy:
                     return True
 
         if self.settings.get(Settings.ORIGIN_HIJACK_CUSTOMERS, False):
-            policy_propagate_info = OriginHijackCustomers.get_policy_propagate_vals(
+            policy_propagate_info = OriginPrefixHijackCustomers.get_policy_propagate_vals(
+                self, neighbor_as, ann, propagate_to, send_rels
+            )
+            if policy_propagate_info.policy_propagate_bool:
+                ann = policy_propagate_info.ann
+                if not policy_propagate_info.send_ann_bool:
+                    return True
+        if self.settings.get(Settings.FIRST_ASN_STRIPPING_PREFIX_ASPA_ATTACKER, False):
+            policy_propagate_info = FirstASNStrippingPrefixHijackCustomers.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
             )
             if policy_propagate_info.policy_propagate_bool:
