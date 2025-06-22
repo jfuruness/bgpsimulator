@@ -1,6 +1,6 @@
 from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.shared.enums import Relationships, ROAValidity
-from bgpsimulator.as_graph import AS
+from bgpsimulator.as_graphs import AS
 from bgpsimulator.simulation_engine.policy.policy import Policy
     
 class ROV:
