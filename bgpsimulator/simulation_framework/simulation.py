@@ -466,6 +466,7 @@ class Simulation:
         propagation_round: int,
         data_tracker: DataTracker,
     ) -> dict[int, dict[int, int]]:
+
         # Save all engine run info
         # The reason we aggregate info right now, instead of saving
         # the engine and doing it later, is because doing it all

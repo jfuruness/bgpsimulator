@@ -1,0 +1,43 @@
+from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
+from bgpsimulator.simulation_engine import Announcement as Ann
+from bgpsimulator.simulation_engine import SimulationEngine
+from bgpsimulator.shared.enums import CommonPrefixes, Relationships, Timestamps
+from bgpsimulator.shared import IPAddr
+from bgpsimulator.route_validator import ROA
+
+
+class LegitimatePrefixOnly(Scenario):
+    """No attackers, only announcements from legitimate origins"""
+
+    def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
+
+        anns = dict()
+        for legitimate_origin_asn in self.legitimate_origin_asns:
+            anns[legitimate_origin_asn] = [
+                Ann(
+                    prefix=CommonPrefixes.PREFIX.value,
+                    as_path=(legitimate_origin_asn,),
+                    next_hop_asn=legitimate_origin_asn,
+                    recv_relationship=Relationships.ORIGIN,
+                    timestamp=Timestamps.LEGITIMATE_ORIGIN,
+                )
+            ]
+        return anns
+
+    def _get_roas(
+        self,
+        *,
+        seed_asn_ann_dict: dict[int, list[Ann]],
+        engine: SimulationEngine,
+    ) -> list[ROA]:
+        """Returns a list of ROAs"""
+
+        return [ROA(CommonPrefixes.PREFIX.value, x) for x in self.legitimate_origin_asns]
+
+    def _get_dest_ip_addr(self) -> IPAddr:
+        """Returns the destination IP address for the scenario"""
+
+        return IPAddr("1.2.3.4")
+
+    def _get_attacker_asns(self, *args, **kwargs):
+        return set()
