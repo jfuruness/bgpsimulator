@@ -9,6 +9,16 @@ from bgpsimulator.shared import Relationships
 from bgpsimulator.shared import RoutingPolicySettings
 from bgpsimulator.shared import Prefix, IPAddr
 from bgpsimulator.route_validator import RouteValidator
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.aspa import ASPA
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.aspawn import ASPAwN
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.asra import ASRA
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.bgp import BGP
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.edge_filter import EdgeFilter
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.only_to_customers import OnlyToCustomers
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.enforce_first_as import EnforceFirstAS
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.rov import ROV
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.path_end import PathEnd
+from bgpsimulator.simulation_engine.routing_policy.custom_policies.peerlock_lite import PeerLockLite
 
 if TYPE_CHECKING:
     from weakref import CallableProxyType
@@ -122,7 +132,7 @@ class RoutingPolicy:
     ) -> Ann | None:
         """Cheks new_ann's validity, processes it, and returns best_ann_by_gao_rexford"""
 
-        if self._valid_ann(new_ann, from_rel):
+        if self.valid_ann(new_ann, from_rel, self.as_):
             new_ann_processed = new_ann.copy(
                 as_path=(self.as_.asn, *new_ann.as_path),
                 recv_relationship=from_rel,
@@ -131,11 +141,34 @@ class RoutingPolicy:
         else:
             return current_ann
 
-    def _valid_ann(self, ann: Ann, from_rel: Relationships) -> bool:
+    def valid_ann(self, ann: Ann, from_rel: Relationships, as_obj: "AS") -> bool:
         """Determine if an announcement is valid or should be dropped"""
 
-        # BGP Loop Prevention Check; no AS 0 either
-        return self.as_.asn not in ann.as_path and 0 not in ann.as_path
+        settings = self.overriden_routing_policy_settings
+
+        if BGP.valid_ann(ann, from_rel, as_obj):
+            return False
+        # ASPAwN and ASRA are supersets of ASPA
+        if settings.get(RoutingPolicySettings.ASPA, False) and not settings.get(RoutingPolicySettings.ASRA, False) and not settings.get(RoutingPolicySettings.ASPA_W_N, False) and not ASPA.valid_ann(ann, from_rel, as_obj):
+            return False
+        if settings.get(RoutingPolicySettings.ASPA_W_N, False) and not settings.get(RoutingPolicySettings.ASRA, False) and not ASPAwN.valid_ann(ann, from_rel, as_obj):
+            return False
+        if settings.get(RoutingPolicySettings.ASRA, False) and not ASRA.valid_ann(ann, from_rel, as_obj):
+            return False
+        if settings.get(RoutingPolicySettings.EDGE_FILTER, False) and not EdgeFilter.valid_ann(ann, from_rel, as_obj):
+            return False
+        if settings.get(RoutingPolicySettings.ENFORCE_FIRST_AS, False) and not EnforceFirstAS.valid_ann(ann, from_rel, as_obj):
+            return False
+        if settings.get(RoutingPolicySettings.ONLY_TO_CUSTOMERS, False) and not OnlyToCustomers.valid_ann(ann, from_rel, as_obj):
+            return False
+        if settings.get(RoutingPolicySettings.ROV, False) and not ROV.valid_ann(ann, from_rel, as_obj):
+            return False
+        if settings.get(RoutingPolicySettings.PATH_END, False) and not PathEnd.valid_ann(ann, from_rel, as_obj):
+            return False
+        if settings.get(RoutingPolicySettings.PEER_LOCK_LITE, False) and not PeerLockLite.valid_ann(ann, from_rel, as_obj):
+            return False
+
+        return True
 
     ###############
     # Gao rexford #
@@ -243,12 +276,12 @@ class RoutingPolicy:
             for neighbor_as in neighbor_ases:
                 if ann.recv_relationship in send_rels:
                     # Policy took care of it's own propagation for this ann
-                    if self._policy_propagate(neighbor_as, ann, propagate_to, send_rels):
+                    if self.policy_propagate(neighbor_as, ann, propagate_to, send_rels):
                         continue
                     else:
-                        self._process_outgoing_ann(neighbor_as, ann, propagate_to, send_rels)
+                        self.process_outgoing_ann(neighbor_as, ann, propagate_to, send_rels)
 
-    def _policy_propagate(
+    def policy_propagate(
         self,
         neighbor_as: "AS",
         ann: Ann,
@@ -257,9 +290,21 @@ class RoutingPolicy:
     ) -> bool:
         """Policies can override this to handle their own propagation and return True"""
 
-        return False
+        policy_propagate_ann = None
+        if self.overriden_routing_policy_settings.get(RoutingPolicySettings.ONLY_TO_CUSTOMERS, False):
+            policy_propagate_info = OnlyToCustomers.get_policy_propagate_vals(neighbor_as, ann, propagate_to, send_rels, self)
+            if policy_propagate_info.policy_propagate_bool:
+                policy_propagate_ann = policy_propagate_info.ann
+                if not policy_propagate_info.send_ann_bool:
+                    return False
 
-    def _process_outgoing_ann(
+        if policy_propagate_ann:
+            self.process_outgoing_ann(neighbor_as, policy_propagate_ann, propagate_to, send_rels)
+
+
+        return policy_propagate
+
+    def process_outgoing_ann(
         self,
         neighbor_as: "AS",
         ann: Ann,

@@ -3,6 +3,7 @@ from .exceptions import CycleError, NoCAIDAURLError, GaoRexfordError, Announceme
 from .enums import Relationships, RoutingPolicySettings, ROAValidity, ROARouted, ASNGroups, InAdoptingAsns, Outcomes, CommonPrefixes, Timestamps
 from .ip_addr import IPAddr
 from .prefix import Prefix
+from .policy_propagate_info import PolicyPropagateInfo
 
 __all__ = [
     "SINGLE_DAY_CACHE_DIR",
@@ -24,4 +25,5 @@ __all__ = [
     "Outcomes",
     "CommonPrefixes",
     "Timestamps",
+    "PolicyPropagateInfo",
 ]
