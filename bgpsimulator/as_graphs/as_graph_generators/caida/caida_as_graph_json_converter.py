@@ -34,28 +34,40 @@ class CAIDAASGraphJSONConverter:
         """
 
         caida_as_graph_path = caida_as_graph_path or CAIDAASGraphCollector().run()
-        json_cache_path = caida_as_graph_path.with_suffix('.json')
+        json_cache_path = caida_as_graph_path.with_suffix(".json")
         if not json_cache_path.exists():
             self._write_as_graph_json(
                 caida_as_graph_path,
                 json_cache_path,
                 additional_asn_group_filters,
-                PolicyCls
+                PolicyCls,
             )
         try:
             as_graph_info = json.loads(json_cache_path.read_text())
             # Must convert keys to ints when coming from JSON
-            as_graph_info["ases"] = {int(asn): info for asn, info in as_graph_info["ases"].items()}
+            as_graph_info["ases"] = {
+                int(asn): info for asn, info in as_graph_info["ases"].items()
+            }
             return as_graph_info, json_cache_path
         except json.JSONDecodeError:
-            bgpsimulator_logger.error(f"JSON file {json_cache_path} is corrupted, it will now be deleted")
+            bgpsimulator_logger.error(
+                f"JSON file {json_cache_path} is corrupted, it will now be deleted"
+            )
             json_cache_path.unlink()
             raise
 
-    def _write_as_graph_json(self, caida_as_graph_path: Path, json_cache_path: Path, additional_asn_group_filters: frozendict[int, Callable[[dict[int, AS]], frozenset[AS]]], PolicyCls: type[Policy]) -> None:
+    def _write_as_graph_json(
+        self,
+        caida_as_graph_path: Path,
+        json_cache_path: Path,
+        additional_asn_group_filters: frozendict[
+            int, Callable[[dict[int, AS]], frozenset[AS]]
+        ],
+        PolicyCls: type[Policy],
+    ) -> None:
         """Writes as graph JSON from CAIDAs raw file"""
 
-        asn_to_as : dict[int, AS] = dict()
+        asn_to_as: dict[int, AS] = dict()
         lines = caida_as_graph_path.read_text().splitlines()
         for line in lines:
             # Get Caida input clique. See paper on site for what this is
@@ -76,8 +88,11 @@ class CAIDAASGraphJSONConverter:
         asn_groups = self._get_asn_groups(asn_to_as, additional_asn_group_filters)
 
         final_json = {
-            "ases": {k: {**as_.to_json(), "PolicyCls": PolicyCls.__name__} for k, as_ in asn_to_as.items()},
-            "asn_groups": {k: list(asn_group) for k, asn_group in asn_groups.items()}
+            "ases": {
+                k: {**as_.to_json(), "PolicyCls": PolicyCls.__name__}
+                for k, as_ in asn_to_as.items()
+            },
+            "asn_groups": {k: list(asn_group) for k, asn_group in asn_groups.items()},
         }
         ASGraphUtils.add_extra_setup(final_json)
 
@@ -133,17 +148,24 @@ class CAIDAASGraphJSONConverter:
     # Get ASN Groups #
     #################
 
-    def _get_asn_groups(self, asn_to_as: dict[int, AS], additional_asn_group_filters: frozendict[str, Callable[[dict[int, AS]], frozenset[int]]]) -> frozendict[str, frozenset[int]]:
+    def _get_asn_groups(
+        self,
+        asn_to_as: dict[int, AS],
+        additional_asn_group_filters: frozendict[
+            str, Callable[[dict[int, AS]], frozenset[int]]
+        ],
+    ) -> frozendict[str, frozenset[int]]:
         """Gets ASN groups. Used for choosing attackers from stubs, adopters, etc."""
 
         asn_group_filters: dict[str, Callable[[dict[int, AS]], frozenset[int]]] = dict(
-            **self._default_as_group_filters,
-            **additional_asn_group_filters
+            **self._default_as_group_filters, **additional_asn_group_filters
         )
 
-        asn_groups: frozendict[str, frozenset[int]] = frozendict({
-            asn_group_key: filter_func(asn_to_as) for asn_group_key, filter_func in asn_group_filters.items()
-        }
+        asn_groups: frozendict[str, frozenset[int]] = frozendict(
+            {
+                asn_group_key: filter_func(asn_to_as)
+                for asn_group_key, filter_func in asn_group_filters.items()
+            }
         )
 
         return asn_groups
@@ -158,18 +180,28 @@ class CAIDAASGraphJSONConverter:
             return frozenset(asn for asn, as_ in asn_to_as.items() if as_.ixp)
 
         def stub_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
-            return frozenset(asn for asn, as_ in asn_to_as.items() if as_.stub and not as_.ixp)
+            return frozenset(
+                asn for asn, as_ in asn_to_as.items() if as_.stub and not as_.ixp
+            )
 
         def multihomed_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
-            return frozenset(asn for asn, as_ in asn_to_as.items() if as_.multihomed and not as_.ixp)
-
-        def stubs_or_multihomed_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
             return frozenset(
-                asn for asn, as_ in asn_to_as.items() if (as_.stub or as_.multihomed) and not as_.ixp
+                asn for asn, as_ in asn_to_as.items() if as_.multihomed and not as_.ixp
+            )
+
+        def stubs_or_multihomed_no_ixp_filter(
+            asn_to_as: dict[int, AS],
+        ) -> frozenset[int]:
+            return frozenset(
+                asn
+                for asn, as_ in asn_to_as.items()
+                if (as_.stub or as_.multihomed) and not as_.ixp
             )
 
         def tier_1_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
-            return frozenset(asn for asn, as_ in asn_to_as.items() if as_.tier_1 and not as_.ixp)
+            return frozenset(
+                asn for asn, as_ in asn_to_as.items() if as_.tier_1 and not as_.ixp
+            )
 
         def etc_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
             return frozenset(
@@ -179,7 +211,9 @@ class CAIDAASGraphJSONConverter:
             )
 
         def transit_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
-            return frozenset(asn for asn, as_ in asn_to_as.items() if as_.transit and not as_.ixp)
+            return frozenset(
+                asn for asn, as_ in asn_to_as.items() if as_.transit and not as_.ixp
+            )
 
         def all_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
             return frozenset(asn_to_as.keys())

@@ -18,7 +18,11 @@ from typing import TYPE_CHECKING, Iterable
 from multiprocessing import cpu_count
 import json
 
-from bgpsimulator.as_graphs import CAIDAASGraphCollector, CAIDAASGraphJSONConverter, ASGraph
+from bgpsimulator.as_graphs import (
+    CAIDAASGraphCollector,
+    CAIDAASGraphJSONConverter,
+    ASGraph,
+)
 from .data_tracker.line_filter import LineFilter
 from .data_tracker.data_tracker import DataTracker
 from .scenarios.scenario_config import ScenarioConfig
@@ -27,7 +31,13 @@ from .data_plane_packet_propagator import DataPlanePacketPropagator
 from .scenarios.scenario import Scenario
 from .scenarios import SubprefixHijack
 from .graph_factory import GraphFactory
-from bgpsimulator.shared import bgpsimulator_logger, ASNGroups, InAdoptingASNs, Outcomes, Settings
+from bgpsimulator.shared import (
+    bgpsimulator_logger,
+    ASNGroups,
+    InAdoptingASNs,
+    Outcomes,
+    Settings,
+)
 
 if TYPE_CHECKING:
     from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
@@ -52,6 +62,7 @@ parser.add_argument(
 # parse known args to avoid crashing during pytest
 args, _unknown = parser.parse_known_args()
 
+
 class Simulation:
     """A simulation of a BGP routing policy"""
 
@@ -62,7 +73,7 @@ class Simulation:
     def __init__(
         self,
         output_dir: Path = Path("~/Desktop/sims").expanduser() / "bgpsimulator",
-        percent_ases_randomly_adopting: tuple[float, ...] = (.1, .2, .5, .8, .99),
+        percent_ases_randomly_adopting: tuple[float, ...] = (0.1, 0.2, 0.5, 0.8, 0.99),
         scenario_configs: tuple[ScenarioConfig, ...] = (
             ScenarioConfig(
                 label="Subprefix Hijack; ROV Adopting",
@@ -77,14 +88,18 @@ class Simulation:
         python_hash_seed: int | None = None,
         as_graph_data_json_path: Path | None = None,
         SimulationEngineCls: type[SimulationEngine] = SimulationEngine,
-        DataPlanePacketPropagatorCls: type[DataPlanePacketPropagator] = DataPlanePacketPropagator,
+        DataPlanePacketPropagatorCls: type[
+            DataPlanePacketPropagator
+        ] = DataPlanePacketPropagator,
         DataTrackerCls: type[DataTracker] = DataTracker,
         line_filters: tuple[LineFilter, ...] = (),
-        PolicyCls: type[Policy] = Policy
+        PolicyCls: type[Policy] = Policy,
     ) -> None:
         self.output_dir: Path = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.percent_ases_randomly_adopting: tuple[float, ...] = percent_ases_randomly_adopting
+        self.percent_ases_randomly_adopting: tuple[float, ...] = (
+            percent_ases_randomly_adopting
+        )
         self.scenario_configs: tuple[ScenarioConfig, ...] = scenario_configs
         self.num_trials: int = num_trials
         self.parse_cpus: int = parse_cpus
@@ -95,8 +110,7 @@ class Simulation:
         if not as_graph_data_json_path:
             caida_path: Path = CAIDAASGraphCollector().run()
             _, as_graph_data_json_path = CAIDAASGraphJSONConverter().run(
-                caida_as_graph_path=caida_path,
-                PolicyCls=PolicyCls
+                caida_as_graph_path=caida_path, PolicyCls=PolicyCls
             )
         self.as_graph_data_json_path: Path = as_graph_data_json_path
 
@@ -127,7 +141,6 @@ class Simulation:
             tmp_dir_str = tmp_dir
         self._tqdm_tracking_dir: Path = Path(tmp_dir_str)
         self._tqdm_tracking_dir.mkdir(parents=True)
-
 
     def _seed_random(self, seed_suffix: str = "") -> None:
         """Seeds randomness"""
@@ -194,17 +207,18 @@ class Simulation:
                 stacklevel=2,
             )
 
-
     ##############
     # Run Funcs #
     ##############
 
-    def run(self):#, GraphFactoryCls: type[GraphFactory] = GraphFactory, graph_factory_kwargs: dict[str, Any] | None = None) -> None:
+    def run(
+        self,
+    ):  # , GraphFactoryCls: type[GraphFactory] = GraphFactory, graph_factory_kwargs: dict[str, Any] | None = None) -> None:
         """Runs the simulation and writes the data"""
 
         data_tracker = self._get_data()
         self._write_data(data_tracker)
-        #self._graph_data(GraphFactoryCls, graph_factory_kwargs)
+        # self._graph_data(GraphFactoryCls, graph_factory_kwargs)
         # This object holds a lot of memory, good to get rid of it
         del data_tracker
         gc.collect()
@@ -267,7 +281,9 @@ class Simulation:
             # return p.starmap(self._run_chunk, enumerate(self._get_chunks(parse_cpus)))
             chunks = self._get_chunks(self.parse_cpus)
             desc = f"Simulating {self.output_dir.name}"
-            total = sum(len(x) for x in chunks) * len(self.percent_ases_randomly_adopting)
+            total = sum(len(x) for x in chunks) * len(
+                self.percent_ases_randomly_adopting
+            )
             with tqdm(total=total, desc=desc) as pbar:
                 tasks: list[ApplyResult[DataTracker]] = [
                     p.apply_async(self._run_chunk, x) for x in enumerate(chunks)
@@ -313,7 +329,9 @@ class Simulation:
         self._seed_random(seed_suffix=str(chunk_id))
 
         # ASGraph is not picklable, so we need to create it here
-        engine = self.SimulationEngineCls(ASGraph.from_json(json.loads(self.as_graph_data_json_path.read_text())))
+        engine = self.SimulationEngineCls(
+            ASGraph.from_json(json.loads(self.as_graph_data_json_path.read_text()))
+        )
 
         data_tracker = self.DataTrackerCls(
             line_filters=self.line_filters,
@@ -324,7 +342,9 @@ class Simulation:
             # Use the same attacker victim pairs across all percent adoptions
             trial_attacker_asns = None
             trial_legitimate_origin_asns = None
-            for percent_adopt_index, percent_adopt in enumerate(self.percent_ases_randomly_adopting):
+            for percent_adopt_index, percent_adopt in enumerate(
+                self.percent_ases_randomly_adopting
+            ):
                 # Use the same adopting asns across all scenarios configs
                 adopting_asns = None
                 for scenario_config in self.scenario_configs:
@@ -333,7 +353,7 @@ class Simulation:
                         scenario_config=scenario_config,
                         percent_ases_randomly_adopting=percent_adopt,
                         engine=engine,
-                        route_validator = self.PolicyCls.route_validator,
+                        route_validator=self.PolicyCls.route_validator,
                         attacker_asns=trial_attacker_asns,
                         legitimate_origin_asns=trial_legitimate_origin_asns,
                         adopting_asns=adopting_asns,
@@ -361,11 +381,15 @@ class Simulation:
                         adopting_asns = scenario.adopting_asns
                 # Used to track progress with tqdm
                 total_completed = (
-                    trial_index * len(self.percent_ases_randomly_adopting) + percent_adopt_index + 1
+                    trial_index * len(self.percent_ases_randomly_adopting)
+                    + percent_adopt_index
+                    + 1
                 )
                 self._write_tqdm_progress(chunk_id, total_completed)
 
-        self._write_tqdm_progress(chunk_id, len(trials) * len(self.percent_ases_randomly_adopting))
+        self._write_tqdm_progress(
+            chunk_id, len(trials) * len(self.percent_ases_randomly_adopting)
+        )
 
         return data_tracker
 
@@ -373,19 +397,22 @@ class Simulation:
     def reuse_attacker_asns(self) -> bool:
         """Reuse the same attacker ASes across all scenarios configs if they're from the same ASN group"""
         num_attackers_set = {x.num_attackers for x in self.scenario_configs}
-        attacker_asn_groups_set = {
-            x.attacker_asn_group for x in self.scenario_configs
-        }
+        attacker_asn_groups_set = {x.attacker_asn_group for x in self.scenario_configs}
         return len(num_attackers_set) == 1 and len(attacker_asn_groups_set) == 1
 
     @cached_property
     def reuse_legitimate_origin_asns(self) -> bool:
         """Reuse the same victim ASes across all scenarios configs if they're from the same ASN group"""
-        num_legitimate_origins_set = {x.num_legitimate_origins for x in self.scenario_configs}
+        num_legitimate_origins_set = {
+            x.num_legitimate_origins for x in self.scenario_configs
+        }
         legitimate_origin_asn_groups_set = {
             x.legitimate_origin_asn_group for x in self.scenario_configs
         }
-        return len(num_legitimate_origins_set) == 1 and len(legitimate_origin_asn_groups_set) == 1
+        return (
+            len(num_legitimate_origins_set) == 1
+            and len(legitimate_origin_asn_groups_set) == 1
+        )
 
     @cached_property
     def reuse_adopting_asns(self) -> bool:
@@ -421,7 +448,7 @@ class Simulation:
         self,
         *,
         engine: SimulationEngine,
-        percent_ases_randomly_adopting: float,  
+        percent_ases_randomly_adopting: float,
         trial: int,
         scenario: "Scenario",
         propagation_round: int,
@@ -466,19 +493,19 @@ class Simulation:
         propagation_round: int,
         data_tracker: DataTracker,
     ) -> dict[int, dict[int, int]]:
-
         # Save all engine run info
         # The reason we aggregate info right now, instead of saving
         # the engine and doing it later, is because doing it all
         # in RAM is MUCH faster, and speed is important
-        outcomes = self.DataPlanePacketPropagatorCls().get_as_outcomes_for_data_plane_packet(
-            dest_ip_addr=scenario.dest_ip_addr,
-            simulation_engine=engine,
-            legitimate_origin_asns=scenario.legitimate_origin_asns,
-            attacker_asns=scenario.attacker_asns,
-            scenario=scenario,
+        outcomes = (
+            self.DataPlanePacketPropagatorCls().get_as_outcomes_for_data_plane_packet(
+                dest_ip_addr=scenario.dest_ip_addr,
+                simulation_engine=engine,
+                legitimate_origin_asns=scenario.legitimate_origin_asns,
+                attacker_asns=scenario.attacker_asns,
+                scenario=scenario,
+            )
         )
-
 
         data_tracker.store_trial_data(
             engine=engine,
@@ -509,7 +536,6 @@ class Simulation:
             GraphFactoryCls(**kwargs).generate_graphs()
             bgpsimulator_logger.info(f"\nWrote graphs to {kwargs['graph_dir']}")
 
-
     ##############
     # Properties #
     ##############
@@ -518,11 +544,10 @@ class Simulation:
     def scenario_labels(self) -> tuple[str, ...]:
         return tuple([x.label for x in self.scenario_configs])
 
-    
     @cached_property
     def graph_output_dir(self) -> Path:
         return self.output_dir / "graphs"
-    
+
     @cached_property
     def csv_path(self) -> Path:
         return self.output_dir / "data.csv"

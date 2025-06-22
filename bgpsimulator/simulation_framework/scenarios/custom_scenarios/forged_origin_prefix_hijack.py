@@ -13,7 +13,6 @@ class ForgedOriginPrefixHijack(Scenario):
     """Victim announces a prefix covered by a ROA, attacker announces the same prefix but with a forged origin ASN, bypassing ROV"""
 
     def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
-
         anns = dict()
         for legitimate_origin_asn in self.legitimate_origin_asns:
             anns[legitimate_origin_asn] = [
@@ -27,7 +26,6 @@ class ForgedOriginPrefixHijack(Scenario):
             ]
 
         victim_asn = next(iter(self.victim_asns))
-
 
         for attacker_asn in self.attacker_asns:
             anns[attacker_asn] = [
@@ -50,7 +48,9 @@ class ForgedOriginPrefixHijack(Scenario):
     ) -> list[ROA]:
         """Returns a list of ROAs"""
 
-        return [ROA(CommonPrefixes.PREFIX.value, x) for x in self.legitimate_origin_asns]
+        return [
+            ROA(CommonPrefixes.PREFIX.value, x) for x in self.legitimate_origin_asns
+        ]
 
     def _get_dest_ip_addr(self) -> IPAddr:
         """Returns the destination IP address for the scenario"""

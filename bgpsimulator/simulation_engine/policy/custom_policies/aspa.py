@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
+
 class ASPA:
     """A Policy that deploys ASPA and ASPA Records
 
@@ -24,7 +25,6 @@ class ASPA:
     def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
         """Returns False if ann from peer/customer when ASPA is set"""
 
-    
         # Note: This first if check has to be removed if you want to implement
         # route server to RS-Client behaviour
         if not ASPA._next_hop_valid(policy, ann):
@@ -40,14 +40,16 @@ class ASPA:
     @staticmethod
     def _next_hop_valid(policy: "Policy", ann: "Ann") -> bool:
         """Ensures the next hop is the first ASN in the AS-Path
-        
+
         Route servers are allowed to strip their own ASN (and in most cases are obligated to)
         """
 
         return ann.next_hop_asn == ann.as_path[0] or policy.as_.ixp
 
     @staticmethod
-    def _upstream_check(policy: "Policy", ann: "Ann", from_rel: "Relationships") -> bool:
+    def _upstream_check(
+        policy: "Policy", ann: "Ann", from_rel: "Relationships"
+    ) -> bool:
         """ASPA upstream check"""
 
         # Upstream check
@@ -80,12 +82,16 @@ class ASPA:
         reversed_path = ann.as_path[::-1]
 
         for i in range(len(reversed_path) - 1):
-            if not ASPA._provider_check(reversed_path[i], reversed_path[i + 1], policy.as_):
+            if not ASPA._provider_check(
+                reversed_path[i], reversed_path[i + 1], policy.as_
+            ):
                 return i + 1
         return len(ann.as_path)
 
     @staticmethod
-    def _downstream_check(policy: "Policy", ann: "Ann", from_rel: "Relationships") -> bool:
+    def _downstream_check(
+        policy: "Policy", ann: "Ann", from_rel: "Relationships"
+    ) -> bool:
         """ASPA downstream check"""
 
         # 4. If max_up_ramp + max_down_ramp < N,
@@ -138,7 +144,9 @@ class ASPA:
         """
 
         cur_as_obj = policy.as_.as_graph.as_dict.get(asn1)
-        if cur_as_obj and cur_as_obj.policy.overriden_settings.get(Settings.ASPA, False):
+        if cur_as_obj and cur_as_obj.policy.overriden_settings.get(
+            Settings.ASPA, False
+        ):
             next_as_obj = policy.as_.as_graph.as_dict.get(asn2)
             next_asn = next_as_obj.asn if next_as_obj else next_as_obj
             if next_asn not in cur_as_obj.provider_asns:

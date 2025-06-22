@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
+
 class OnlyToCustomers:
     """A Policy that deploys only to customers, RFC 9234"""
 
@@ -17,29 +18,28 @@ class OnlyToCustomers:
             ann.only_to_customers
             and from_rel == Relationships.PEERS
             and ann.next_hop_asn != ann.only_to_customers
-        ) or (
-            ann.only_to_customers
-            and from_rel == Relationships.CUSTOMERS
-        ):
+        ) or (ann.only_to_customers and from_rel == Relationships.CUSTOMERS):
             return False
         else:
             return True
 
     @staticmethod
-    def get_policy_propagate_vals(policy: "Policy", neighbor_as_obj: "AS", ann: "Ann", propagate_to: Relationships, send_rels: list[Relationships]) -> bool:
+    def get_policy_propagate_vals(
+        policy: "Policy",
+        neighbor_as_obj: "AS",
+        ann: "Ann",
+        propagate_to: Relationships,
+        send_rels: list[Relationships],
+    ) -> bool:
         """If propagating to custmoers and only_to_customers isn't set, set it"""
 
         if propagate_to in (Relationships.CUSTOMERS, Relationships.PROVIDERS):
             ann = ann.copy(only_to_customers=policy.as_obj.asn)
             policy.process_outgoing_ann(neighbor_as_obj, ann, propagate_to, send_rels)
             return PolicyPropagateInfo(
-                policy_propagate_bool=True,
-                ann=ann,
-                send_ann_bool=True
+                policy_propagate_bool=True, ann=ann, send_ann_bool=True
             )
         else:
             return PolicyPropagateInfo(
-                policy_propagate_bool=False,
-                ann=ann,
-                send_ann_bool=False
+                policy_propagate_bool=False, ann=ann, send_ann_bool=False
             )

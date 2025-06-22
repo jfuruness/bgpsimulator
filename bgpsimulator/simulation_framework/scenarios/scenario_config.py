@@ -47,7 +47,6 @@ class ScenarioConfig:
         self.PolicyCls: type[Policy] = policy_cls
         self.propagation_rounds: int | None = propagation_rounds
 
-
         ###########################
         # Routing Policy Settings #
         ###########################
@@ -62,13 +61,21 @@ class ScenarioConfig:
         # 1a. This will update the base routing policy settings for the attacker ASes
         self.attacker_settings: dict[Settings, bool] = attacker_settings or dict()
         # 1v. This will update the base routing policy settings for the legitimate_origin ASes
-        self.legitimate_origin_settings: dict[Settings, bool] = legitimate_origin_settings or dict()
+        self.legitimate_origin_settings: dict[Settings, bool] = (
+            legitimate_origin_settings or dict()
+        )
         # 2. This will completely override the default adopt routing policy settings
-        self.override_adoption_settings: dict[int, dict[str, bool]] = override_adoption_settings or dict()
+        self.override_adoption_settings: dict[int, dict[str, bool]] = (
+            override_adoption_settings or dict()
+        )
         # 3. This will completely override the default base routing policy settings
-        self.override_base_settings: dict[int, dict[str, bool]] = override_base_settings or dict()
+        self.override_base_settings: dict[int, dict[str, bool]] = (
+            override_base_settings or dict()
+        )
         # 4. This will update the base routing policy settings for the adopting ASes
-        self.default_adoption_settings: dict[str, bool] = default_adoption_settings or dict()
+        self.default_adoption_settings: dict[str, bool] = (
+            default_adoption_settings or dict()
+        )
         # 5. Base routing policy settings that will be applied to all ASes
         self.default_base_settings: dict[str, bool] = default_base_settings or {
             x: False for x in Settings
@@ -83,11 +90,17 @@ class ScenarioConfig:
         # Victims are randomly selected from this ASN group
         self.legitimate_origin_asn_group: str = legitimate_origin_asn_group
         # Adoption is equal across these ASN groups
-        self.adoption_asn_groups: list[str] = adoption_asn_groups or [ASNGroups.STUBS_OR_MH.value, ASNGroups.ETC.value, ASNGroups.TIER_1.value]
+        self.adoption_asn_groups: list[str] = adoption_asn_groups or [
+            ASNGroups.STUBS_OR_MH.value,
+            ASNGroups.ETC.value,
+            ASNGroups.TIER_1.value,
+        ]
 
         # Forces the attackers/legitimate_origins/adopting ASes to be a specific set of ASes rather than random
         self.override_attacker_asns: set[int] | None = override_attacker_asns
-        self.override_legitimate_origin_asns: set[int] | None = override_legitimate_origin_asns
+        self.override_legitimate_origin_asns: set[int] | None = (
+            override_legitimate_origin_asns
+        )
         self.override_adopting_asns: set[int] | None = override_adopting_asns
         # Forces the announcements/roas to be a specific set of announcements/roas
         # rather than generated dynamically based on attackers/legitimate_origins
@@ -99,14 +112,28 @@ class ScenarioConfig:
         if self.propagation_rounds is None:
             # BGP-iSec needs this.
             for policy_setting in [Settings.BGP_I_SEC, Settings.BGP_I_SEC_TRANSITIVE]:
-                if (any(x.get(policy_setting) for x in [self.attacker_settings, self.legitimate_origin_settings, self.override_adoption_settings, self.override_base_settings, self.default_adoption_settings, self.default_base_settings])):
-                    from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import ShortestPathPrefixHijack
+                if any(
+                    x.get(policy_setting)
+                    for x in [
+                        self.attacker_settings,
+                        self.legitimate_origin_settings,
+                        self.override_adoption_settings,
+                        self.override_base_settings,
+                        self.default_adoption_settings,
+                        self.default_base_settings,
+                    ]
+                ):
+                    from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import (
+                        ShortestPathPrefixHijack,
+                    )
 
                     if issubclass(self.ScenarioCls, ShortestPathPrefixHijack):
                         # ShortestPathPrefixHijack needs 2 propagation rounds
                         self.propagation_rounds = 2
                     else:
-                        self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
+                        self.propagation_rounds = (
+                            self.ScenarioCls.min_propagation_rounds
+                        )
             if self.propagation_rounds is None:
                 self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
         if self.ScenarioCls.min_propagation_rounds > self.propagation_rounds:

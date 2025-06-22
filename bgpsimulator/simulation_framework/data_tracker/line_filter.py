@@ -3,25 +3,39 @@ from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 from bgpsimulator.shared import ASNGroups, InAdoptingASNs, Outcomes
 import re
 
+
 class LineFilter:
     """Filters for a line in a line chart
-    
+
     Checks for each AS whether it meets the filter criteria, aside from the outcome
-    
+
     The outcome is used only for the numerator of the data point, the denominator is always the total number of ASes in the group
 
     You can always subclass this and change your criteria for the numerator and denominator
     """
 
-    def __init__(self, as_group: ASNGroups, in_adopting_asns: bool, prop_round: int, outcome: Outcomes) -> None:
+    def __init__(
+        self,
+        as_group: ASNGroups,
+        in_adopting_asns: bool,
+        prop_round: int,
+        outcome: Outcomes,
+    ) -> None:
         self.asn_group = as_group
         self.in_adopting_asns = in_adopting_asns
         self.prop_round = prop_round
         self.outcome = outcome
 
-    def as_in_denominator(self, as_obj: AS, as_graph: ASGraph, scenario: Scenario, propagation_round: int, outcome: Outcomes) -> bool:
+    def as_in_denominator(
+        self,
+        as_obj: AS,
+        as_graph: ASGraph,
+        scenario: Scenario,
+        propagation_round: int,
+        outcome: Outcomes,
+    ) -> bool:
         """Checks if the AS meets the filter criteria, aside from the outcome
-        
+
         The outcome is used only for the numerator of the data point, the denominator is always the total number of ASes in the group
         """
 
@@ -29,14 +43,27 @@ class LineFilter:
             return False
         elif as_obj.asn not in as_graph.asn_groups[self.asn_group]:
             return False
-        elif self.in_adopting_asns == InAdoptingASNs.TRUE and as_obj.asn not in scenario.adopting_asns:
+        elif (
+            self.in_adopting_asns == InAdoptingASNs.TRUE
+            and as_obj.asn not in scenario.adopting_asns
+        ):
             return False
-        elif self.in_adopting_asns == InAdoptingASNs.FALSE and as_obj.asn in scenario.adopting_asns:
+        elif (
+            self.in_adopting_asns == InAdoptingASNs.FALSE
+            and as_obj.asn in scenario.adopting_asns
+        ):
             return False
         else:
             return True
 
-    def as_in_numerator(self, as_obj: AS, as_graph: ASGraph, scenario: Scenario, propagation_round: int, outcome: Outcomes) -> bool:
+    def as_in_numerator(
+        self,
+        as_obj: AS,
+        as_graph: ASGraph,
+        scenario: Scenario,
+        propagation_round: int,
+        outcome: Outcomes,
+    ) -> bool:
         """Checks if the AS should be included in the numerator of the data point
 
         NOTE: as_in_denominator is already checked before this function is called, so we don't need to check it again
@@ -53,12 +80,14 @@ class LineFilter:
             f"and outcome is ({self.outcome})"
         )
 
-    @classmethod    
+    @classmethod
     def from_json(cls, string: str) -> "LineFilter":
         """Converts a JSON-friendly string back to a LineFilter"""
         matches = re.findall(r"\((.*?)\)", string)
         if len(matches) != 4:
-            raise ValueError(f"Expected 4 values in parentheses, got {len(matches)}: {matches}")
+            raise ValueError(
+                f"Expected 4 values in parentheses, got {len(matches)}: {matches}"
+            )
         as_group, in_adopting_asns, prop_round, outcome = matches
         return cls(
             as_group=ASNGroups(as_group),

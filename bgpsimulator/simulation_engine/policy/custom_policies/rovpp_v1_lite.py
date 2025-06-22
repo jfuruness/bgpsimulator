@@ -8,18 +8,31 @@ if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
+
 class ROVPPV1Lite:
     """A Policy that deploys ROV++V1 Lite as defined in the ROV++ paper"""
 
     @staticmethod
-    def get_policy_propagate_vals(policy: "Policy", neighbor_as: "AS", ann: "Ann", propagate_to: Relationships, send_rels: set[Relationships]) -> PolicyPropagateInfo:
+    def get_policy_propagate_vals(
+        policy: "Policy",
+        neighbor_as: "AS",
+        ann: "Ann",
+        propagate_to: Relationships,
+        send_rels: set[Relationships],
+    ) -> PolicyPropagateInfo:
         if ann.rovpp_blackhole:
-            return PolicyPropagateInfo(policy_propagate_bool=True, ann=None, send_ann_bool=False)
+            return PolicyPropagateInfo(
+                policy_propagate_bool=True, ann=None, send_ann_bool=False
+            )
         else:
-            return PolicyPropagateInfo(policy_propagate_bool=False, ann=ann, send_ann_bool=True)
+            return PolicyPropagateInfo(
+                policy_propagate_bool=False, ann=ann, send_ann_bool=True
+            )
 
     @staticmethod
-    def process_incoming_anns(policy: "Policy", from_rel: Relationships, propagation_round: int) -> None:
+    def process_incoming_anns(
+        policy: "Policy", from_rel: Relationships, propagation_round: int
+    ) -> None:
         """Additional processing for incoming announcements"""
 
         ROVPPV1Lite.add_blackholes(policy, from_rel)
@@ -34,10 +47,12 @@ class ROVPPV1Lite:
         invalid subprefix from the same neighbor,
         add it to the local RIB as a blackhole
         """
-        
+
         non_routed_blackholes = ROVPPV1Lite.get_non_routed_blackholes_to_add(policy)
         routed_blackholes = ROVPPV1Lite.get_routed_blackholes_to_add(policy, from_rel)
-        ROVPPV1Lite.add_blackholes_to_local_rib(policy, non_routed_blackholes + routed_blackholes)
+        ROVPPV1Lite.add_blackholes_to_local_rib(
+            policy, non_routed_blackholes + routed_blackholes
+        )
 
     @staticmethod
     def get_non_routed_blackholes_to_add(policy: "Policy") -> list["Ann"]:
@@ -60,7 +75,9 @@ class ROVPPV1Lite:
         return non_routed_blackholes_to_add
 
     @staticmethod
-    def get_routed_blackholes_to_add(policy: "Policy", from_rel: Relationships) -> list["Ann"]:
+    def get_routed_blackholes_to_add(
+        policy: "Policy", from_rel: Relationships
+    ) -> list["Ann"]:
         """Gets all routed blackholes from the anns you just recieved"""
 
         routed_blackholes_to_add = []
@@ -74,12 +91,16 @@ class ROVPPV1Lite:
                     rovpp_blackhole=True,
                 )
                 if policy.settings.get(Settings.BGPSEC, False):
-                    processed_sub_ann = BGPSec.process_bgpsec_ann(policy, processed_sub_ann, from_rel)
+                    processed_sub_ann = BGPSec.process_bgpsec_ann(
+                        policy, processed_sub_ann, from_rel
+                    )
                 routed_blackholes_to_add.append(processed_sub_ann)
         return routed_blackholes_to_add
 
     @staticmethod
-    def invalid_subprefixes_from_neighbor(policy: "Policy", ann: "Ann") -> Iterator["Ann"]:
+    def invalid_subprefixes_from_neighbor(
+        policy: "Policy", ann: "Ann"
+    ) -> Iterator["Ann"]:
         """Returns all invalid subprefixes from the neighbor"""
 
         # If we are the origin, then there are zero invalid anns from the same neighbor
@@ -98,7 +119,9 @@ class ROVPPV1Lite:
                         yield recvq_ann
 
     @staticmethod
-    def add_blackholes_to_local_rib(policy: "Policy", blackhole_anns: list["Ann"]) -> None:
+    def add_blackholes_to_local_rib(
+        policy: "Policy", blackhole_anns: list["Ann"]
+    ) -> None:
         """Adds blackholes to the local RIB"""
 
         for blackhole_ann in blackhole_anns:

@@ -13,7 +13,6 @@ class PrefixHijack(Scenario):
     """Attacker announces an ROV-invalid prefix that is not routed by the legitimate origin"""
 
     def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
-
         anns = dict()
         for attacker_asn in self.attacker_asns:
             anns[attacker_asn] = [

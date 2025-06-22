@@ -4,7 +4,7 @@ from .prefix import Prefix
 
 class Relationships(IntEnum):
     """Relationships between ASes. Higher numbers == higher priority for announcements"""
-    
+
     # Must start at one for the priority
     PROVIDERS = 1
     PEERS = 2
@@ -53,6 +53,7 @@ class Settings(IntEnum):
     ROVPP_V2I_LITE = 18
     ROVPP_V2_LITE = 19
     SHORTEST_PATH_PREFIX_ASPA_ATTACKER = 20
+
 
 class ROAValidity(IntEnum):
     """ROAValidity values
@@ -106,11 +107,13 @@ class CommonPrefixes(Enum):
     PREFIX: Prefix = Prefix("1.2.0.0/16")
     SUBPREFIX: Prefix = Prefix("1.2.3.0/24")
 
+
 class Timestamps(IntEnum):
     """Timestamps for announcements. Legitimate origin is always first."""
 
     LEGITIMATE_ORIGIN: int = 0
     ATTACKER: int = 1
+
 
 class Outcomes(IntEnum):
     ATTACKER_SUCCESS: int = 0
@@ -118,6 +121,7 @@ class Outcomes(IntEnum):
     DISCONNECTED: int = 2
     UNDETERMINED: int = 3
     DATA_PLANE_LOOP: int = 4
+
 
 class InAdoptingASNs(StrEnum):
     TRUE: str = "True"

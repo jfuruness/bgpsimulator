@@ -66,7 +66,9 @@ class RouteValidator:
         return binary_str
 
     @lru_cache(maxsize=10_000)
-    def get_roa_outcome(self, prefix: Prefix, origin: int) -> tuple[ROAValidity, ROARouted]:
+    def get_roa_outcome(
+        self, prefix: Prefix, origin: int
+    ) -> tuple[ROAValidity, ROARouted]:
         """Gets the validity and roa routed vs non rotued of a prefix-origin pair
 
         This can get fairly complicated, since there can be multiple ROAs
@@ -80,7 +82,10 @@ class RouteValidator:
 
         if relevant_roas:
             # Return the best ROAOutcome
-            rv = sorted([x.get_outcome(prefix, origin) for x in relevant_roas], key=lambda x: x[0])[0]  # type: ignore
+            rv = sorted(
+                [x.get_outcome(prefix, origin) for x in relevant_roas],
+                key=lambda x: x[0],
+            )[0]  # type: ignore
             return rv
         else:
             return ROAValidity.UNKNOWN, ROARouted.UNKNOWN

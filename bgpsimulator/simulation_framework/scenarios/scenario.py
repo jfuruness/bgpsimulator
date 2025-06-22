@@ -70,7 +70,9 @@ class Scenario:
         )
 
         self.legitimate_origin_asns: set[int] = self._get_legitimate_origin_asns(
-            scenario_config.override_legitimate_origin_asns, legitimate_origin_asns, engine
+            scenario_config.override_legitimate_origin_asns,
+            legitimate_origin_asns,
+            engine,
         )
         self.adopting_asns: set[int] = self._get_adopting_asns(
             scenario_config.override_adopting_asns,
@@ -79,14 +81,18 @@ class Scenario:
         )
 
         if self.scenario_config.override_announcements is not None:
-            self.seed_asn_ann_dict: dict[int, list[Ann]] = self.scenario_config.override_announcements.copy()
+            self.seed_asn_ann_dict: dict[int, list[Ann]] = (
+                self.scenario_config.override_announcements.copy()
+            )
         else:
             self.seed_asn_ann_dict = self._get_seed_asn_ann_dict(engine=engine)
 
         if self.scenario_config.override_roas is not None:
             self.roas: list[ROA] = self.scenario_config.override_roas.copy()
         else:
-            self.roas = self._get_roas(seed_asn_ann_dict=self.seed_asn_ann_dict, engine=engine)
+            self.roas = self._get_roas(
+                seed_asn_ann_dict=self.seed_asn_ann_dict, engine=engine
+            )
         self._reset_and_add_roas_to_route_validator(route_validator)
 
         if self.scenario_config.override_dest_ip_addr is not None:
@@ -176,7 +182,8 @@ class Scenario:
         # Reuse the legitimate_origin from the last scenario for comparability
         elif (
             prev_legitimate_origin_asns
-            and len(prev_legitimate_origin_asns) == self.scenario_config.num_legitimate_origins
+            and len(prev_legitimate_origin_asns)
+            == self.scenario_config.num_legitimate_origins
         ):
             legitimate_origin_asns = prev_legitimate_origin_asns
         # This is being initialized for the first time
@@ -188,12 +195,15 @@ class Scenario:
             # https://stackoverflow.com/a/15837796/8903959
             legitimate_origin_asns = set(
                 random.sample(
-                    tuple(possible_legitimate_origin_asns), self.scenario_config.num_legitimate_origins
+                    tuple(possible_legitimate_origin_asns),
+                    self.scenario_config.num_legitimate_origins,
                 )
             )
 
         err = "Number of legitimate_origins is different from legitimate_origin length"
-        assert len(legitimate_origin_asns) == self.scenario_config.num_legitimate_origins, err
+        assert (
+            len(legitimate_origin_asns) == self.scenario_config.num_legitimate_origins
+        ), err
 
         return legitimate_origin_asns
 
@@ -251,7 +261,9 @@ class Scenario:
             if self.percent_ases_randomly_adopting == 0:
                 k = 0
             else:
-                k = math.ceil(len(possible_adopters) * self.percent_ases_randomly_adopting / 100)
+                k = math.ceil(
+                    len(possible_adopters) * self.percent_ases_randomly_adopting / 100
+                )
 
             try:
                 # https://stackoverflow.com/a/15837796/8903959
@@ -300,21 +312,28 @@ class Scenario:
 
         # NOTE: Most important updates go last
 
-
         if as_obj.asn in self.scenario_config.override_base_settings:
-            as_obj.policysettings = self.scenario_config.override_base_settings[as_obj.asn]
+            as_obj.policysettings = self.scenario_config.override_base_settings[
+                as_obj.asn
+            ]
         else:
             as_obj.policy.settings = self.scenario_config.default_base_settings
 
         if as_obj.asn in self.scenario_config.override_adoption_settings:
-            as_obj.policy.settings.update(self.scenario_config.override_adoption_settings[as_obj.asn])
+            as_obj.policy.settings.update(
+                self.scenario_config.override_adoption_settings[as_obj.asn]
+            )
         elif as_obj.asn in self.adopting_asns or as_obj.asn in self.default_adopters:
-            as_obj.policy.settings.update(self.scenario_config.default_adoption_settings)
+            as_obj.policy.settings.update(
+                self.scenario_config.default_adoption_settings
+            )
 
         if as_obj.asn in self.attacker_asns:
             as_obj.policy.settings.update(self.scenario_config.attacker_settings)
         elif as_obj.asn in self.legitimate_origin_asns:
-            as_obj.policy.settings.update(self.scenario_config.legitimate_origin_settings)
+            as_obj.policy.settings.update(
+                self.scenario_config.legitimate_origin_settings
+            )
 
     def setup_engine(self, engine: SimulationEngine) -> None:
         """Nice hook func for setting up the engine with adopting ASes, routing policy settings, etc"""

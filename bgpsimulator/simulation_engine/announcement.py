@@ -9,7 +9,17 @@ from bgpsimulator.shared import Prefix
 class Announcement:
     """BGP Announcement"""
 
-    __slots__ = ("prefix", "as_path", "next_hop_asn", "recv_relationship", "timestamp", "bgpsec_next_asn", "bgpsec_as_path", "only_to_customers", "rovpp_blackhole")
+    __slots__ = (
+        "prefix",
+        "as_path",
+        "next_hop_asn",
+        "recv_relationship",
+        "timestamp",
+        "bgpsec_next_asn",
+        "bgpsec_as_path",
+        "only_to_customers",
+        "rovpp_blackhole",
+    )
 
     def __init__(
         self,

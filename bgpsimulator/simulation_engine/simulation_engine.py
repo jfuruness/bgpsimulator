@@ -73,7 +73,9 @@ class SimulationEngine:
         self._propagate_to_peers(propagation_round, scenario)
         self._propagate_to_customers(propagation_round, scenario)
 
-    def _propagate_to_providers(self, propagation_round: int, scenario: "Scenario") -> None:
+    def _propagate_to_providers(
+        self, propagation_round: int, scenario: "Scenario"
+    ) -> None:
         """Propogate to providers"""
 
         # Propogation ranks go from stubs to input_clique in ascending order
@@ -109,7 +111,9 @@ class SimulationEngine:
                 scenario=scenario,
             )
 
-    def _propagate_to_customers(self, propagation_round: int, scenario: "Scenario") -> None:
+    def _propagate_to_customers(
+        self, propagation_round: int, scenario: "Scenario"
+    ) -> None:
         """Propagate to customers"""
 
         # Propogation ranks go from stubs to input_clique in ascending order

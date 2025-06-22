@@ -8,10 +8,9 @@ if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
-class ASRA:
-    """Algo-B using ASRA3 records
-    """
 
+class ASRA:
+    """Algo-B using ASRA3 records"""
 
     @staticmethod
     def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
@@ -82,7 +81,9 @@ class ASRA:
             # 1/5/2024 JF: Added check for if as1_obj doesn't exist
             # If asn1 does not adopt ASPA, we treat that
             # as 'No Attestation', so min_up_ramp ends here.
-            if not asn1_obj or not asn1_obj.policy.overriden_settings.get(Settings.ASPA, False):
+            if not asn1_obj or not asn1_obj.policy.overriden_settings.get(
+                Settings.ASPA, False
+            ):
                 return i
 
             # If asn2 is not in asn1's provider list => 'Not Provider+',

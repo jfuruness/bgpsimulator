@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
+
 class EnforceFirstAS:
     """A Policy that enforces the first AS in the AS-Path to be the origin AS"""
 

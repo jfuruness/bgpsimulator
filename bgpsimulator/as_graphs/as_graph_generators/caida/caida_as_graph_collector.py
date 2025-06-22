@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup as Soup
 
 from bgpsimulator.shared import SINGLE_DAY_CACHE_DIR, NoCAIDAURLError
 
+
 class CAIDAASGraphCollector:
     """Downloads relationships from CAIDA and caches file"""
 
@@ -30,9 +31,7 @@ class CAIDAASGraphCollector:
         try:
             return self._run()
         except Exception as e:
-            print(
-                f"Error {e}, deleting cached as graph file at {self.cache_path}"
-            )
+            print(f"Error {e}, deleting cached as graph file at {self.cache_path}")
             # Make sure no matter what don't create a messed up cache
             shutil.rmtree(self.cache_path)
             raise
@@ -107,9 +106,7 @@ class CAIDAASGraphCollector:
             # Get soup
             soup = Soup(r.text, "html.parser")
             # Extract hrefs from a tags
-            rv = [
-                x.get("href") for x in soup.select("a") if x.get("href") is not None
-            ]
+            rv = [x.get("href") for x in soup.select("a") if x.get("href") is not None]
             return cast(list[str], rv)
 
     #########################

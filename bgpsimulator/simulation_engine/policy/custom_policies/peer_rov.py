@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from bgpsimulator.simulationengine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
+
 class PeerROV:
     """A Policy that deploys Peer ROV (ROV only at peers)"""
 

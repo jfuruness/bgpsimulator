@@ -28,7 +28,7 @@ stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.INFO)
 
 # Optional: Add a formatter for better readability
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 stream_handler.setFormatter(formatter)
 
 # Attach handler to the logger

@@ -1,6 +1,10 @@
 from pathlib import Path
 
-from bgpsimulator.simulation_framework import ScenarioConfig, Simulation, SubprefixHijack
+from bgpsimulator.simulation_framework import (
+    ScenarioConfig,
+    Simulation,
+    SubprefixHijack,
+)
 from bgpsimulator.shared import Settings
 
 

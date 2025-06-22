@@ -30,11 +30,13 @@ if TYPE_CHECKING:
     from weakref import CallableProxyType
     from bgpsimulator.as_graphs import AS
 
-class Policy:
 
+class Policy:
     __slots__ = ("local_rib", "recv_q", "settings", "as_")
 
-    most_specific_prefix_cache: dict[tuple[IPAddr, tuple[Prefix, ...]], Prefix | None] = dict()
+    most_specific_prefix_cache: dict[
+        tuple[IPAddr, tuple[Prefix, ...]], Prefix | None
+    ] = dict()
 
     # Used when dumping the routing policy to JSON
     name_to_cls_dict: dict[str, type["Policy"]] = {}
@@ -132,7 +134,11 @@ class Policy:
 
         # NOTE: all three of these have the same process_incoming_anns
         # which just adds ROV++ blackholes to the local RIB
-        if self.settings.get(Settings.ROVPP_V1_LITE, False) or self.settings.get(Settings.ROVPP_V2_LITE, False) or self.settings.get(Settings.ROVPP_V2I_LITE, False):
+        if (
+            self.settings.get(Settings.ROVPP_V1_LITE, False)
+            or self.settings.get(Settings.ROVPP_V2_LITE, False)
+            or self.settings.get(Settings.ROVPP_V2I_LITE, False)
+        ):
             ROVPPV1Lite.process_incoming_anns(self, from_rel, propagation_round)
 
         self.recv_q.clear()
@@ -148,7 +154,9 @@ class Policy:
                 recv_relationship=from_rel,
             )
             if self.settings.get(Settings.BGPSEC, False):
-                new_ann_processed = BGPSec.process_bgpsec_ann(self, new_ann_processed, from_rel)
+                new_ann_processed = BGPSec.process_bgpsec_ann(
+                    self, new_ann_processed, from_rel
+                )
             return self._get_best_ann_by_gao_rexford(current_ann, new_ann_processed)
         else:
             return current_ann
@@ -161,30 +169,53 @@ class Policy:
         if not BGP.valid_ann(self, ann, from_rel):
             return False
         # ASPAwN and ASRA are supersets of ASPA
-        if settings.get(Settings.ASPA, False) and not settings.get(Settings.ASRA, False) and not settings.get(Settings.ASPA_W_N, False) and not ASPA.valid_ann(self, ann, from_rel):
+        if (
+            settings.get(Settings.ASPA, False)
+            and not settings.get(Settings.ASRA, False)
+            and not settings.get(Settings.ASPA_W_N, False)
+            and not ASPA.valid_ann(self, ann, from_rel)
+        ):
             return False
-        if settings.get(Settings.ASPA_W_N, False) and not settings.get(Settings.ASRA, False) and not ASPAwN.valid_ann(self, ann, from_rel):
+        if (
+            settings.get(Settings.ASPA_W_N, False)
+            and not settings.get(Settings.ASRA, False)
+            and not ASPAwN.valid_ann(self, ann, from_rel)
+        ):
             return False
-        if settings.get(Settings.ASRA, False) and not ASRA.valid_ann(self, ann, from_rel):
+        if settings.get(Settings.ASRA, False) and not ASRA.valid_ann(
+            self, ann, from_rel
+        ):
             return False
-        if settings.get(Settings.AS_PATH_EDGE_FILTER, False) and not ASPathEdgeFilter.valid_ann(self, ann, from_rel):
+        if settings.get(
+            Settings.AS_PATH_EDGE_FILTER, False
+        ) and not ASPathEdgeFilter.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(Settings.ENFORCE_FIRST_AS, False) and not EnforceFirstAS.valid_ann(self, ann, from_rel):
+        if settings.get(
+            Settings.ENFORCE_FIRST_AS, False
+        ) and not EnforceFirstAS.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(Settings.ONLY_TO_CUSTOMERS, False) and not OnlyToCustomers.valid_ann(self, ann, from_rel):
+        if settings.get(
+            Settings.ONLY_TO_CUSTOMERS, False
+        ) and not OnlyToCustomers.valid_ann(self, ann, from_rel):
             return False
         if settings.get(Settings.ROV, False) and not ROV.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(Settings.PATH_END, False) and not PathEnd.valid_ann(self, ann, from_rel):
+        if settings.get(Settings.PATH_END, False) and not PathEnd.valid_ann(
+            self, ann, from_rel
+        ):
             return False
-        if settings.get(Settings.PEERLOCK_LITE, False) and not PeerLockLite.valid_ann(self, ann, from_rel):
+        if settings.get(Settings.PEERLOCK_LITE, False) and not PeerLockLite.valid_ann(
+            self, ann, from_rel
+        ):
             return False
 
         return True
 
     def ann_is_invalid_by_roa(self, ann: Ann) -> bool:
         """Determines if an announcement is invalid by a ROA"""
-        return ROAValidity.is_invalid(self.route_validator.get_roa_outcome(ann.prefix, ann.origin)[0])
+        return ROAValidity.is_invalid(
+            self.route_validator.get_roa_outcome(ann.prefix, ann.origin)[0]
+        )
 
     ###############
     # Gao rexford #
@@ -206,18 +237,20 @@ class Policy:
             or self._get_best_ann_by_local_pref(current_ann, new_ann)
             or self._get_best_ann_by_as_path(current_ann, new_ann)
             # BGPSec is security third (see BGPSec class docstring)
-            or (self.settings.get(Settings.BGPSEC, False) and BGPSec.get_best_ann_by_bgpsec(self, current_ann, new_ann))
-            or self._get_best_ann_by_lowest_neighbor_asn_tiebreaker(current_ann, new_ann)
+            or (
+                self.settings.get(Settings.BGPSEC, False)
+                and BGPSec.get_best_ann_by_bgpsec(self, current_ann, new_ann)
+            )
+            or self._get_best_ann_by_lowest_neighbor_asn_tiebreaker(
+                current_ann, new_ann
+            )
         )
         if final_ann:
             return final_ann
         else:
             raise GaoRexfordError("No ann was chosen")
 
-
-    def _get_best_ann_by_local_pref(
-        self, current_ann: Ann, new_ann: Ann
-    ) -> Ann | None:
+    def _get_best_ann_by_local_pref(self, current_ann: Ann, new_ann: Ann) -> Ann | None:
         """Returns best announcement by local pref, or None if tie. Higher is better"""
 
         if current_ann.recv_relationship.value > new_ann.recv_relationship.value:
@@ -232,7 +265,6 @@ class Policy:
             return current_ann
         elif len(current_ann.as_path) > len(new_ann.as_path):
             return new_ann
-
 
     def _get_best_ann_by_lowest_neighbor_asn_tiebreaker(
         self, current_ann: Ann, new_ann: Ann
@@ -254,7 +286,6 @@ class Policy:
         send_rels: set[Relationships] = {Relationships.ORIGIN, Relationships.CUSTOMERS}
         self._propagate(Relationships.PROVIDERS, send_rels)
 
-
     def propagate_to_customers(self) -> None:
         """Propogates to customers anns that have a known recv_rel"""
 
@@ -266,15 +297,15 @@ class Policy:
         }
         self._propagate(Relationships.CUSTOMERS, send_rels)
 
-
     def propagate_to_peers(self) -> None:
         """Propogates to peers anns from this AS (origin) or from customers"""
 
         send_rels: set[Relationships] = {Relationships.ORIGIN, Relationships.CUSTOMERS}
         self._propagate(Relationships.PEERS, send_rels)
 
-
-    def _propagate(self, propagate_to: Relationships, send_rels: set[Relationships]) -> None:
+    def _propagate(
+        self, propagate_to: Relationships, send_rels: set[Relationships]
+    ) -> None:
         """Propogates announcements from local rib to other ASes
 
         send_rels are the relationships that are acceptable to send
@@ -297,7 +328,9 @@ class Policy:
                     if self.policy_propagate(neighbor_as, ann, propagate_to, send_rels):
                         continue
                     else:
-                        self.process_outgoing_ann(neighbor_as, ann, propagate_to, send_rels)
+                        self.process_outgoing_ann(
+                            neighbor_as, ann, propagate_to, send_rels
+                        )
 
     def policy_propagate(
         self,
@@ -307,10 +340,10 @@ class Policy:
         send_rels: set[Relationships],
     ) -> bool:
         """Policies can override this to handle their own propagation and return True
-        
+
         This can no longer be as simple as it was in BGPy since many policies may
         interact with one another. So there are three values returned from each policy:
-        1. policy_propagate_bool. If this is False, the policy did nothing, if it is 
+        1. policy_propagate_bool. If this is False, the policy did nothing, if it is
         true, Policy should return True from this method
         2. ann: The modified ann. This can be then be passed into the other funcs
         3. send_ann_bool. Sometimes a policy may declare the ann shoulldn't be sent at all
@@ -320,33 +353,49 @@ class Policy:
 
         og_ann = ann
         if self.settings.get(Settings.BGPSEC, False):
-            policy_propagate_info = BGPSec.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
+            policy_propagate_info = BGPSec.get_policy_propagate_vals(
+                self, neighbor_as, ann, propagate_to, send_rels
+            )
             if policy_propagate_info.policy_propagate_bool:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
         if self.settings.get(Settings.ONLY_TO_CUSTOMERS, False):
-            policy_propagate_info = OnlyToCustomers.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
+            policy_propagate_info = OnlyToCustomers.get_policy_propagate_vals(
+                self, neighbor_as, ann, propagate_to, send_rels
+            )
             if policy_propagate_info.policy_propagate_bool:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
         if self.settings.get(Settings.ROVPP_V2I_LITE, False):
-            policy_propagate_info = ROVPPV2iLite.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
+            policy_propagate_info = ROVPPV2iLite.get_policy_propagate_vals(
+                self, neighbor_as, ann, propagate_to, send_rels
+            )
             if policy_propagate_info.policy_propagate_bool:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
         # If V2i is deployed, don't use V2
-        if self.settings.get(Settings.ROVPP_V2_LITE, False) and not self.settings.get(Settings.ROVPP_V2I_LITE, False):
-            policy_propagate_info = ROVPPV2Lite.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
+        if self.settings.get(Settings.ROVPP_V2_LITE, False) and not self.settings.get(
+            Settings.ROVPP_V2I_LITE, False
+        ):
+            policy_propagate_info = ROVPPV2Lite.get_policy_propagate_vals(
+                self, neighbor_as, ann, propagate_to, send_rels
+            )
             if policy_propagate_info.policy_propagate_bool:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
         # If v2i or v2 are set, don't use v1 (since they are supersets)
-        if self.settings.get(Settings.ROVPP_V1_LITE, False) and not self.settings.get(Settings.ROVPP_V2I_LITE, False) and not self.settings.get(Settings.ROVPP_V2_LITE, False):
-            policy_propagate_info = ROVPPV1Lite.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
+        if (
+            self.settings.get(Settings.ROVPP_V1_LITE, False)
+            and not self.settings.get(Settings.ROVPP_V2I_LITE, False)
+            and not self.settings.get(Settings.ROVPP_V2_LITE, False)
+        ):
+            policy_propagate_info = ROVPPV1Lite.get_policy_propagate_vals(
+                self, neighbor_as, ann, propagate_to, send_rels
+            )
             if policy_propagate_info.policy_propagate_bool:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
@@ -387,19 +436,23 @@ class Policy:
 
         # Dont' cache massive RIBs, there won't be duplicates
         if len(self.local_rib) < 10:
-            most_specific_prefix = self.most_specific_prefix_cache.get((dest_ip_addr, tuple(list(self.local_rib.keys()))))
+            most_specific_prefix = self.most_specific_prefix_cache.get(
+                (dest_ip_addr, tuple(list(self.local_rib.keys())))
+            )
 
         if most_specific_prefix is None:
             matching_prefixes = sorted(
                 (p for p in self.local_rib if dest_ip_addr in p),
                 key=lambda p: p.prefixlen,
-                reverse=True
+                reverse=True,
             )
             most_specific_prefix = matching_prefixes[0] if matching_prefixes else None
 
         # Don't cache massive ribs, pointless, there won't be duplicates
         if len(self.local_rib) < 10:
-            self.most_specific_prefix_cache[(dest_ip_addr, tuple(list(self.local_rib.keys())))] = most_specific_prefix
+            self.most_specific_prefix_cache[
+                (dest_ip_addr, tuple(list(self.local_rib.keys())))
+            ] = most_specific_prefix
             # Don't cache too many, it's pointless
             if len(self.most_specific_prefix_cache) > 10:
                 self.most_specific_prefix_cache.pop()
@@ -418,7 +471,9 @@ class Policy:
     def to_json(self) -> dict[str, Any]:
         """Converts the routing policy to a JSON object"""
         return {
-            "local_rib": {prefix: ann.to_json() for prefix, ann in self.local_rib.items()},
+            "local_rib": {
+                prefix: ann.to_json() for prefix, ann in self.local_rib.items()
+            },
             "settings": self.settings,
         }
 
@@ -426,7 +481,10 @@ class Policy:
     def from_json(cls, json_obj: dict[str, Any], as_: "AS") -> "Policy":
         return cls(
             as_=as_,
-            local_rib={prefix: Ann.from_json(ann) for prefix, ann in json_obj["local_rib"].items()},
+            local_rib={
+                prefix: Ann.from_json(ann)
+                for prefix, ann in json_obj["local_rib"].items()
+            },
             settings=json_obj["settings"],
         )
 

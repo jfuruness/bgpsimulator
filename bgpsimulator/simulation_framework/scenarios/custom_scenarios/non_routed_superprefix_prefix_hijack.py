@@ -13,7 +13,6 @@ class NonRoutedSuperprefixPrefixHijack(Scenario):
     """Attacker announces a superprefix that is not covered by a ROA and is not routed by the legitimate origin, as well as a prefix that is ROV invalid and not routed by the legitimate origin"""
 
     def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
-
         anns = dict()
         for attacker_asn in self.attacker_asns:
             anns[attacker_asn] = [

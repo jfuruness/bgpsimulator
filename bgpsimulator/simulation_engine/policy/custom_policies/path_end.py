@@ -8,9 +8,10 @@ if TYPE_CHECKING:
 
 from .rov import ROV
 
+
 class PathEnd:
     """A Policy that deploys Path-End
-    
+
     Jump starting BGP with Path-End validation"""
 
     @staticmethod

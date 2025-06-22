@@ -12,7 +12,9 @@ class ASGraphUtils:
 
         if not as_graph_json.get("extra_setup_complete", False):
             # Conver to ints when pulling from JSON
-            as_graph_json["ases"] = {int(asn): info for asn, info in as_graph_json["ases"].items()}
+            as_graph_json["ases"] = {
+                int(asn): info for asn, info in as_graph_json["ases"].items()
+            }
             ASGraphUtils.check_for_cycles(as_graph_json)
             ASGraphUtils.add_provider_cone_asns(as_graph_json)
             ASGraphUtils.assign_as_propagation_rank(as_graph_json)
@@ -58,7 +60,12 @@ class ASGraphUtils:
             for neighbor_asn in as_info[key]:
                 if neighbor_asn not in visited:
                     ASGraphUtils._validate_no_cycles_helper(
-                        neighbor_asn, as_graph_json["ases"][neighbor_asn], as_graph_json, visited, rec_stack, key
+                        neighbor_asn,
+                        as_graph_json["ases"][neighbor_asn],
+                        as_graph_json,
+                        visited,
+                        rec_stack,
+                        key,
                     )
                 elif neighbor_asn in rec_stack:
                     raise CycleError(f"Cycle detected in {key} for AS {asn}")
@@ -80,7 +87,6 @@ class ASGraphUtils:
             )
             as_info["provider_cone_asns"] = list(provider_cone)
 
-
     @staticmethod
     def _get_cone_helper(
         as_info: dict[str, Any],
@@ -98,7 +104,12 @@ class ASGraphUtils:
             for neighbor_asn in as_info[rel_key]:
                 cone_dict[as_asn].add(neighbor_asn)
                 if neighbor_asn not in cone_dict:
-                    ASGraphUtils._get_cone_helper(as_graph_json["ases"][neighbor_asn], cone_dict, as_graph_json, rel_key)
+                    ASGraphUtils._get_cone_helper(
+                        as_graph_json["ases"][neighbor_asn],
+                        cone_dict,
+                        as_graph_json,
+                        rel_key,
+                    )
                 cone_dict[as_asn].update(cone_dict[neighbor_asn])
         return cone_dict[as_asn]
 
@@ -115,9 +126,10 @@ class ASGraphUtils:
             as_info["propagation_rank"] = None
             ASGraphUtils._assign_ranks_helper(as_info, 0, as_graph_json)
 
-
     @staticmethod
-    def _assign_ranks_helper(as_info: dict[str, Any], rank: int, as_graph_json: dict[int, dict[str, Any]]) -> None:
+    def _assign_ranks_helper(
+        as_info: dict[str, Any], rank: int, as_graph_json: dict[int, dict[str, Any]]
+    ) -> None:
         """Assigns ranks to all ases in customer/provider chain recursively"""
 
         if as_info["propagation_rank"] is None or as_info["propagation_rank"] < rank:
@@ -125,13 +137,19 @@ class ASGraphUtils:
             # Only update it's providers if it's rank becomes higher
             # This avoids a double for loop of writes
             for provider_asn in as_info["provider_asns"]:
-                ASGraphUtils._assign_ranks_helper(as_graph_json["ases"][provider_asn], rank + 1, as_graph_json)
+                ASGraphUtils._assign_ranks_helper(
+                    as_graph_json["ases"][provider_asn], rank + 1, as_graph_json
+                )
 
     @staticmethod
-    def assign_as_graph_propagation_ranks(as_graph_json: dict[int, dict[str, Any]]) -> None:
+    def assign_as_graph_propagation_ranks(
+        as_graph_json: dict[int, dict[str, Any]],
+    ) -> None:
         """Orders ASes by rank"""
 
-        max_rank: int = max(x["propagation_rank"] for x in as_graph_json["ases"].values())
+        max_rank: int = max(
+            x["propagation_rank"] for x in as_graph_json["ases"].values()
+        )
         # Create a list of empty lists
         # Ignore types here for speed purposes
         ranks: list[list[int]] = [list() for _ in range(max_rank + 1)]

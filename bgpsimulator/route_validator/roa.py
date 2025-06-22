@@ -1,4 +1,3 @@
-
 from functools import cached_property
 from ipaddress import IPv4Network, IPv6Network
 
@@ -7,7 +6,13 @@ from bgpsimulator.shared import ROAValidity, ROARouted
 
 
 class ROA:
-    def __init__(self, prefix: Prefix, origin: int, max_length: int | None = None, ta: str | None = None):
+    def __init__(
+        self,
+        prefix: Prefix,
+        origin: int,
+        max_length: int | None = None,
+        ta: str | None = None,
+    ):
         self.prefix: Prefix = prefix
         self.origin: int = origin
         self.max_length: int | None = max_length
@@ -46,9 +51,7 @@ class ROA:
         # NOTE: subnet_of includes the original prefix (I checked lol)
         return prefix.subnet_of(self.prefix)
 
-    def get_validity(
-        self, prefix: Prefix, origin: int
-    ) -> ROAValidity:
+    def get_validity(self, prefix: Prefix, origin: int) -> ROAValidity:
         """Returns validity of prefix origin pair"""
 
         if self.covers_prefix(prefix):

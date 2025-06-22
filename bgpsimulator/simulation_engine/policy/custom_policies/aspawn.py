@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
+
 class ASPAwN:
     """ASRA: Esentially ASPA and checking neighbors at every AS together
 
@@ -22,10 +23,9 @@ class ASPAwN:
     the neighbor type) and also assumes the strict algorithm.
 
     As ASPAwN is equivalent to ASRA, this is merely vestigial and I would recommend
-    using the ASRA policy. However - ASRA is the same as ASPAwN and imo this is a 
+    using the ASRA policy. However - ASRA is the same as ASPAwN and imo this is a
     vastly more simple algorithm.
     """
-
 
     @staticmethod
     def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
@@ -37,7 +37,9 @@ class ASPAwN:
             # Get the AS object for the current AS in the AS Path
             asra_as_obj = as_dict.get(asn)
             # If the AS is an ASRA AS
-            if asra_as_obj and asra_as_obj.policy.overriden_settings.get(Settings.ASPA_W_N, False):
+            if asra_as_obj and asra_as_obj.policy.overriden_settings.get(
+                Settings.ASPA_W_N, False
+            ):
                 # Check that both of it's neighbors are in the valid next hops
                 for neighbor_index in (i - 1, i + 1):
                     # Can't use try except IndexError here, since -1 is a valid index

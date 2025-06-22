@@ -45,12 +45,11 @@ class DataTracker:
         """
         self.line_filters = line_filters
         self.scenario_labels = scenario_labels
-        self.unaggregated_data = unaggregated_data or self._create_new_unaggregated_data()
+        self.unaggregated_data = (
+            unaggregated_data or self._create_new_unaggregated_data()
+        )
         self.aggregated_data = {
-            label: {
-                line_filter: {}
-                for line_filter in line_filters
-            }
+            label: {line_filter: {} for line_filter in line_filters}
             for label in self.scenario_labels
         }
 
@@ -68,32 +67,47 @@ class DataTracker:
         }
 
     def __add__(self, other) -> "DataTracker":
-
         if isinstance(other, DataTracker):
             # Timing trials show this is the fastest way
             new_data = self._create_new_unaggregated_data()
             for label, inner_dict in self.unaggregated_data.items():
                 for line_filter, trial_data in inner_dict.items():
-                    for percent_ases_randomly_adopting, data_points in trial_data.items():
+                    for (
+                        percent_ases_randomly_adopting,
+                        data_points,
+                    ) in trial_data.items():
                         new_data[label][line_filter][percent_ases_randomly_adopting] = (
-                            self.unaggregated_data[label][line_filter][percent_ases_randomly_adopting]
-                            + other.unaggregated_data[label][line_chart_filter][percent_ases_randomly_adopting]
+                            self.unaggregated_data[label][line_filter][
+                                percent_ases_randomly_adopting
+                            ]
+                            + other.unaggregated_data[label][line_chart_filter][
+                                percent_ases_randomly_adopting
+                            ]
                         )
             return DataTracker(self.line_filters, self.scenario_labels, new_data)
         else:
             return NotImplemented
 
-    def store_trial_data(self, *, engine: SimulationEngine, scenario: Scenario, outcomes_dict: dict[int, int], propagation_round: int) -> None:
+    def store_trial_data(
+        self,
+        *,
+        engine: SimulationEngine,
+        scenario: Scenario,
+        outcomes_dict: dict[int, int],
+        propagation_round: int,
+    ) -> None:
         """Stores the data for a trial"""
 
         # Initialize the trial data
         for label, inner_dict in self.unaggregated_data.items():
             for line_filter, trial_data in inner_dict.items():
-                trial_data.setdefault(scenario.percent_ases_randomly_adopting, []).append(
-                    {"numerator": 0, "denominator": 0}
-                )
+                trial_data.setdefault(
+                    scenario.percent_ases_randomly_adopting, []
+                ).append({"numerator": 0, "denominator": 0})
 
-        unaggregated_scenario_data = self.unaggregated_data[scenario.scenario_config.label]
+        unaggregated_scenario_data = self.unaggregated_data[
+            scenario.scenario_config.label
+        ]
 
         for line_filter in unaggregated_scenario_data:
             # We don't need this (since this is also checked in LineFilter), but it saves some time
@@ -104,11 +118,19 @@ class DataTracker:
                 if as_obj.asn in scenario.untracked_asns:
                     continue
                 outcome = outcomes_dict[as_obj.asn]
-                if line_filter.as_in_denominator(as_obj, engine.as_graph, scenario, propagation_round, outcome):
+                if line_filter.as_in_denominator(
+                    as_obj, engine.as_graph, scenario, propagation_round, outcome
+                ):
                     # The default for the numerator simply checks that the outcome is the same as the line filter
-                    if line_filter.as_in_numerator(as_obj, engine.as_graph, scenario, propagation_round, outcome):
-                        unaggregated_scenario_data[line_filter][scenario.percent_ases_randomly_adopting][-1]["numerator"] += 1
-                    unaggregated_scenario_data[line_filter][scenario.percent_ases_randomly_adopting][-1]["denominator"] += 1
+                    if line_filter.as_in_numerator(
+                        as_obj, engine.as_graph, scenario, propagation_round, outcome
+                    ):
+                        unaggregated_scenario_data[line_filter][
+                            scenario.percent_ases_randomly_adopting
+                        ][-1]["numerator"] += 1
+                    unaggregated_scenario_data[line_filter][
+                        scenario.percent_ases_randomly_adopting
+                    ][-1]["denominator"] += 1
 
     def aggregate_data(self) -> None:
         """Aggregates the data"""
@@ -116,10 +138,17 @@ class DataTracker:
         for label, inner_dict in self.unaggregated_data.items():
             for line_filter, trial_data in inner_dict.items():
                 for percent_ases_randomly_adopting, data_points in trial_data.items():
-                    decimal_vals = [x["numerator"] * 100/ x["denominator"] if x["denominator"] != 0 else 0 for x in data_points]
-                    self.aggregated_data[label][line_filter][percent_ases_randomly_adopting] = {
+                    decimal_vals = [
+                        x["numerator"] * 100 / x["denominator"]
+                        if x["denominator"] != 0
+                        else 0
+                        for x in data_points
+                    ]
+                    self.aggregated_data[label][line_filter][
+                        percent_ases_randomly_adopting
+                    ] = {
                         "value": sum(decimal_vals) / len(decimal_vals),  # average
-                        "yerr": self._get_yerr(decimal_vals)
+                        "yerr": self._get_yerr(decimal_vals),
                     }
 
     def _get_yerr(self, percent_list: list[float]) -> float:
@@ -141,7 +170,7 @@ class DataTracker:
             "line_filters": [x.to_json() for x in self.line_filters],
             "scenario_labels": self.scenario_labels,
             "unaggregated_data": json_data,
-            "schema_description": DataTracker.__init__.__doc__
+            "schema_description": DataTracker.__init__.__doc__,
         }
 
     @classmethod
@@ -160,7 +189,9 @@ class DataTracker:
 
     def to_csv(self) -> str:
         """Converts the data to a CSV-friendly format"""
-        csv_data = "scenario_label,line_filter,percent_ases_randomly_adopting,value,yerr\n"
+        csv_data = (
+            "scenario_label,line_filter,percent_ases_randomly_adopting,value,yerr\n"
+        )
         for label, inner_dict in self.aggregated_data.items():
             for line_filter, trial_data in inner_dict.items():
                 for percent_ases_randomly_adopting, data_point in trial_data.items():

@@ -5,6 +5,7 @@ from weakref import CallableProxyType, proxy
 from bgpsimulator.shared import Relationships
 from bgpsimulator.simulation_engine import Policy
 
+
 class AS:
     """Autonomous System class. Contains attributes of an AS"""
 
@@ -20,7 +21,7 @@ class AS:
         ixp: bool = False,
         as_graph: Optional["ASGraph"] = None,
         policy_json: dict[str, Any] | None = None,
-        PolicyCls: type[Policy] = Policy
+        PolicyCls: type[Policy] = Policy,
     ) -> None:
         # Make sure you're not accidentally passing in a string here
         self.asn: int = int(asn)
@@ -43,7 +44,9 @@ class AS:
         # Hash in advance and only once since this gets called a lot
         self.hashed_asn = hash(self.asn)
 
-        self.policy: Policy = PolicyCls.from_json(policy_json, self) if policy_json else PolicyCls(self)
+        self.policy: Policy = (
+            PolicyCls.from_json(policy_json, self) if policy_json else PolicyCls(self)
+        )
 
         # This is useful for some policies to have knowledge of the graph
         if as_graph is not None:
@@ -104,7 +107,10 @@ class AS:
         Use customer_asns instead of customers so you can use this during graph construction
         """
 
-        return len(self.customer_asns) == 0 and len(self.peer_asns) + len(self.provider_asns) > 1
+        return (
+            len(self.customer_asns) == 0
+            and len(self.peer_asns) + len(self.provider_asns) > 1
+        )
 
     @cached_property
     def transit(self) -> bool:
@@ -115,7 +121,8 @@ class AS:
 
         return (
             len(self.customer_asns) > 0
-            and len(self.customer_asns) + len(self.peer_asns) + len(self.provider_asns) > 1
+            and len(self.customer_asns) + len(self.peer_asns) + len(self.provider_asns)
+            > 1
         )
 
     @cached_property
@@ -156,7 +163,9 @@ class AS:
         }
 
     @classmethod
-    def from_json(cls, json_obj: dict[str, Any], as_graph: "ASGraph | None" = None) -> "AS":
+    def from_json(
+        cls, json_obj: dict[str, Any], as_graph: "ASGraph | None" = None
+    ) -> "AS":
         """Converts the AS to a JSON object"""
 
         PolicyCls = Policy.name_to_cls_dict[json_obj["PolicyCls"]]

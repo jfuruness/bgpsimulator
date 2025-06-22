@@ -13,7 +13,6 @@ class PassiveHijack(Scenario):
     """Attacker passively monitors the legitimate origin announcements"""
 
     def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
-
         anns = dict()
         for legitimate_origin_asn in self.legitimate_origin_asns:
             anns[legitimate_origin_asn] = [
@@ -35,7 +34,9 @@ class PassiveHijack(Scenario):
     ) -> list[ROA]:
         """Returns a list of ROAs"""
 
-        return [ROA(CommonPrefixes.PREFIX.value, x) for x in self.legitimate_origin_asns]
+        return [
+            ROA(CommonPrefixes.PREFIX.value, x) for x in self.legitimate_origin_asns
+        ]
 
     def _get_dest_ip_addr(self) -> IPAddr:
         """Returns the destination IP address for the scenario"""

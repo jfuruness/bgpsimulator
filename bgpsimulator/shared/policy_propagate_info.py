@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann
 
+
 @dataclass(frozen=True)
 class PolicyPropagateInfo:
     """Information about the policy propagation"""

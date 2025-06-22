@@ -3,6 +3,7 @@ from .as_graph_utils import ASGraphUtils
 from typing import Any
 from weakref import proxy
 
+
 class ASGraph:
     """BGP Topology"""
 
@@ -25,14 +26,21 @@ class ASGraph:
         # Always add cycles, provider cones, and propagation ranks if it hasn't been done already
         ASGraphUtils.add_extra_setup(graph_data)
         # populate basic info
-        self.as_dict = {int(asn): AS.from_json(info, as_graph=self) for asn, info in graph_data["ases"].items()}
+        self.as_dict = {
+            int(asn): AS.from_json(info, as_graph=self)
+            for asn, info in graph_data["ases"].items()
+        }
         # Populate ASN groups
-        self.asn_groups = {asn_group_key: set(asn_group) for asn_group_key, asn_group in graph_data["asn_groups"].items()}
+        self.asn_groups = {
+            asn_group_key: set(asn_group)
+            for asn_group_key, asn_group in graph_data["asn_groups"].items()
+        }
         # populate objects
         self._populate_objects()
         # Add propagation ranks
         self.propagation_ranks = [
-            [self.as_dict[asn] for asn in rank] for rank in graph_data["propagation_rank_asns"]
+            [self.as_dict[asn] for asn in rank]
+            for rank in graph_data["propagation_rank_asns"]
         ]
 
     def _populate_objects(self) -> None:
@@ -63,10 +71,15 @@ class ASGraph:
 
         return {
             "ases": {asn: as_obj.to_json() for asn, as_obj in self.as_dict.items()},
-            "asn_groups": {asn_group_key: set(asn_group) for asn_group_key, asn_group in self.asn_groups.items()},
+            "asn_groups": {
+                asn_group_key: set(asn_group)
+                for asn_group_key, asn_group in self.asn_groups.items()
+            },
             "extra_setup_complete": True,
             "cycles_detected": False,
-            "propagation_rank_asns": [[x.asn for x in rank] for rank in self.propagation_ranks],
+            "propagation_rank_asns": [
+                [x.asn for x in rank] for rank in self.propagation_ranks
+            ],
         }
 
     @classmethod

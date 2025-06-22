@@ -1,6 +1,7 @@
 from bgpsimulator.shared import Prefix
 from .roa import ROA
 
+
 class ROASNode:
     """Node in the ROAS tree"""
 
