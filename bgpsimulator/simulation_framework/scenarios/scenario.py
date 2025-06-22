@@ -31,7 +31,7 @@ class Scenario:
 
     def __init_subclass__(cls, **kwargs):
         """Used when dumping the scenario_config to JSON
-        
+
         NOTE: When converting to rust, just keep a hardcoded list of scenarios
         """
         super().__init_subclass__(**kwargs)
@@ -302,23 +302,19 @@ class Scenario:
 
 
         if as_obj.asn in self.scenario_config.override_base_settings:
-            as_obj.policy.base_settings = self.scenario_config.override_base_settings[as_obj.asn]
+            as_obj.policysettings = self.scenario_config.override_base_settings[as_obj.asn]
         else:
-            as_obj.policy.base_settings = self.scenario_config.default_base_settings
-
-        trial_settings = as_obj.policy.base_settings.copy()
+            as_obj.policy.settings = self.scenario_config.default_base_settings
 
         if as_obj.asn in self.scenario_config.override_adopting_settings:
-            trial_settings.update(self.scenario_config.override_adopting_settings[as_obj.asn])
+            as_obj.policy.settings.update(self.scenario_config.override_adopting_settings[as_obj.asn])
         elif as_obj.asn in self.adopting_asns or as_obj.asn in self.default_adopters:
-            trial_settings.update(self.scenario_config.default_adopt_settings)
+            as_obj.policy.settings.update(self.scenario_config.default_adopt_settings)
 
         if as_obj.asn in self.attacker_asns:
-            trial_settings.update(self.scenario_config.attacker_settings)
+            as_obj.policy.settings.update(self.scenario_config.attacker_settings)
         elif as_obj.asn in self.legitimate_origin_asns:
-            trial_settings.update(self.scenario_config.legitimate_origin_settings)
-
-        as_obj.policy.overriden_settings = trial_settings
+            as_obj.policy.settings.update(self.scenario_config.legitimate_origin_settings)
 
     def setup_engine(self, engine: SimulationEngine) -> None:
         """Nice hook func for setting up the engine with adopting ASes, routing policy settings, etc"""
@@ -350,7 +346,7 @@ class Scenario:
 
     def _get_dest_ip_addr(self) -> IPAddr:
         """Returns the destination IP address for the scenario
-        
+
         Subclass must implement this"""
 
         raise NotImplementedError("Subclass must implement this")

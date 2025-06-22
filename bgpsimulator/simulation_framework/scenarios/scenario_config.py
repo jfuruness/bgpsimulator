@@ -27,7 +27,7 @@ class ScenarioConfig:
         legitimate_origin_settings: dict[Settings, bool] | None = None,
         override_adopting_settings: dict[int, dict[Settings, bool]] | None = None,
         override_base_settings: dict[int, dict[Settings, bool]] | None = None,
-        default_adopt_settings: dict[Settings, bool] | None = None,
+        default_adopting_settings: dict[Settings, bool] | None = None,
         default_base_settings: dict[Settings, bool] | None = None,
         num_attackers: int = 1,
         num_legitimate_origins: int = 1,
@@ -56,7 +56,7 @@ class ScenarioConfig:
         # 1. attacker_settings or legitimate_origin_settings (if AS is an attacker or legitimate_origin)
         # 2. override_adopting_settings (if set)
         # 3. override_base_settings
-        # 4. default_adopt_settings
+        # 4. default_adopting_settings
         # 5. default_base_settings
 
         # 1a. This will update the base routing policy settings for the attacker ASes
@@ -68,7 +68,7 @@ class ScenarioConfig:
         # 3. This will completely override the default base routing policy settings
         self.override_base_settings: dict[int, dict[str, bool]] = override_base_settings or dict()
         # 4. This will update the base routing policy settings for the adopting ASes
-        self.default_adopt_settings: dict[str, bool] = default_adopt_settings or dict()
+        self.default_adopting_settings: dict[str, bool] = default_adopting_settings or dict()
         # 5. Base routing policy settings that will be applied to all ASes
         self.default_base_settings: dict[str, bool] = default_base_settings or {
             x: False for x in Settings
@@ -99,7 +99,7 @@ class ScenarioConfig:
         if self.propagation_rounds is None:
             # BGP-iSec needs this.
             for policy_setting in [Settings.BGP_I_SEC, Settings.BGP_I_SEC_TRANSITIVE]:
-                if (any(x.get(policy_setting) for x in [self.attacker_settings, self.legitimate_origin_settings, self.override_adopting_settings, self.override_base_settings, self.default_adopt_settings, self.default_base_settings])):
+                if (any(x.get(policy_setting) for x in [self.attacker_settings, self.legitimate_origin_settings, self.override_adopting_settings, self.override_base_settings, self.default_adopting_settings, self.default_base_settings])):
                     from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import ShortestPathPrefixHijack
 
                     if issubclass(self.ScenarioCls, ShortestPathPrefixHijack):
