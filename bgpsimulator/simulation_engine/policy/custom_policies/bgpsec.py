@@ -69,7 +69,7 @@ class BGPSec:
         )
 
     @staticmethod
-    def process_bgpsec_ann(
+    def process_ann(
         policy: "Policy", ann: "Ann", from_rel: Relationships
     ) -> "Ann":
         """Sets the bgpsec_as_path. Prepends ASN if valid, otherwise clears"""

@@ -7,6 +7,7 @@ from bgpsimulator.shared import (
     ROARouted,
 )
 from .rovpp_v1_lite import ROVPPV1Lite
+from .rovpp import ROV
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -74,3 +75,9 @@ class ROVPPV2Lite:
                 or roa_routed == ROARouted.NON_ROUTED
             )
         )
+
+    @staticmethod
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
+        """Determines ROV++V2 Lite validity"""
+
+        return ROV.valid_ann(policy, ann, from_rel)

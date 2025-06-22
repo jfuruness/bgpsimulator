@@ -14,6 +14,8 @@ from .custom_policies import (
     ROVPPV2Lite,
     ROVPPV2iLite,
     BGPSec,
+    BGPiSecTransitive,
+    ProviderConeID,
 )
 
 __all__ = [
@@ -32,4 +34,6 @@ __all__ = [
     "ROVPPV2Lite",
     "ROVPPV2iLite",
     "BGPSec",
+    "BGPiSecTransitive",
+    "ProviderConeID",
 ]

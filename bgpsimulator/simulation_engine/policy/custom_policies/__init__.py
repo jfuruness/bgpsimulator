@@ -12,6 +12,8 @@ from .rovpp_v1_lite import ROVPPV1Lite
 from .rovpp_v2_lite import ROVPPV2Lite
 from .rovpp_v2i_lite import ROVPPV2iLite
 from .bgpsec import BGPSec
+from .bgpisec_transitive import BGPiSecTransitive
+from .provider_cone_id import ProviderConeID
 
 __all__ = [
     "ASPathEdgeFilter",
@@ -28,4 +30,6 @@ __all__ = [
     "ROVPPV2Lite",
     "ROVPPV2iLite",
     "BGPSec",
+    "BGPiSecTransitive",
+    "ProviderConeID",
 ]

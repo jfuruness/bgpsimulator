@@ -15,6 +15,8 @@ from .policy import (
     ROVPPV2Lite,
     ROVPPV2iLite,
     BGPSec,
+    BGPiSecTransitive,
+    ProviderConeID,
 )
 from .simulation_engine import SimulationEngine
 
@@ -36,4 +38,6 @@ __all__ = [
     "ROVPPV2Lite",
     "ROVPPV2iLite",
     "BGPSec",
+    "BGPiSecTransitive",
+    "ProviderConeID",
 ]

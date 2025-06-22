@@ -1,7 +1,9 @@
 from typing import TYPE_CHECKING, Iterator
 
 from bgpsimulator.shared import Relationships, PolicyPropagateInfo, Timestamps, Settings
+from .bgpisec_transitive import BGPiSecTransitive
 from .bgpsec import BGPSec
+from .rovpp import ROV
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -90,8 +92,13 @@ class ROVPPV1Lite:
                     recv_relationship=from_rel,
                     rovpp_blackhole=True,
                 )
-                if policy.settings.get(Settings.BGPSEC, False):
-                    processed_sub_ann = BGPSec.process_bgpsec_ann(
+                if policy.settings.get(Settings.BGP_I_SEC, False) or policy.settings.get(Settings.BGP_I_SEC_TRANSITIVE, False):
+                    processed_sub_ann = BGPiSecTransitive.process_ann(
+                        policy, processed_sub_ann, from_rel
+                    )
+                # BGPiSec is a superset of BGPSec with differing functionality, so this must be ELIF!!!
+                elif policy.settings.get(Settings.BGPSEC, False):
+                    processed_sub_ann = BGPSec.process_ann(
                         policy, processed_sub_ann, from_rel
                     )
                 routed_blackholes_to_add.append(processed_sub_ann)
@@ -149,3 +156,9 @@ class ROVPPV1Lite:
         # NOTE: Additionally, we don't account for withdrawals at all...
         if propagation_round != 0:
             raise NotImplementedError("TODO: support ROV++ for multiple rounds")
+
+    @staticmethod
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
+        """Determines ROV++V1 Lite validity"""
+
+        return ROV.valid_ann(policy, ann, from_rel)

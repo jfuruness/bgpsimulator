@@ -24,6 +24,8 @@ from .custom_policies import (
     ROVPPV2Lite,
     ROVPPV2iLite,
     BGPSec,
+    BGPiSecTransitive,
+    ProviderConeID,
 )
 
 if TYPE_CHECKING:
@@ -98,7 +100,7 @@ class Policy:
         assert self.local_rib.get(ann.prefix) is None, err
 
         # If BGPSEC is deployed, modify the announcement
-        if self.settings.get(Settings.BGPSEC, False):
+        if self.settings.get(Settings.BGPSEC, False) or self.settings.get(Settings.BGP_I_SEC, False) or self.settings.get(Settings.BGP_I_SEC_TRANSITIVE, False):
             ann = BGPSec.get_modified_seed_ann(self, ann)
         # Seed by placing in the local rib
         self.local_rib[ann.prefix] = ann
@@ -153,8 +155,13 @@ class Policy:
                 as_path=(self.as_.asn, *new_ann.as_path),
                 recv_relationship=from_rel,
             )
-            if self.settings.get(Settings.BGPSEC, False):
-                new_ann_processed = BGPSec.process_bgpsec_ann(
+            if self.settings.get(Settings.BGP_I_SEC, False) or self.settings.get(Settings.BGP_I_SEC_TRANSITIVE, False):
+                new_ann_processed = BGPiSecTransitive.process_ann(
+                    self, new_ann_processed, from_rel
+                )
+            # NOTE: THIS MUST BE ELIF!! BGPiSecTransitive is a superset of BGPSec and has different process_ann
+            elif self.settings.get(Settings.BGPSEC, False):
+                new_ann_processed = BGPSec.process_ann(
                     self, new_ann_processed, from_rel
                 )
             return self._get_best_ann_by_gao_rexford(current_ann, new_ann_processed)
@@ -198,7 +205,8 @@ class Policy:
             Settings.ONLY_TO_CUSTOMERS, False
         ) and not OnlyToCustomers.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(Settings.ROV, False) and not ROV.valid_ann(self, ann, from_rel):
+        # All use ROV for validity
+        if (settings.get(Settings.ROV, False) or settings.get(Settings.ROVPP_V1_LITE, False) or settings.get(Settings.ROVPP_V2_LITE, False) or settings.get(Settings.ROVPP_V2I_LITE, False)) and not ROV.valid_ann(self, ann, from_rel):
             return False
         if settings.get(Settings.PATH_END, False) and not PathEnd.valid_ann(
             self, ann, from_rel
@@ -207,6 +215,10 @@ class Policy:
         if settings.get(Settings.PEERLOCK_LITE, False) and not PeerLockLite.valid_ann(
             self, ann, from_rel
         ):
+            return False
+        if (settings.get(Settings.BGP_I_SEC, False) or settings.get(Settings.BGP_I_SEC_TRANSITIVE, False)) and not BGPiSecTransitive.valid_ann(self, ann, from_rel):
+            return False
+        if settings.get(Settings.PROVIDER_CONE_ID, False) and not ProviderConeID.valid_ann(self, ann, from_rel):
             return False
 
         return True
@@ -237,6 +249,7 @@ class Policy:
             or self._get_best_ann_by_local_pref(current_ann, new_ann)
             or self._get_best_ann_by_as_path(current_ann, new_ann)
             # BGPSec is security third (see BGPSec class docstring)
+            # NOTE: BGPiSec policies don't change path preference for easier deployment
             or (
                 self.settings.get(Settings.BGPSEC, False)
                 and BGPSec.get_best_ann_by_bgpsec(self, current_ann, new_ann)
@@ -352,7 +365,16 @@ class Policy:
         """
 
         og_ann = ann
-        if self.settings.get(Settings.BGPSEC, False):
+        if self.settings.get(Settings.BGP_I_SEC, False) or self.settings.get(Settings.BGP_I_SEC_TRANSITIVE, False):
+            policy_propagate_info = BGPiSecTransitive.get_policy_propagate_vals(
+                self, neighbor_as, ann, propagate_to, send_rels
+            )
+            if policy_propagate_info.policy_propagate_bool:
+                ann = policy_propagate_info.ann
+                if not policy_propagate_info.send_ann_bool:
+                    return True
+        # NOTE: THIS MUST BE ELIF!! BGPiSecTransitive is a superset of BGPSec and has different get_policy_propagate_vals
+        elif self.settings.get(Settings.BGPSEC, False):
             policy_propagate_info = BGPSec.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
             )
@@ -360,6 +382,7 @@ class Policy:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
+
         if self.settings.get(Settings.ONLY_TO_CUSTOMERS, False):
             policy_propagate_info = OnlyToCustomers.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
@@ -368,6 +391,8 @@ class Policy:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
+
+
         if self.settings.get(Settings.ROVPP_V2I_LITE, False):
             policy_propagate_info = ROVPPV2iLite.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
@@ -377,9 +402,7 @@ class Policy:
                 if not policy_propagate_info.send_ann_bool:
                     return True
         # If V2i is deployed, don't use V2
-        if self.settings.get(Settings.ROVPP_V2_LITE, False) and not self.settings.get(
-            Settings.ROVPP_V2I_LITE, False
-        ):
+        elif self.settings.get(Settings.ROVPP_V2_LITE, False):
             policy_propagate_info = ROVPPV2Lite.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
             )
@@ -388,11 +411,7 @@ class Policy:
                 if not policy_propagate_info.send_ann_bool:
                     return True
         # If v2i or v2 are set, don't use v1 (since they are supersets)
-        if (
-            self.settings.get(Settings.ROVPP_V1_LITE, False)
-            and not self.settings.get(Settings.ROVPP_V2I_LITE, False)
-            and not self.settings.get(Settings.ROVPP_V2_LITE, False)
-        ):
+        elif self.settings.get(Settings.ROVPP_V1_LITE, False):
             policy_propagate_info = ROVPPV1Lite.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
             )
