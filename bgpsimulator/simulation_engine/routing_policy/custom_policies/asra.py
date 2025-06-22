@@ -1,6 +1,7 @@
 from bgpsimulator.simulation_engine import Announcement as Ann
-from bgpsimulator.shared.enums import Relationships, RoutingPolicySettings
+from bgpsimulator.shared.enums import Relationships, Settings
 from bgpsimulator.as_graph import AS
+from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class ASRA:
     """Algo-B using ASRA3 records
@@ -8,7 +9,7 @@ class ASRA:
 
 
     @staticmethod
-    def valid_ann(ann: Ann, from_rel: Relationships, as_obj: "AS") -> bool:
+    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
         """
         1) Perform standard ASPA route-leak detection via ASPA.valid_ann()
            If ASPA.valid_ann() returns False => 'Invalid'. We bail out.
@@ -21,7 +22,7 @@ class ASRA:
         """
 
         # 1) Run ASPA's logic
-        aspa_result = ASPA.valid_ann(ann, from_rel, as_obj)
+        aspa_result = ASPA.valid_ann(policy, ann, from_rel)
 
         # If ASPA deems it invalid, bail
         if not aspa_result:
@@ -40,7 +41,7 @@ class ASRA:
         # Compute min_up_ramp in a simple way:
         # We start from the origin side (index 0) going forward until
         # we find the first place the ASPA "provider check" fails.
-        min_up_ramp = ASRA._get_min_up_ramp_length(ann, as_obj)
+        min_up_ramp = ASRA._get_min_up_ramp_length(policy, ann)
 
         # If min_up_ramp == n, that means every hop was "provider+",
         # so there's no leftover "down-ramp" region to apply ASRA to,
@@ -52,7 +53,7 @@ class ASRA:
         # i.e., the region from the top of the up-ramp to the second-last
         # AS in the path.  (We examine i -> i+1.)
         for i in range(min_up_ramp, n - 1):
-            if ASRA._is_fake_link(path[i], path[i + 1], as_obj):
+            if ASRA._is_fake_link(policy, path[i], path[i + 1]):
                 # RFC: "If Fake-Link(...) = Detected, then outcome => invalid"
                 return False
 
@@ -60,7 +61,7 @@ class ASRA:
         return True
 
     @staticmethod
-    def _get_min_up_ramp_length(ann: "Ann", as_obj: "AS") -> int:
+    def _get_min_up_ramp_length(policy: "Policy", ann: "Ann") -> int:
         """
         We define min_up_ramp ~ the first 'i' from the origin side
         where the ASPA check fails or the AS does not adopt ASPA.
@@ -71,12 +72,12 @@ class ASRA:
         for i in range(len(path) - 1):
             asn1 = path[i]
             asn2 = path[i + 1]
-            asn1_obj = as_obj.as_graph.as_dict.get(asn1)
+            asn1_obj = policy.as_.as_graph.as_dict.get(asn1)
 
             # 1/5/2024 JF: Added check for if as1_obj doesn't exist
             # If asn1 does not adopt ASPA, we treat that
             # as 'No Attestation', so min_up_ramp ends here.
-            if not asn1_obj or not asn1_obj.routing_policy.overriden_routing_policy_settings.get(RoutingPolicySettings.ASPA, False):
+            if not asn1_obj or not asn1_obj.policy.overriden_settings.get(Settings.ASPA, False):
                 return i
 
             # If asn2 is not in asn1's provider list => 'Not Provider+',
@@ -87,7 +88,7 @@ class ASRA:
         return len(path)
 
     @staticmethod
-    def _is_fake_link(asn1: int, asn2: int, as_obj: "AS") -> bool:
+    def _is_fake_link(policy: "Policy", asn1: int, asn2: int) -> bool:
         """
         ASRA-B fake link check (Algorithm B).
         "If AS(i) has valid ASPA(s) and does not list AS(i+1) as a provider,
@@ -102,20 +103,20 @@ class ASRA:
         (i.e. policy is ASRA or child class), and asn2 is not in
         asn1.neighbor_asns."
         """
-        asn1_obj = as_obj.as_graph.as_dict.get(asn1)
+        asn1_obj = policy.as_.as_graph.as_dict.get(asn1)
 
         # Must meet BOTH conditions to declare fake link:
         # 1) asn1 adopts ASPA and does NOT list asn2 as a provider
         has_aspa_but_not_provider = (
             asn1_obj
-            and asn1_obj.routing_policy.overriden_routing_policy_settings.get(RoutingPolicySettings.ASPA, False)
+            and asn1_obj.policy.overriden_settings.get(Settings.ASPA, False)
             and asn2 not in asn1_obj.provider_asns
         )
 
         # 2) asn1 also adopts ASRA and does NOT list asn2 as neighbor
         has_asra_but_not_neighbor = (
             asn1_obj
-            and asn1_obj.routing_policy.overriden_routing_policy_settings.get(RoutingPolicySettings.ASRA, False)
+            and asn1_obj.policy.overriden_settings.get(Settings.ASRA, False)
             and asn2 not in asn1_obj.neighbor_asns
         )
 

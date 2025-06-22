@@ -6,33 +6,33 @@ from weakref import proxy
 from bgpsimulator.shared.exceptions import GaoRexfordError
 from bgpsimulator.simulation_engine.announcement import Announcement as Ann
 from bgpsimulator.shared import Relationships
-from bgpsimulator.shared import RoutingPolicySettings
+from bgpsimulator.shared import Settings
 from bgpsimulator.shared import Prefix, IPAddr
 from bgpsimulator.route_validator import RouteValidator
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.aspa import ASPA
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.aspawn import ASPAwN
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.asra import ASRA
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.bgp import BGP
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.edge_filter import EdgeFilter
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.only_to_customers import OnlyToCustomers
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.enforce_first_as import EnforceFirstAS
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.rov import ROV
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.path_end import PathEnd
-from bgpsimulator.simulation_engine.routing_policy.custom_policies.peerlock_lite import PeerLockLite
+from bgpsimulator.simulation_engine.policy.custom_policies.aspa import ASPA
+from bgpsimulator.simulation_engine.policy.custom_policies.aspawn import ASPAwN
+from bgpsimulator.simulation_engine.policy.custom_policies.asra import ASRA
+from bgpsimulator.simulation_engine.policy.custom_policies.bgp import BGP
+from bgpsimulator.simulation_engine.policy.custom_policies.edge_filter import EdgeFilter
+from bgpsimulator.simulation_engine.policy.custom_policies.only_to_customers import OnlyToCustomers
+from bgpsimulator.simulation_engine.policy.custom_policies.enforce_first_as import EnforceFirstAS
+from bgpsimulator.simulation_engine.policy.custom_policies.rov import ROV
+from bgpsimulator.simulation_engine.policy.custom_policies.path_end import PathEnd
+from bgpsimulator.simulation_engine.policy.custom_policies.peerlock_lite import PeerLockLite
 
 if TYPE_CHECKING:
     from weakref import CallableProxyType
     from bgpsimulator.as_graphs import AS
 
 
-class RoutingPolicy:
+class Policy:
 
-    __slots__ = ("local_rib", "recv_q", "base_routing_policy_settings", "overriden_routing_policy_settings", "as_")
+    __slots__ = ("local_rib", "recv_q", "base_settings", "overriden_settings", "as_")
 
     most_specific_prefix_cache: dict[tuple[IPAddr, tuple[Prefix, ...]], Prefix | None] = dict()
 
     # Used when dumping the routing policy to JSON
-    name_to_cls_dict: dict[str, type["RoutingPolicy"]] = {}
+    name_to_cls_dict: dict[str, type["Policy"]] = {}
 
     route_validator = RouteValidator()
 
@@ -42,13 +42,13 @@ class RoutingPolicy:
         NOTE: Rust should not support this
         """
         super().__init_subclass__(**kwargs)
-        RoutingPolicy.name_to_cls_dict[cls.__name__] = cls
+        Policy.name_to_cls_dict[cls.__name__] = cls
 
     def __init__(
         self,
         as_: "AS",
-        base_routing_policy_settings: dict[str, bool] | None = None,
-        overriden_routing_policy_settings: dict[str, bool] | None = None,
+        base_settings: dict[str, bool] | None = None,
+        overriden_settings: dict[str, bool] | None = None,
         local_rib: dict[str, Ann] | None = None,
     ) -> None:
         """Add local rib and data structures here
@@ -61,18 +61,18 @@ class RoutingPolicy:
 
         self.local_rib: dict[Prefix, Ann] = local_rib or dict()
         self.recv_q: defaultdict[Prefix, list[Ann]] = defaultdict(list)
-        default_routing_policy_settings: dict[RoutingPolicySettings, bool] = {
-            x: False for x in RoutingPolicySettings
+        default_settings: dict[Settings, bool] = {
+            x: False for x in Settings
         }
         # Base routing policy settings are the default settings for all ASes
-        self.base_routing_policy_settings: dict[RoutingPolicySettings, bool] = base_routing_policy_settings or default_routing_policy_settings
+        self.base_settings: dict[Settings, bool] = base_settings or default_settings
         # Overriden routing policy settings are the settings that will be applied to the ASes
-        self.overriden_routing_policy_settings: dict[RoutingPolicySettings, bool] = overriden_routing_policy_settings or dict()
+        self.overriden_settings: dict[Settings, bool] = overriden_settings or dict()
         # The AS object that this routing policy is associated with
         self.as_: CallableProxyType["AS"] = proxy(as_)
 
     def __eq__(self, other) -> bool:
-        if isinstance(other, RoutingPolicy):
+        if isinstance(other, Policy):
             return self.to_json() == other.to_json()
         else:
             return NotImplemented
@@ -141,31 +141,31 @@ class RoutingPolicy:
         else:
             return current_ann
 
-    def valid_ann(self, ann: Ann, from_rel: Relationships, as_obj: "AS") -> bool:
+    def valid_ann(self, ann: Ann, from_rel: Relationships) -> bool:
         """Determine if an announcement is valid or should be dropped"""
 
-        settings = self.overriden_routing_policy_settings
+        settings = self.overriden_settings
 
-        if BGP.valid_ann(ann, from_rel, as_obj):
+        if not BGP.valid_ann(self, ann, from_rel):
             return False
         # ASPAwN and ASRA are supersets of ASPA
-        if settings.get(RoutingPolicySettings.ASPA, False) and not settings.get(RoutingPolicySettings.ASRA, False) and not settings.get(RoutingPolicySettings.ASPA_W_N, False) and not ASPA.valid_ann(ann, from_rel, as_obj):
+        if settings.get(Settings.ASPA, False) and not settings.get(Settings.ASRA, False) and not settings.get(Settings.ASPA_W_N, False) and not ASPA.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(RoutingPolicySettings.ASPA_W_N, False) and not settings.get(RoutingPolicySettings.ASRA, False) and not ASPAwN.valid_ann(ann, from_rel, as_obj):
+        if settings.get(Settings.ASPA_W_N, False) and not settings.get(Settings.ASRA, False) and not ASPAwN.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(RoutingPolicySettings.ASRA, False) and not ASRA.valid_ann(ann, from_rel, as_obj):
+        if settings.get(Settings.ASRA, False) and not ASRA.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(RoutingPolicySettings.EDGE_FILTER, False) and not EdgeFilter.valid_ann(ann, from_rel, as_obj):
+        if settings.get(Settings.EDGE_FILTER, False) and not EdgeFilter.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(RoutingPolicySettings.ENFORCE_FIRST_AS, False) and not EnforceFirstAS.valid_ann(ann, from_rel, as_obj):
+        if settings.get(Settings.ENFORCE_FIRST_AS, False) and not EnforceFirstAS.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(RoutingPolicySettings.ONLY_TO_CUSTOMERS, False) and not OnlyToCustomers.valid_ann(ann, from_rel, as_obj):
+        if settings.get(Settings.ONLY_TO_CUSTOMERS, False) and not OnlyToCustomers.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(RoutingPolicySettings.ROV, False) and not ROV.valid_ann(ann, from_rel, as_obj):
+        if settings.get(Settings.ROV, False) and not ROV.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(RoutingPolicySettings.PATH_END, False) and not PathEnd.valid_ann(ann, from_rel, as_obj):
+        if settings.get(Settings.PATH_END, False) and not PathEnd.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(RoutingPolicySettings.PEER_LOCK_LITE, False) and not PeerLockLite.valid_ann(ann, from_rel, as_obj):
+        if settings.get(Settings.PEER_LOCK_LITE, False) and not PeerLockLite.valid_ann(self, ann, from_rel):
             return False
 
         return True
@@ -291,8 +291,8 @@ class RoutingPolicy:
         """Policies can override this to handle their own propagation and return True"""
 
         policy_propagate_ann = None
-        if self.overriden_routing_policy_settings.get(RoutingPolicySettings.ONLY_TO_CUSTOMERS, False):
-            policy_propagate_info = OnlyToCustomers.get_policy_propagate_vals(neighbor_as, ann, propagate_to, send_rels, self)
+        if self.overriden_settings.get(Settings.ONLY_TO_CUSTOMERS, False):
+            policy_propagate_info = OnlyToCustomers.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
             if policy_propagate_info.policy_propagate_bool:
                 policy_propagate_ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
@@ -314,7 +314,7 @@ class RoutingPolicy:
         """Adds ann to the neighbors recv q"""
 
         # Add the new ann to the incoming anns for that prefix
-        neighbor_as.routing_policy.receive_ann(ann)
+        neighbor_as.policy.receive_ann(ann)
 
     #########################
     # Data Plane Validation #
@@ -365,18 +365,18 @@ class RoutingPolicy:
         """Converts the routing policy to a JSON object"""
         return {
             "local_rib": {prefix: ann.to_json() for prefix, ann in self.local_rib.items()},
-            "base_routing_policy_settings": self.base_routing_policy_settings,
-            "overriden_routing_policy_settings": self.overriden_routing_policy_settings,
+            "base_settings": self.base_settings,
+            "overriden_settings": self.overriden_settings,
         }
 
     @classmethod
-    def from_json(cls, json_obj: dict[str, Any], as_: "AS") -> "RoutingPolicy":
+    def from_json(cls, json_obj: dict[str, Any], as_: "AS") -> "Policy":
         return cls(
             as_=as_,
             local_rib={prefix: Ann.from_json(ann) for prefix, ann in json_obj["local_rib"].items()},
-            base_routing_policy_settings=json_obj["base_routing_policy_settings"],
-            overriden_routing_policy_settings=json_obj["overriden_routing_policy_settings"],
+            base_settings=json_obj["base_settings"],
+            overriden_settings=json_obj["overriden_settings"],
         )
 
 
-RoutingPolicy.name_to_cls_dict["RoutingPolicy"] = RoutingPolicy
+Policy.name_to_cls_dict["Policy"] = Policy

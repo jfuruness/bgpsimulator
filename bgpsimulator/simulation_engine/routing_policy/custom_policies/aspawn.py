@@ -1,6 +1,7 @@
 from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.shared.enums import Relationships
 from bgpsimulator.as_graph import AS
+from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class ASPAwN:
     """ASRA: Esentially ASPA and checking neighbors at every AS together
@@ -23,16 +24,16 @@ class ASPAwN:
 
 
     @staticmethod
-    def valid_ann(ann: Ann, from_rel: Relationships, as_obj: "AS") -> bool:
+    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
         """Checks neighbors at every AS in the AS-Path"""
 
         as_path = ann.as_path
-        as_dict = as_obj.as_graph.as_dict
+        as_dict = policy.as_.as_graph.as_dict
         for i, asn in enumerate(as_path):
             # Get the AS object for the current AS in the AS Path
             asra_as_obj = as_dict.get(asn)
             # If the AS is an ASRA AS
-            if asra_as_obj and asra_as_obj.routing_policy.overriden_routing_policy_settings.get(RoutingPolicySettings.ASPA_W_N, False):
+            if asra_as_obj and asra_as_obj.policy.overriden_settings.get(Settings.ASPA_W_N, False):
                 # Check that both of it's neighbors are in the valid next hops
                 for neighbor_index in (i - 1, i + 1):
                     # Can't use try except IndexError here, since -1 is a valid index
@@ -41,4 +42,4 @@ class ASPAwN:
                         if neighbor_asn not in asra_as_obj.neighbor_asns:
                             return False
         # This is a superset of ASPA
-        return ASPA.valid_ann(ann, from_rel, as_obj)
+        return ASPA.valid_ann(policy, ann, from_rel)

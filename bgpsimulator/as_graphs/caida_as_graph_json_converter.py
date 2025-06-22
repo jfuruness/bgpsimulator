@@ -9,7 +9,7 @@ from .base_as import AS
 from .caida_as_graph_collector import CAIDAASGraphCollector
 from .as_graph_utils import ASGraphUtils
 from bgpsimulator.shared import ASNGroups, SINGLE_DAY_CACHE_DIR, bgpsimulator_logger
-from bgpsimulator.simulation_engine.routing_policy import RoutingPolicy
+from bgpsimulator.simulation_engine.policy import Policy
 
 
 class CAIDAASGraphJSONConverter:
@@ -24,7 +24,7 @@ class CAIDAASGraphJSONConverter:
         additional_asn_group_filters: frozendict[
             str, Callable[[dict[int, AS]], frozenset[int]]
         ] = frozendict(),
-        RoutingPolicyCls: type[RoutingPolicy] = RoutingPolicy,
+        PolicyCls: type[Policy] = Policy,
     ) -> tuple[dict[str, Any], Path]:
         """Generates AS graph in the following steps:
 
@@ -41,7 +41,7 @@ class CAIDAASGraphJSONConverter:
                 caida_as_graph_path,
                 json_cache_path,
                 additional_asn_group_filters,
-                RoutingPolicyCls
+                PolicyCls
             )
         try:
             as_graph_info = json.loads(json_cache_path.read_text())
@@ -53,7 +53,7 @@ class CAIDAASGraphJSONConverter:
             json_cache_path.unlink()
             raise
 
-    def _write_as_graph_json(self, caida_as_graph_path: Path, json_cache_path: Path, additional_asn_group_filters: frozendict[int, Callable[[dict[int, AS]], frozenset[AS]]], RoutingPolicyCls: type[RoutingPolicy]) -> None:
+    def _write_as_graph_json(self, caida_as_graph_path: Path, json_cache_path: Path, additional_asn_group_filters: frozendict[int, Callable[[dict[int, AS]], frozenset[AS]]], PolicyCls: type[Policy]) -> None:
         """Writes as graph JSON from CAIDAs raw file"""
 
         asn_to_as : dict[int, AS] = dict()
@@ -77,7 +77,7 @@ class CAIDAASGraphJSONConverter:
         asn_groups = self._get_asn_groups(asn_to_as, additional_asn_group_filters)
 
         final_json = {
-            "ases": {k: {**as_.to_json(), "RoutingPolicyCls": RoutingPolicyCls.__name__} for k, as_ in asn_to_as.items()},
+            "ases": {k: {**as_.to_json(), "PolicyCls": PolicyCls.__name__} for k, as_ in asn_to_as.items()},
             "asn_groups": {k: list(asn_group) for k, asn_group in asn_groups.items()}
         }
         ASGraphUtils.add_extra_setup(final_json)

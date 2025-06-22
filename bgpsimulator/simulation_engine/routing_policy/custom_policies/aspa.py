@@ -1,6 +1,7 @@
 from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.shared.enums import Relationships
 from bgpsimulator.as_graph import AS
+from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class ASPA:
     """A Policy that deploys ASPA and ASPA Records
@@ -16,33 +17,33 @@ class ASPA:
     """
 
     @staticmethod
-    def valid_ann(ann: Ann, from_rel: Relationships, as_obj: "AS") -> bool:
+    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
         """Returns False if ann from peer/customer when ASPA is set"""
 
     
         # Note: This first if check has to be removed if you want to implement
         # route server to RS-Client behaviour
-        if not ASPA._next_hop_valid(ann, as_obj):
+        if not ASPA._next_hop_valid(policy, ann):
             return False
         # Most ASes recieve anns from providers (moved here for speed)
         elif from_rel == Relationships.PROVIDERS:
-            return ASPA._downstream_check(ann, from_rel, as_obj)
+            return ASPA._downstream_check(policy, ann, from_rel)
         elif from_rel in (Relationships.CUSTOMERS, Relationships.PEERS):
-            return ASPA._upstream_check(ann, from_rel, as_obj)
+            return ASPA._upstream_check(policy, ann, from_rel)
         else:
             raise NotImplementedError("Should never reach here")
 
     @staticmethod
-    def _next_hop_valid(ann: "Ann", as_obj: "AS") -> bool:
+    def _next_hop_valid(policy: "Policy", ann: "Ann") -> bool:
         """Ensures the next hop is the first ASN in the AS-Path
         
         Route servers are allowed to strip their own ASN (and in most cases are obligated to)
         """
 
-        return ann.next_hop_asn == ann.as_path[0] or as_obj.ixp
+        return ann.next_hop_asn == ann.as_path[0] or policy.as_.ixp
 
     @staticmethod
-    def _upstream_check(ann: "Ann", from_rel: "Relationships", as_obj: "AS") -> bool:
+    def _upstream_check(policy: "Policy", ann: "Ann", from_rel: "Relationships") -> bool:
         """ASPA upstream check"""
 
         # Upstream check
@@ -53,14 +54,14 @@ class ASPA:
         # Since this is checking from customers
 
         # 4. If max_up_ramp < N, the procedure halts with the outcome "Invalid".
-        elif ASPA._get_max_up_ramp_length(ann, as_obj) < len(ann.as_path):
+        elif ASPA._get_max_up_ramp_length(policy, ann) < len(ann.as_path):
             return False
 
         # ASPA valid or unknown
         return True
 
     @staticmethod
-    def _get_max_up_ramp_length(ann: "Ann", as_obj: "AS") -> int:
+    def _get_max_up_ramp_length(policy: "Policy", ann: "Ann") -> int:
         """See desc
 
         Determine the maximum up-ramp length as I, where I is the minimum
@@ -75,18 +76,18 @@ class ASPA:
         reversed_path = ann.as_path[::-1]
 
         for i in range(len(reversed_path) - 1):
-            if not ASPA._provider_check(reversed_path[i], reversed_path[i + 1], as_obj):
+            if not ASPA._provider_check(reversed_path[i], reversed_path[i + 1], policy.as_):
                 return i + 1
         return len(ann.as_path)
 
     @staticmethod
-    def _downstream_check(ann: "Ann", from_rel: "Relationships", as_obj: "AS") -> bool:
+    def _downstream_check(policy: "Policy", ann: "Ann", from_rel: "Relationships") -> bool:
         """ASPA downstream check"""
 
         # 4. If max_up_ramp + max_down_ramp < N,
         # the procedure halts with the outcome "Invalid".
-        max_up_ramp = ASPA._get_max_up_ramp_length(ann, as_obj)
-        max_down_ramp = ASPA._get_max_down_ramp_length(ann, as_obj)
+        max_up_ramp = ASPA._get_max_up_ramp_length(policy, ann)
+        max_down_ramp = ASPA._get_max_down_ramp_length(policy, ann)
         if max_up_ramp + max_down_ramp < len(ann.as_path):
             return False
 
@@ -94,7 +95,7 @@ class ASPA:
         return True
 
     @staticmethod
-    def _get_max_down_ramp_length(ann: "Ann", as_obj: "AS") -> int:
+    def _get_max_down_ramp_length(policy: "Policy", ann: "Ann") -> int:
         """See desc
 
         Similarly, the maximum down-ramp length can be determined as N - J +
@@ -112,14 +113,14 @@ class ASPA:
         # We want the max J, so start at the end of the reversed Path
         # This is the most efficient way to traverse this
         for i in range(len(reversed_path) - 1, 0, -1):
-            if not ASPA._provider_check(reversed_path[i], reversed_path[i - 1], as_obj):
+            if not ASPA._provider_check(policy, reversed_path[i], reversed_path[i - 1]):
                 # Must add one due to zero indexing in python, vs 1 indexing in RFC
                 J = i + 1
                 return len(reversed_path) - J + 1
         return len(ann.as_path)
 
     @staticmethod
-    def _provider_check(asn1: int, asn2: int, as_obj: "AS") -> bool:
+    def _provider_check(policy: "Policy", asn1: int, asn2: int) -> bool:
         """Returns False if asn2 is not in asn1's provider_asns, AND asn1 adopts ASPA
 
         This also essentially can take the place of the "hop check" listed in
@@ -132,9 +133,9 @@ class ASPA:
         Updated so that if either AS doesn't exist, this function returns properly
         """
 
-        cur_as_obj = as_obj.as_graph.as_dict.get(asn1)
-        if cur_as_obj and cur_as_obj.routing_policy.overriden_routing_policy_settings.get(RoutingPolicySettings.ASPA, False):
-            next_as_obj = as_obj.as_graph.as_dict.get(asn2)
+        cur_as_obj = policy.as_.as_graph.as_dict.get(asn1)
+        if cur_as_obj and cur_as_obj.policy.overriden_settings.get(Settings.ASPA, False):
+            next_as_obj = policy.as_.as_graph.as_dict.get(asn2)
             next_asn = next_as_obj.asn if next_as_obj else next_as_obj
             if next_asn not in cur_as_obj.provider_asns:
                 return False

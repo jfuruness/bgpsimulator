@@ -30,7 +30,7 @@ class ASNGroups(StrEnum):
     IXPS = "ixps"
 
 
-class RoutingPolicySettings(IntEnum):
+class Settings(IntEnum):
     """Routing policy settings"""
 
     ASPA = 1
@@ -119,7 +119,7 @@ class Outcomes(IntEnum):
     UNDETERMINED: int = 3
     DATA_PLANE_LOOP: int = 4
 
-class InAdoptingAsns(StrEnum):
+class InAdoptingASNs(StrEnum):
     TRUE: str = "True"
     FALSE: str = "False"
     ANY: str = "Any"

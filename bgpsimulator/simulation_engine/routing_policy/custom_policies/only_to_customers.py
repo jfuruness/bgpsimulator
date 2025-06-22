@@ -1,12 +1,13 @@
 from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.shared.enums import Relationships
 from bgpsimulator.as_graph import AS
+from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class OnlyToCustomers:
     """A Policy that deploys only to customers, RFC 9234"""
 
     @staticmethod
-    def valid_ann(ann: Ann, from_rel: Relationships, as_obj: "AS") -> bool:
+    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
         """Returns validity for OTC attributes (RFC 9234)"""
 
         if (
@@ -22,12 +23,12 @@ class OnlyToCustomers:
             return True
 
     @staticmethod
-    def get_policy_propagate_vals(neighbor_as_obj: "AS", ann: Ann, propagate_to: Relationships, send_rels: list[Relationships], routing_policy: "RoutingPolicy") -> bool:
+    def get_policy_propagate_vals(policy: "Policy", neighbor_as_obj: "AS", ann: Ann, propagate_to: Relationships, send_rels: list[Relationships]) -> bool:
         """If propagating to custmoers and only_to_customers isn't set, set it"""
 
         if propagate_to in (Relationships.CUSTOMERS, Relationships.PROVIDERS):
-            ann = ann.copy(only_to_customers=routing_policy.as_obj.asn)
-            routing_policy.process_outgoing_ann(neighbor_as_obj, ann, propagate_to, send_rels)
+            ann = ann.copy(only_to_customers=policy.as_obj.asn)
+            policy.process_outgoing_ann(neighbor_as_obj, ann, propagate_to, send_rels)
             return PolicyPropagateInfo(
                 policy_propagate_bool=True,
                 ann=ann,

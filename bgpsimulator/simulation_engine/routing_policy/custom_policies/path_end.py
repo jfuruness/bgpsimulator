@@ -1,7 +1,8 @@
 from bgpsimulator.simulation_engine import Announcement as Ann
-from bgpsimulator.shared.enums import Relationships, RoutingPolicySettings
+from bgpsimulator.shared.enums import Relationships, Settings
 from bgpsimulator.as_graph import AS
 from .rov import ROV
+from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class PathEnd:
     """A Policy that deploys Path-End
@@ -9,18 +10,18 @@ class PathEnd:
     Jump starting BGP with Path-End validation"""
 
     @staticmethod
-    def valid_ann(ann: Ann, from_rel: Relationships, as_obj: "AS") -> bool:
+    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
         """Path-End extends ROV by checking the next-hop of the origin"""
 
-        if not ROV.valid_ann(ann, from_rel, as_obj):
+        if not ROV.valid_ann(policy, ann, from_rel):
             return False
 
         origin_asn = ann.origin
-        origin_as_obj = as_obj.as_graph.as_dict.get(origin_asn)
+        origin_as_obj = policy.as_.as_graph.as_dict.get(origin_asn)
         # If the origin is deploying pathend and the path is longer than 1
         if (
             origin_as_obj
-            and origin_as_obj.routing_policy.overriden_routing_policy_settings.get(RoutingPolicySettings.PATH_END, False)
+            and origin_as_obj.policy.overriden_settings.get(Settings.PATH_END, False)
             and len(ann.as_path) > 1
         ):
             # If the provider is real, do the loop check

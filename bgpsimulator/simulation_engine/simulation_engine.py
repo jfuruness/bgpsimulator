@@ -30,20 +30,20 @@ class SimulationEngine:
         """Sets AS classes and seeds announcements"""
 
         self._clear_as_routing_policies()
-        self._set_routing_policy_settings(scenario)
+        self._set_settings(scenario)
         self._seed_announcements(scenario.seed_asn_ann_dict)
 
     def _clear_as_routing_policies(self) -> None:
         """Clears the routing policies for each AS"""
 
         for as_obj in self.as_graph:
-            as_obj.routing_policy.clear()
+            as_obj.policy.clear()
 
-    def _set_routing_policy_settings(self, scenario: "Scenario") -> None:
+    def _set_settings(self, scenario: "Scenario") -> None:
         """Sets the routing policy settings for each AS"""
 
         for as_obj in self.as_graph:
-            scenario.set_routing_policy_settings(as_obj)
+            scenario.set_settings(as_obj)
 
     def _seed_announcements(self, seed_asn_ann_dict: dict[int, list["Ann"]]) -> None:
         """Seeds announcement at the proper AS
@@ -54,7 +54,7 @@ class SimulationEngine:
 
         for asn, anns in seed_asn_ann_dict.items():
             for ann in anns:
-                self.as_graph.as_dict[asn].routing_policy.seed_ann(ann)
+                self.as_graph.as_dict[asn].policy.seed_ann(ann)
 
     #####################
     # Propagation funcs #
@@ -83,14 +83,14 @@ class SimulationEngine:
             if i > 0:
                 # Process first because maybe it recv from lower ranks
                 for as_obj in rank:
-                    as_obj.routing_policy.process_incoming_anns(
+                    as_obj.policy.process_incoming_anns(
                         from_rel=Relationships.CUSTOMERS,
                         propagation_round=propagation_round,
                         scenario=scenario,
                     )
             # Send to the higher ranks
             for as_obj in rank:
-                as_obj.routing_policy.propagate_to_providers()
+                as_obj.policy.propagate_to_providers()
 
     def _propagate_to_peers(self, propagation_round: int, scenario: "Scenario") -> None:
         """Propagate to peers"""
@@ -101,9 +101,9 @@ class SimulationEngine:
         # since different customers peer to different ranks
         # So first do customer to provider propagation, then peer propagation
         for as_obj in self.as_graph:
-            as_obj.routing_policy.propagate_to_peers()
+            as_obj.policy.propagate_to_peers()
         for as_obj in self.as_graph:
-            as_obj.routing_policy.process_incoming_anns(
+            as_obj.policy.process_incoming_anns(
                 from_rel=Relationships.PEERS,
                 propagation_round=propagation_round,
                 scenario=scenario,
@@ -119,13 +119,13 @@ class SimulationEngine:
             # There are no incomming Anns at the top
             if i > 0:
                 for as_obj in rank:
-                    as_obj.routing_policy.process_incoming_anns(
+                    as_obj.policy.process_incoming_anns(
                         from_rel=Relationships.PROVIDERS,
                         propagation_round=propagation_round,
                         scenario=scenario,
                     )
             for as_obj in rank:
-                as_obj.routing_policy.propagate_to_customers()
+                as_obj.policy.propagate_to_customers()
 
     ##############
     # JSON funcs #

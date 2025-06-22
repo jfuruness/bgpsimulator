@@ -1,6 +1,6 @@
 from bgpsimulator.as_graphs import ASGraph
 from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
-from bgpsimulator.shared import ASNGroups, InAdoptingAsns, Outcomes
+from bgpsimulator.shared import ASNGroups, InAdoptingASNs, Outcomes
 from bgpsimulator.as_graphs.base_as import AS
 import re
 
@@ -30,9 +30,9 @@ class LineFilter:
             return False
         elif as_obj.asn not in as_graph.asn_groups[self.asn_group]:
             return False
-        elif self.in_adopting_asns == InAdoptingAsns.TRUE and as_obj.asn not in scenario.adopting_asns:
+        elif self.in_adopting_asns == InAdoptingASNs.TRUE and as_obj.asn not in scenario.adopting_asns:
             return False
-        elif self.in_adopting_asns == InAdoptingAsns.FALSE and as_obj.asn in scenario.adopting_asns:
+        elif self.in_adopting_asns == InAdoptingASNs.FALSE and as_obj.asn in scenario.adopting_asns:
             return False
         else:
             return True
@@ -63,7 +63,7 @@ class LineFilter:
         as_group, in_adopting_asns, prop_round, outcome = matches
         return cls(
             as_group=ASNGroups(as_group),
-            in_adopting_asns=InAdoptingAsns(in_adopting_asns),
+            in_adopting_asns=InAdoptingASNs(in_adopting_asns),
             prop_round=int(prop_round),
             outcome=Outcomes(outcome),
         )

@@ -1,3 +1,3 @@
-from .routing_policy import RoutingPolicy
+from .policy import Policy
 
-__all__ = ["RoutingPolicy"]
+__all__ = ["Policy"]

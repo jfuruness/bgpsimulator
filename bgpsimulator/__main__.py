@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from bgpsimulator.simulation_framework import ScenarioConfig, Simulation, SubprefixHijack
-from bgpsimulator.shared import RoutingPolicySettings
+from bgpsimulator.shared import Settings
 
 
 def main():
@@ -19,8 +19,8 @@ def main():
             ScenarioConfig(
                 label="Subprefix Hijack; ROV Adopting",
                 ScenarioCls=SubprefixHijack,
-                default_adopt_routing_policy_settings={
-                    RoutingPolicySettings.ROV: True,
+                default_adopt_settings={
+                    Settings.ROV: True,
                 },
             ),
         ),

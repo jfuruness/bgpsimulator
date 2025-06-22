@@ -24,7 +24,7 @@ class DataPlanePacketPropagator:
         if as_obj.asn in outcomes:
             return outcomes[as_obj.asn]
         else:
-            most_specific_ann = as_obj.routing_policy.get_most_specific_ann(dest_ip_addr)
+            most_specific_ann = as_obj.policy.get_most_specific_ann(dest_ip_addr)
             outcome = self._determine_data_plane_outcome(as_obj, engine, dest_ip_addr, most_specific_ann, visited_asns, legitimate_origin_asns, attacker_asns, scenario)
             if outcome == Outcomes.UNDETERMINED:
                 # next as in the AS path to traceback to
@@ -55,7 +55,7 @@ class DataPlanePacketPropagator:
             or len(most_specific_ann.as_path) == 1
             or most_specific_ann.recv_relationship.value == Relationships.ORIGIN.value
             or most_specific_ann.next_hop_asn == as_obj.asn
-            or not as_obj.routing_policy.passes_sav(dest_ip_addr, most_specific_ann)
+            or not as_obj.policy.passes_sav(dest_ip_addr, most_specific_ann)
         ):
             return Outcomes.DISCONNECTED
         elif (as_obj.asn in visited_asns) or (len(visited_asns) > 64):

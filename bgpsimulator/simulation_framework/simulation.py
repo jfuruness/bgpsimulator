@@ -22,12 +22,12 @@ from bgpsimulator.as_graphs import CAIDAASGraphCollector, CAIDAASGraphJSONConver
 from .data_tracker.line_filter import LineFilter
 from .data_tracker.data_tracker import DataTracker
 from .scenarios.scenario_config import ScenarioConfig
-from bgpsimulator.simulation_engine import SimulationEngine, RoutingPolicy
+from bgpsimulator.simulation_engine import SimulationEngine, Policy
 from .data_plane_packet_propagator import DataPlanePacketPropagator
 from .scenarios.scenario import Scenario
 from .scenarios import SubprefixHijack
 from .graph_factory import GraphFactory
-from bgpsimulator.shared import bgpsimulator_logger, ASNGroups, InAdoptingAsns, Outcomes, RoutingPolicySettings
+from bgpsimulator.shared import bgpsimulator_logger, ASNGroups, InAdoptingASNs, Outcomes, Settings
 
 if TYPE_CHECKING:
     from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
@@ -67,8 +67,8 @@ class Simulation:
             ScenarioConfig(
                 label="Subprefix Hijack; ROV Adopting",
                 ScenarioCls=SubprefixHijack,
-                default_adopt_routing_policy_settings={
-                    RoutingPolicySettings.ROV: True,
+                default_adopt_settings={
+                    Settings.ROV: True,
                 },
             ),
         ),
@@ -80,7 +80,7 @@ class Simulation:
         DataPlanePacketPropagatorCls: type[DataPlanePacketPropagator] = DataPlanePacketPropagator,
         DataTrackerCls: type[DataTracker] = DataTracker,
         line_filters: tuple[LineFilter, ...] = (),
-        RoutingPolicyCls: type[RoutingPolicy] = RoutingPolicy
+        PolicyCls: type[Policy] = Policy
     ) -> None:
         self.output_dir: Path = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -90,13 +90,13 @@ class Simulation:
         self.parse_cpus: int = parse_cpus
         self.python_hash_seed: int | None = python_hash_seed
         self._seed_random()
-        self.RoutingPolicyCls = RoutingPolicyCls
+        self.PolicyCls = PolicyCls
 
         if not as_graph_data_json_path:
             caida_path: Path = CAIDAASGraphCollector().run()
             _, as_graph_data_json_path = CAIDAASGraphJSONConverter().run(
                 caida_as_graph_path=caida_path,
-                RoutingPolicyCls=RoutingPolicyCls
+                PolicyCls=PolicyCls
             )
         self.as_graph_data_json_path: Path = as_graph_data_json_path
 
@@ -108,7 +108,7 @@ class Simulation:
             max_prop_round = max(x.propagation_rounds for x in self.scenario_configs)
             line_filters: list[LineFilter] = []
             for as_group in ASNGroups:
-                for in_adopting_asns in InAdoptingAsns:
+                for in_adopting_asns in InAdoptingASNs:
                     for outcome in Outcomes:
                         line_filters.append(
                             LineFilter(
@@ -333,7 +333,7 @@ class Simulation:
                         scenario_config=scenario_config,
                         percent_ases_randomly_adopting=percent_adopt,
                         engine=engine,
-                        route_validator = self.RoutingPolicyCls.route_validator,
+                        route_validator = self.PolicyCls.route_validator,
                         attacker_asns=trial_attacker_asns,
                         legitimate_origin_asns=trial_legitimate_origin_asns,
                         adopting_asns=adopting_asns,
