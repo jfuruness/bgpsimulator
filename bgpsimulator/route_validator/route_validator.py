@@ -11,6 +11,12 @@ class RouteValidator:
     def __init__(self) -> None:
         self.root: ROASNode = ROASNode()
         self.get_roa_outcome.cache_clear()
+        self._roas: list[ROA] = list()
+
+    @property
+    def roas(self) -> tuple[ROA, ...]:
+        """Returns all ROAs in the trie"""
+        return tuple(self._roas)
 
     def clear(self) -> None:
         """Clears the trie"""
@@ -31,6 +37,7 @@ class RouteValidator:
                     node.left = ROASNode()
                 node = node.left
         node.add_data(prefix, roa)
+        self._roas.append(roa)
 
     def __contains__(self, prefix: Prefix) -> bool:
         """Checks if a prefix is contained within the Trie"""

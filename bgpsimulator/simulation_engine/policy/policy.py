@@ -6,7 +6,7 @@ from weakref import proxy
 from bgpsimulator.shared.exceptions import GaoRexfordError
 from bgpsimulator.simulation_engine.announcement import Announcement as Ann
 from bgpsimulator.shared import Relationships
-from bgpsimulator.shared import Settings
+from bgpsimulator.shared import Settings, ROAValidity
 from bgpsimulator.shared import Prefix, IPAddr
 from bgpsimulator.route_validator import RouteValidator
 from .custom_policies import (
@@ -20,12 +20,15 @@ from .custom_policies import (
     ROV,
     PathEnd,
     PeerLockLite,
+    ROVPPV1Lite,
+    ROVPPV2Lite,
+    ROVPPV2iLite,
+    BGPSec,
 )
 
 if TYPE_CHECKING:
     from weakref import CallableProxyType
     from bgpsimulator.as_graphs import AS
-
 
 class Policy:
 
@@ -91,6 +94,10 @@ class Policy:
         # Ensure we aren't replacing anything
         err = f"Seeding conflict {ann} {self.local_rib.get(ann.prefix)}"
         assert self.local_rib.get(ann.prefix) is None, err
+
+        # If BGPSEC is deployed, modify the announcement
+        if self.settings.get(Settings.BGPSEC, False):
+            ann = BGPSec.get_modified_seed_ann(self, ann)
         # Seed by placing in the local rib
         self.local_rib[ann.prefix] = ann
 
@@ -123,6 +130,11 @@ class Policy:
                 # Save to local rib
                 self.local_rib[current_ann.prefix] = current_ann
 
+        # NOTE: all three of these have the same process_incoming_anns
+        # which just adds ROV++ blackholes to the local RIB
+        if self.settings.get(Settings.ROVPP_V1_LITE, False) or self.settings.get(Settings.ROVPP_V2_LITE, False) or self.settings.get(Settings.ROVPP_V2I_LITE, False):
+            ROVPPV1Lite.process_incoming_anns(self, from_rel, propagation_round)
+
         self.recv_q.clear()
 
     def _get_new_best_ann(
@@ -135,6 +147,8 @@ class Policy:
                 as_path=(self.as_.asn, *new_ann.as_path),
                 recv_relationship=from_rel,
             )
+            if self.settings.get(Settings.BGPSEC, False):
+                new_ann_processed = BGPSec.process_bgpsec_ann(self, new_ann_processed, from_rel)
             return self._get_best_ann_by_gao_rexford(current_ann, new_ann_processed)
         else:
             return current_ann
@@ -168,6 +182,10 @@ class Policy:
 
         return True
 
+    def ann_is_invalid_by_roa(self, ann: Ann) -> bool:
+        """Determines if an announcement is invalid by a ROA"""
+        return ROAValidity.is_invalid(self.route_validator.get_roa_outcome(ann.prefix, ann.origin)[0])
+
     ###############
     # Gao rexford #
     ###############
@@ -187,6 +205,8 @@ class Policy:
             (new_ann if current_ann is None else None)
             or self._get_best_ann_by_local_pref(current_ann, new_ann)
             or self._get_best_ann_by_as_path(current_ann, new_ann)
+            # BGPSec is security third (see BGPSec class docstring)
+            or (self.settings.get(Settings.BGPSEC, False) and BGPSec.get_best_ann_by_bgpsec(self, current_ann, new_ann))
             or self._get_best_ann_by_lowest_neighbor_asn_tiebreaker(current_ann, new_ann)
         )
         if final_ann:
@@ -299,8 +319,34 @@ class Policy:
         """
 
         og_ann = ann
+        if self.settings.get(Settings.BGPSEC, False):
+            policy_propagate_info = BGPSec.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
+            if policy_propagate_info.policy_propagate_bool:
+                ann = policy_propagate_info.ann
+                if not policy_propagate_info.send_ann_bool:
+                    return True
         if self.settings.get(Settings.ONLY_TO_CUSTOMERS, False):
             policy_propagate_info = OnlyToCustomers.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
+            if policy_propagate_info.policy_propagate_bool:
+                ann = policy_propagate_info.ann
+                if not policy_propagate_info.send_ann_bool:
+                    return True
+        if self.settings.get(Settings.ROVPP_V2I_LITE, False):
+            policy_propagate_info = ROVPPV2iLite.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
+            if policy_propagate_info.policy_propagate_bool:
+                ann = policy_propagate_info.ann
+                if not policy_propagate_info.send_ann_bool:
+                    return True
+        # If V2i is deployed, don't use V2
+        if self.settings.get(Settings.ROVPP_V2_LITE, False) and not self.settings.get(Settings.ROVPP_V2I_LITE, False):
+            policy_propagate_info = ROVPPV2Lite.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
+            if policy_propagate_info.policy_propagate_bool:
+                ann = policy_propagate_info.ann
+                if not policy_propagate_info.send_ann_bool:
+                    return True
+        # If v2i or v2 are set, don't use v1 (since they are supersets)
+        if self.settings.get(Settings.ROVPP_V1_LITE, False) and not self.settings.get(Settings.ROVPP_V2I_LITE, False) and not self.settings.get(Settings.ROVPP_V2_LITE, False):
+            policy_propagate_info = ROVPPV1Lite.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
             if policy_propagate_info.policy_propagate_bool:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
