@@ -1,7 +1,6 @@
-from bgpsimulator.as_graphs import ASGraph
+from bgpsimulator.as_graphs import ASGraph, AS
 from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 from bgpsimulator.shared import ASNGroups, InAdoptingASNs, Outcomes
-from bgpsimulator.as_graphs.base_as import AS
 import re
 
 class LineFilter:

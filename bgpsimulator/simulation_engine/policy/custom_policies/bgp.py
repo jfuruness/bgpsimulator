@@ -10,7 +10,7 @@ class BGP:
     """A Policy that deploys BGP"""
 
     @staticmethod
-    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
         """Determine if an announcement is valid or should be dropped"""
 
         # BGP Loop Prevention Check; no AS 0 either

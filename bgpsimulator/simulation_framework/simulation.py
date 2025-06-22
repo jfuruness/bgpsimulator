@@ -67,7 +67,7 @@ class Simulation:
             ScenarioConfig(
                 label="Subprefix Hijack; ROV Adopting",
                 ScenarioCls=SubprefixHijack,
-                default_adopt_settings={
+                default_adoption_settings={
                     Settings.ROV: True,
                 },
             ),

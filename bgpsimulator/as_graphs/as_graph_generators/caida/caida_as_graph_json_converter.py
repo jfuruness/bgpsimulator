@@ -5,9 +5,8 @@ from typing import Any, Callable
 
 from frozendict import frozendict
 
-from .base_as import AS
 from .caida_as_graph_collector import CAIDAASGraphCollector
-from .as_graph_utils import ASGraphUtils
+from bgpsimulator.as_graphs.as_graph import AS, ASGraphUtils
 from bgpsimulator.shared import ASNGroups, SINGLE_DAY_CACHE_DIR, bgpsimulator_logger
 from bgpsimulator.simulation_engine.policy import Policy
 

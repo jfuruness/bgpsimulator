@@ -279,7 +279,7 @@ class Scenario:
         """ASNs that have a preset adoption policy"""
 
         # Returns the union of default adopters and non adopters
-        hardcoded_asns = set(self.scenario_config.override_adopting_settings)
+        hardcoded_asns = set(self.scenario_config.override_adoption_settings)
         return self.default_adopters | self.default_non_adopters | hardcoded_asns
 
     @property
@@ -306,10 +306,10 @@ class Scenario:
         else:
             as_obj.policy.settings = self.scenario_config.default_base_settings
 
-        if as_obj.asn in self.scenario_config.override_adopting_settings:
-            as_obj.policy.settings.update(self.scenario_config.override_adopting_settings[as_obj.asn])
+        if as_obj.asn in self.scenario_config.override_adoption_settings:
+            as_obj.policy.settings.update(self.scenario_config.override_adoption_settings[as_obj.asn])
         elif as_obj.asn in self.adopting_asns or as_obj.asn in self.default_adopters:
-            as_obj.policy.settings.update(self.scenario_config.default_adopt_settings)
+            as_obj.policy.settings.update(self.scenario_config.default_adoption_settings)
 
         if as_obj.asn in self.attacker_asns:
             as_obj.policy.settings.update(self.scenario_config.attacker_settings)
