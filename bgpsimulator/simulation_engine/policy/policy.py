@@ -26,6 +26,7 @@ from .custom_policies import (
     BGPSec,
     BGPiSecTransitive,
     ProviderConeID,
+    OriginHijackCustomers,
 )
 
 if TYPE_CHECKING:
@@ -413,6 +414,15 @@ class Policy:
         # If v2i or v2 are set, don't use v1 (since they are supersets)
         elif self.settings.get(Settings.ROVPP_V1_LITE, False):
             policy_propagate_info = ROVPPV1Lite.get_policy_propagate_vals(
+                self, neighbor_as, ann, propagate_to, send_rels
+            )
+            if policy_propagate_info.policy_propagate_bool:
+                ann = policy_propagate_info.ann
+                if not policy_propagate_info.send_ann_bool:
+                    return True
+
+        if self.settings.get(Settings.ORIGIN_HIJACK_CUSTOMERS, False):
+            policy_propagate_info = OriginHijackCustomers.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
             )
             if policy_propagate_info.policy_propagate_bool:

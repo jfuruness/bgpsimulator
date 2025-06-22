@@ -52,7 +52,7 @@ class Settings(IntEnum):
     ROVPP_V1_LITE = 17
     ROVPP_V2I_LITE = 18
     ROVPP_V2_LITE = 19
-    SHORTEST_PATH_PREFIX_ASPA_ATTACKER = 20
+    ORIGIN_HIJACK_CUSTOMERS = 20
 
 
 class ROAValidity(IntEnum):

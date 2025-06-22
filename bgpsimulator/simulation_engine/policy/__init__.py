@@ -16,6 +16,7 @@ from .custom_policies import (
     BGPSec,
     BGPiSecTransitive,
     ProviderConeID,
+    OriginHijackCustomers,
 )
 
 __all__ = [
@@ -36,4 +37,5 @@ __all__ = [
     "BGPSec",
     "BGPiSecTransitive",
     "ProviderConeID",
+    "OriginHijackCustomers",
 ]
