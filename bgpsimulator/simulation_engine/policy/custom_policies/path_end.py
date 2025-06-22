@@ -1,8 +1,12 @@
-from bgpsimulator.simulation_engine import Announcement as Ann
+from typing import TYPE_CHECKING
+
 from bgpsimulator.shared.enums import Relationships, Settings
-from bgpsimulator.as_graphs import AS
+
+if TYPE_CHECKING:
+    from bgpsimulator.simulation_engine import Announcement as Ann
+    from bgpsimulator.simulation_engine.policy.policy import Policy
+
 from .rov import ROV
-from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class PathEnd:
     """A Policy that deploys Path-End
@@ -10,7 +14,7 @@ class PathEnd:
     Jump starting BGP with Path-End validation"""
 
     @staticmethod
-    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
         """Path-End extends ROV by checking the next-hop of the origin"""
 
         if not ROV.valid_ann(policy, ann, from_rel):

@@ -1,7 +1,11 @@
-from bgpsimulator.simulation_engine import Announcement as Ann
+from typing import TYPE_CHECKING
+
 from bgpsimulator.shared.enums import Relationships
-from bgpsimulator.as_graphs import AS
-from bgpsimulator.simulation_engine.policy.policy import Policy
+
+if TYPE_CHECKING:
+    from bgpsimulator.as_graphs import AS
+    from bgpsimulator.simulation_engine import Announcement as Ann
+    from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class ASPA:
     """A Policy that deploys ASPA and ASPA Records
@@ -17,7 +21,7 @@ class ASPA:
     """
 
     @staticmethod
-    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
         """Returns False if ann from peer/customer when ASPA is set"""
 
     

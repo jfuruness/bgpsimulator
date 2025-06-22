@@ -1,7 +1,11 @@
-from bgpsimulator.simulation_engine import Announcement as Ann
+from typing import TYPE_CHECKING
+
 from bgpsimulator.shared.enums import Relationships
-from bgpsimulator.as_graphs import AS
-from bgpsimulator.simulation_engine.policy.policy import Policy
+
+if TYPE_CHECKING:
+    from bgpsimulator.as_graphs import AS
+    from bgpsimulator.simulation_engine import Announcement as Ann
+    from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class ASPAwN:
     """ASRA: Esentially ASPA and checking neighbors at every AS together
@@ -24,7 +28,7 @@ class ASPAwN:
 
 
     @staticmethod
-    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
         """Checks neighbors at every AS in the AS-Path"""
 
         as_path = ann.as_path

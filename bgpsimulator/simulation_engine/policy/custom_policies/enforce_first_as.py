@@ -1,13 +1,16 @@
-from bgpsimulator.simulation_engine import Announcement as Ann
+from typing import TYPE_CHECKING
+
 from bgpsimulator.shared.enums import Relationships
-from bgpsimulator.as_graphs import AS
-from bgpsimulator.simulation_engine.policy.policy import Policy
+
+if TYPE_CHECKING:
+    from bgpsimulator.simulation_engine import Announcement as Ann
+    from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class EnforceFirstAS:
     """A Policy that enforces the first AS in the AS-Path to be the origin AS"""
 
     @staticmethod
-    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
         """Ensures the first ASN in the AS-Path is a neighbor
 
         NOTE: normally this would check for an exact match, but since we don't

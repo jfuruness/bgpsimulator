@@ -1,7 +1,10 @@
-from bgpsimulator.simulation_engine import Announcement as Ann
+from typing import TYPE_CHECKING
+
 from bgpsimulator.shared.enums import Relationships
-from bgpsimulator.as_graphs import AS
-from bgpsimulator.simulation_engine.policy.policy import Policy
+
+if TYPE_CHECKING:
+    from bgpsimulator.simulation_engine import Announcement as Ann
+    from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class BGP:
     """A Policy that deploys BGP"""

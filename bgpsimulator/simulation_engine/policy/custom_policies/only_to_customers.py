@@ -1,13 +1,16 @@
-from bgpsimulator.simulation_engine import Announcement as Ann
-from bgpsimulator.shared.enums import Relationships
-from bgpsimulator.as_graphs import AS
-from bgpsimulator.simulation_engine.policy.policy import Policy
+from typing import TYPE_CHECKING
+
+from bgpsimulator.shared import Relationships, PolicyPropagateInfo
+
+if TYPE_CHECKING:
+    from bgpsimulator.simulation_engine import Announcement as Ann
+    from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class OnlyToCustomers:
     """A Policy that deploys only to customers, RFC 9234"""
 
     @staticmethod
-    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
         """Returns validity for OTC attributes (RFC 9234)"""
 
         if (
@@ -23,7 +26,7 @@ class OnlyToCustomers:
             return True
 
     @staticmethod
-    def get_policy_propagate_vals(policy: "Policy", neighbor_as_obj: "AS", ann: Ann, propagate_to: Relationships, send_rels: list[Relationships]) -> bool:
+    def get_policy_propagate_vals(policy: "Policy", neighbor_as_obj: "AS", ann: "Ann", propagate_to: Relationships, send_rels: list[Relationships]) -> bool:
         """If propagating to custmoers and only_to_customers isn't set, set it"""
 
         if propagate_to in (Relationships.CUSTOMERS, Relationships.PROVIDERS):

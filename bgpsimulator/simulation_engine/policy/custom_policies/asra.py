@@ -1,7 +1,12 @@
-from bgpsimulator.simulation_engine import Announcement as Ann
+from typing import TYPE_CHECKING
+
 from bgpsimulator.shared.enums import Relationships, Settings
-from bgpsimulator.as_graphs import AS
-from bgpsimulator.simulation_engine.policy.policy import Policy
+from .aspa import ASPA
+
+if TYPE_CHECKING:
+    from bgpsimulator.as_graphs import AS
+    from bgpsimulator.simulation_engine import Announcement as Ann
+    from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class ASRA:
     """Algo-B using ASRA3 records
@@ -9,7 +14,7 @@ class ASRA:
 
 
     @staticmethod
-    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
         """
         1) Perform standard ASPA route-leak detection via ASPA.valid_ann()
            If ASPA.valid_ann() returns False => 'Invalid'. We bail out.

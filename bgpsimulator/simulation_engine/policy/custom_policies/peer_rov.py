@@ -1,14 +1,17 @@
-from bgpsimulator.simulation_engine import Announcement as Ann
-from bgpsimulator.shared.enums import Relationships, ROAValidity
-from bgpsimulator.as_graphs import AS
+from typing import TYPE_CHECKING
+
+from bgpsimulator.shared import Relationships
 from .rov import ROV
-from bgpsimulator.simulation_engine.policy.policy import Policy
+
+if TYPE_CHECKING:
+    from bgpsimulator.simulationengine import Announcement as Ann
+    from bgpsimulator.simulation_engine.policy.policy import Policy
 
 class PeerROV:
     """A Policy that deploys Peer ROV (ROV only at peers)"""
 
     @staticmethod
-    def valid_ann(policy: "Policy", ann: Ann, from_rel: Relationships) -> bool:
+    def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:
         """Returns False if ann is ROV invalid and is from a peer"""
         if from_rel == Relationships.PEERS:
             return ROV.valid_ann(policy, ann, from_rel)
