@@ -9,16 +9,18 @@ from bgpsimulator.shared import Relationships
 from bgpsimulator.shared import Settings
 from bgpsimulator.shared import Prefix, IPAddr
 from bgpsimulator.route_validator import RouteValidator
-from bgpsimulator.simulation_engine.policy.custom_policies.aspa import ASPA
-from bgpsimulator.simulation_engine.policy.custom_policies.aspawn import ASPAwN
-from bgpsimulator.simulation_engine.policy.custom_policies.asra import ASRA
-from bgpsimulator.simulation_engine.policy.custom_policies.bgp import BGP
-from bgpsimulator.simulation_engine.policy.custom_policies.edge_filter import EdgeFilter
-from bgpsimulator.simulation_engine.policy.custom_policies.only_to_customers import OnlyToCustomers
-from bgpsimulator.simulation_engine.policy.custom_policies.enforce_first_as import EnforceFirstAS
-from bgpsimulator.simulation_engine.policy.custom_policies.rov import ROV
-from bgpsimulator.simulation_engine.policy.custom_policies.path_end import PathEnd
-from bgpsimulator.simulation_engine.policy.custom_policies.peerlock_lite import PeerLockLite
+from .custom_policies import (
+    ASPathEdgeFilter,
+    ASPA,
+    ASPAwN,
+    ASRA,
+    BGP,
+    OnlyToCustomers,
+    EnforceFirstAS,
+    ROV,
+    PathEnd,
+    PeerLockLite,
+)
 
 if TYPE_CHECKING:
     from weakref import CallableProxyType
@@ -128,7 +130,7 @@ class Policy:
     ) -> Ann | None:
         """Cheks new_ann's validity, processes it, and returns best_ann_by_gao_rexford"""
 
-        if self.valid_ann(new_ann, from_rel, self.as_):
+        if self.valid_ann(new_ann, from_rel):
             new_ann_processed = new_ann.copy(
                 as_path=(self.as_.asn, *new_ann.as_path),
                 recv_relationship=from_rel,
@@ -140,7 +142,7 @@ class Policy:
     def valid_ann(self, ann: Ann, from_rel: Relationships) -> bool:
         """Determine if an announcement is valid or should be dropped"""
 
-        settings = self.overriden_settings
+        settings = self.settings
 
         if not BGP.valid_ann(self, ann, from_rel):
             return False
@@ -151,7 +153,7 @@ class Policy:
             return False
         if settings.get(Settings.ASRA, False) and not ASRA.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(Settings.EDGE_FILTER, False) and not EdgeFilter.valid_ann(self, ann, from_rel):
+        if settings.get(Settings.AS_PATH_EDGE_FILTER, False) and not ASPathEdgeFilter.valid_ann(self, ann, from_rel):
             return False
         if settings.get(Settings.ENFORCE_FIRST_AS, False) and not EnforceFirstAS.valid_ann(self, ann, from_rel):
             return False
@@ -161,7 +163,7 @@ class Policy:
             return False
         if settings.get(Settings.PATH_END, False) and not PathEnd.valid_ann(self, ann, from_rel):
             return False
-        if settings.get(Settings.PEER_LOCK_LITE, False) and not PeerLockLite.valid_ann(self, ann, from_rel):
+        if settings.get(Settings.PEERLOCK_LITE, False) and not PeerLockLite.valid_ann(self, ann, from_rel):
             return False
 
         return True
@@ -284,21 +286,31 @@ class Policy:
         propagate_to: Relationships,
         send_rels: set[Relationships],
     ) -> bool:
-        """Policies can override this to handle their own propagation and return True"""
+        """Policies can override this to handle their own propagation and return True
+        
+        This can no longer be as simple as it was in BGPy since many policies may
+        interact with one another. So there are three values returned from each policy:
+        1. policy_propagate_bool. If this is False, the policy did nothing, if it is 
+        true, Policy should return True from this method
+        2. ann: The modified ann. This can be then be passed into the other funcs
+        3. send_ann_bool. Sometimes a policy may declare the ann shoulldn't be sent at all
+        (for example, ROV++V1 won't send blackholes), in which case, just return True immediately
+        without sending any anns
+        """
 
-        policy_propagate_ann = None
-        if self.overriden_settings.get(Settings.ONLY_TO_CUSTOMERS, False):
+        og_ann = ann
+        if self.settings.get(Settings.ONLY_TO_CUSTOMERS, False):
             policy_propagate_info = OnlyToCustomers.get_policy_propagate_vals(self, neighbor_as, ann, propagate_to, send_rels)
             if policy_propagate_info.policy_propagate_bool:
-                policy_propagate_ann = policy_propagate_info.ann
+                ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
-                    return False
+                    return True
 
-        if policy_propagate_ann:
-            self.process_outgoing_ann(neighbor_as, policy_propagate_ann, propagate_to, send_rels)
-
-
-        return policy_propagate
+        if og_ann != ann:
+            self.process_outgoing_ann(neighbor_as, ann, propagate_to, send_rels)
+            return True
+        else:
+            return False
 
     def process_outgoing_ann(
         self,
