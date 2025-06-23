@@ -305,7 +305,7 @@ class Policy:
 
         return current_ann if current_neighbor_asn <= new_neighbor_asn else new_ann
 
-    def propagate_to_customers(self, propagation_round: int) -> None:
+    def propagate_to_customers(self) -> None:
         """Propogates to customers anns that have a known recv_rel"""
 
         send_rels: set[Relationships] = {
@@ -314,26 +314,22 @@ class Policy:
             Relationships.PEERS,
             Relationships.PROVIDERS,
         }
-        self._propagate(Relationships.CUSTOMERS, send_rels, propagation_round)
+        self._propagate(Relationships.CUSTOMERS, send_rels)
 
-    def propagate_to_peers(self, propagation_round: int) -> None:
+    def propagate_to_peers(self) -> None:
         """Propogates to peers anns from this AS (origin) or from customers"""
 
         send_rels: set[Relationships] = {Relationships.ORIGIN, Relationships.CUSTOMERS}
-        if propagation_round != 0 and self.settings.get(Settings.LEAKER, False):
-            send_rels.update({Relationships.PEERS, Relationships.PROVIDERS})
-        self._propagate(Relationships.PEERS, send_rels, propagation_round)
+        self._propagate(Relationships.PEERS, send_rels)
 
-    def propagate_to_providers(self, propagation_round: int) -> None:
+    def propagate_to_providers(self) -> None:
         """Propogates to providers anns that have recv_rel from origin or customers"""
 
         send_rels: set[Relationships] = {Relationships.ORIGIN, Relationships.CUSTOMERS}
-        if propagation_round != 0 and self.settings.get(Settings.LEAKER, False):
-            send_rels.update({Relationships.PEERS, Relationships.PROVIDERS})
-        self._propagate(Relationships.PROVIDERS, send_rels, propagation_round)
+        self._propagate(Relationships.PROVIDERS, send_rels)
 
     def _propagate(
-        self, propagate_to: Relationships, send_rels: set[Relationships], propagation_round: int
+        self, propagate_to: Relationships, send_rels: set[Relationships]
     ) -> None:
         """Propogates announcements from local rib to other ASes
 
