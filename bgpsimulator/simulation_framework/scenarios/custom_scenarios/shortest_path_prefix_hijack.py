@@ -1,11 +1,11 @@
 from collections import deque
 import warnings
 
-from bgpsimulator.as_graph import AS
+from bgpsimulator.as_graphs import AS
 from bgpsimulator.route_validator import ROA
 from bgpsimulator.simulation_engine import Announcement as Ann, SimulationEngine
 from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
-from bgpsimulator.shared import Settings, bgpsimulator_logger, Prefixes, Relationships, Timestamps, IPAddr
+from bgpsimulator.shared import Settings, bgpsimulator_logger, Prefix, Relationships, Timestamps, IPAddr
 
 
 class ShortestPathPrefixHijack(Scenario):

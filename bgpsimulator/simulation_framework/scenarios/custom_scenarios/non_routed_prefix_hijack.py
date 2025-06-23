@@ -9,7 +9,7 @@ from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 from bgpsimulator.shared import IPAddr
 
 
-class PrefixHijack(Scenario):
+class NonRoutedPrefixHijack(Scenario):
     """Attacker announces an ROV-invalid prefix that is not routed by the legitimate origin"""
 
     def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:

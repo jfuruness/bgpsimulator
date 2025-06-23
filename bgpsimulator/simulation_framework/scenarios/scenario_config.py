@@ -133,18 +133,6 @@ class ScenarioConfig:
                         self.propagation_rounds = (
                             self.ScenarioCls.min_propagation_rounds
                         )
-            if any(
-                x.get(Settings.LEAKER)
-                for x in [
-                    self.attacker_settings,
-                    self.legitimate_origin_settings,
-                    self.override_adoption_settings,
-                    self.override_base_settings,
-                    self.default_adoption_settings,
-                    self.default_base_settings,
-                ]
-            ):
-                self.propagation_rounds = 2
             if self.propagation_rounds is None:
                 self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
         if self.ScenarioCls.min_propagation_rounds > self.propagation_rounds:

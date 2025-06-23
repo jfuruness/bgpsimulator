@@ -1,5 +1,18 @@
 from .scenario_config import ScenarioConfig
-from .custom_scenarios import SubprefixHijack
 from .scenario import Scenario
+from .custom_scenarios import (
+    AccidentalRouteLeak,
+    FirstASNStrippingPrefixHijack,
+    ForgedOriginPrefixHijack,
+    LegitimatePrefixOnly,
+    NonRoutedPrefixHijack,
+    NonRoutedSuperprefixHijack,
+    NonRoutedSuperprefixPrefixHijack,
+    PassiveHijack,
+    PrefixHijack,
+    ShortestPathPrefixHijack,
+    SubprefixHijack,
+    SuperprefixPrefixHijack,
+)
 
-__all__ = ["ScenarioConfig", "SubprefixHijack", "Scenario"]
+__all__ = ["ScenarioConfig", "Scenario", "AccidentalRouteLeak", "FirstASNStrippingPrefixHijack", "ForgedOriginPrefixHijack", "LegitimatePrefixOnly", "NonRoutedPrefixHijack", "NonRoutedSuperprefixHijack", "NonRoutedSuperprefixPrefixHijack", "PassiveHijack", "PrefixHijack", "ShortestPathPrefixHijack", "SubprefixHijack", "SuperprefixPrefixHijack"]
