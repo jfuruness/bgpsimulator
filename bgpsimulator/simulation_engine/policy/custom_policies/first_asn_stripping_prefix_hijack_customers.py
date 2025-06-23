@@ -26,7 +26,7 @@ class FirstASNStrippingPrefixHijackCustomers:
         ):
             # Only need when sending to customers
             return PolicyPropagateInfo(
-                policy_propagate_bool=True
+                policy_propagate_bool=True,
                 ann=ann.copy(as_path=(ann.origin,)),
                 send_ann_bool=True,
             )

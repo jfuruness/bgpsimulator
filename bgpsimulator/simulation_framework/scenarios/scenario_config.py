@@ -59,25 +59,17 @@ class ScenarioConfig:
         # 5. default_base_settings
 
         # 1a. This will update the base routing policy settings for the attacker ASes
-        self.attacker_settings: dict[Settings, bool] = attacker_settings or dict()
+        self.attacker_settings: dict[Settings, bool] = self.update_supersets(attacker_settings) or dict()
         # 1v. This will update the base routing policy settings for the legitimate_origin ASes
-        self.legitimate_origin_settings: dict[Settings, bool] = (
-            legitimate_origin_settings or dict()
-        )
+        self.legitimate_origin_settings: dict[Settings, bool] = self.update_supersets(legitimate_origin_settings) or dict()
         # 2. This will completely override the default adopt routing policy settings
-        self.override_adoption_settings: dict[int, dict[str, bool]] = (
-            override_adoption_settings or dict()
-        )
+        self.override_adoption_settings: dict[int, dict[str, bool]] = self.update_supersets(override_adoption_settings) or dict()
         # 3. This will completely override the default base routing policy settings
-        self.override_base_settings: dict[int, dict[str, bool]] = (
-            override_base_settings or dict()
-        )
+        self.override_base_settings: dict[int, dict[str, bool]] = self.update_supersets(override_base_settings) or dict()
         # 4. This will update the base routing policy settings for the adopting ASes
-        self.default_adoption_settings: dict[str, bool] = (
-            default_adoption_settings or dict()
-        )
+        self.default_adoption_settings: dict[str, bool] = self.update_supersets(default_adoption_settings) or dict()
         # 5. Base routing policy settings that will be applied to all ASes
-        self.default_base_settings: dict[str, bool] = default_base_settings or {
+        self.default_base_settings: dict[str, bool] = self.update_supersets(default_base_settings) or {
             x: False for x in Settings
         }
 
@@ -109,6 +101,12 @@ class ScenarioConfig:
         # Every AS will attempt to send a packet to this IP address post propagation
         # This is used for the ASGraphAnalyzer to determine the outcome of a packet
         self.override_dest_ip_addr: IPAddr | None = override_dest_ip_addr
+
+
+        # Below this point 99% of devs will not need to touch
+
+
+
         if self.propagation_rounds is None:
             # BGP-iSec needs this.
             for policy_setting in [Settings.BGP_I_SEC, Settings.BGP_I_SEC_TRANSITIVE]:
@@ -134,6 +132,18 @@ class ScenarioConfig:
                         self.propagation_rounds = (
                             self.ScenarioCls.min_propagation_rounds
                         )
+            if any(
+                x.get(Settings.LEAKER)
+                for x in [
+                    self.attacker_settings,
+                    self.legitimate_origin_settings,
+                    self.override_adoption_settings,
+                    self.override_base_settings,
+                    self.default_adoption_settings,
+                    self.default_base_settings,
+                ]
+            ):
+                self.propagation_rounds = 2
             if self.propagation_rounds is None:
                 self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
         if self.ScenarioCls.min_propagation_rounds > self.propagation_rounds:
@@ -143,6 +153,28 @@ class ScenarioConfig:
                 f"but this scenario_config has only {self.propagation_rounds} "
                 "propagation rounds"
             )
+
+    @staticmethod
+    def update_supersets(policy_settings: dict[Settings, bool] | None) -> dict[Settings, bool] | None:
+        """Updates the supersets of a policy setting"""
+
+        if policy_settings is None:
+            return
+
+        new_settings = policy_settings.copy()
+        if policy_settings.get(Settings.BGP_I_SEC, False):
+            new_settings[Settings.BGP_I_SEC_TRANSITIVE] = True
+            new_settings[Settings.PROVIDER_CONE_ID] = True
+            new_settings[Settings.ONLY_TO_CUSTOMERS] = True
+        if policy_settings.get(Settings.PATH_END, False):
+            new_settings[Settings.ROV] = True
+        if any(policy_settings.get(x) for x in [Settings.ROVPP_V2_LITE, Settings.ROVPP_V2I_LITE]):
+            new_settings[Settings.ROVPP_V1_LITE] = True
+        if policy_settings.get(Settings.ROVPP_V1_LITE, False):
+            new_settings[Settings.ROV] = True
+        if any(policy_settings.get(x) for x in [Settings.ASRA, Settings.ASPA_W_N]):
+            new_settings[Settings.ASPA] = True
+        return new_settings
 
     ##############
     # JSON Funcs #

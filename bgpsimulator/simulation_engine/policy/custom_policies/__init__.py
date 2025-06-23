@@ -16,7 +16,7 @@ from .bgpisec_transitive import BGPiSecTransitive
 from .provider_cone_id import ProviderConeID
 from .origin_prefix_hijack_customers import OriginPrefixHijackCustomers
 from .first_asn_stripping_prefix_hijack_customers import FirstASNStrippingPrefixHijackCustomers
-
+from .peer_rov import PeerROV
 __all__ = [
     "ASPathEdgeFilter",
     "ASPA",
@@ -36,4 +36,5 @@ __all__ = [
     "ProviderConeID",
     "OriginPrefixHijackCustomers",
     "FirstASNStrippingPrefixHijackCustomers",
+    "PeerROV",
 ]

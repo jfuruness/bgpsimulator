@@ -27,7 +27,7 @@ class OriginPrefixHijackCustomers:
         ):
             # Only need origin hijack when sending to customers
             return PolicyPropagateInfo(
-                policy_propagate_bool=True
+                policy_propagate_bool=True,
                 ann=ann.copy(as_path=(policy.as_.asn, ann.origin)),
                 send_ann_bool=True,
             )

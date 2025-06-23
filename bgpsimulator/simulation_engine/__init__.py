@@ -19,6 +19,7 @@ from .policy import (
     ProviderConeID,
     OriginPrefixHijackCustomers,
     FirstASNStrippingPrefixHijackCustomers,
+    PeerROV,
 )
 from .simulation_engine import SimulationEngine
 
@@ -44,4 +45,5 @@ __all__ = [
     "ProviderConeID",
     "OriginPrefixHijackCustomers",
     "FirstASNStrippingPrefixHijackCustomers",
+    "PeerROV",
 ]

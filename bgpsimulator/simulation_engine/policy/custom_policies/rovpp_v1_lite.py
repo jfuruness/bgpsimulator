@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Iterator
 from bgpsimulator.shared import Relationships, PolicyPropagateInfo, Timestamps, Settings
 from .bgpisec_transitive import BGPiSecTransitive
 from .bgpsec import BGPSec
-from .rovpp import ROV
+from .rov import ROV
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -84,24 +84,14 @@ class ROVPPV1Lite:
 
         routed_blackholes_to_add = []
         for ann in policy.local_rib.values():
-            for sub_ann in ROVPPV1Lite.invalid_subprefixes_from_neighbor(policy, ann):
-                processed_sub_ann = sub_ann.copy(
-                    prefix=sub_ann.prefix,
+            for unprocessed_sub_ann in ROVPPV1Lite.invalid_subprefixes_from_neighbor(policy, ann):
+                processed_sub_ann = policy.process_ann(unprocessed_sub_ann, from_rel)
+                # Add blackhole attributes to the processed ann
+                blackhole_ann = processed_sub_ann.copy(
                     next_hop_asn=policy.as_.asn,
-                    as_path=(policy.as_.asn, *sub_ann.as_path),
-                    recv_relationship=from_rel,
                     rovpp_blackhole=True,
                 )
-                if policy.settings.get(Settings.BGP_I_SEC, False) or policy.settings.get(Settings.BGP_I_SEC_TRANSITIVE, False):
-                    processed_sub_ann = BGPiSecTransitive.process_ann(
-                        policy, processed_sub_ann, from_rel
-                    )
-                # BGPiSec is a superset of BGPSec with differing functionality, so this must be ELIF!!!
-                elif policy.settings.get(Settings.BGPSEC, False):
-                    processed_sub_ann = BGPSec.process_ann(
-                        policy, processed_sub_ann, from_rel
-                    )
-                routed_blackholes_to_add.append(processed_sub_ann)
+                routed_blackholes_to_add.append(blackhole_ann)
         return routed_blackholes_to_add
 
     @staticmethod

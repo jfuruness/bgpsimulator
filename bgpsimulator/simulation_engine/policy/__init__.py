@@ -18,6 +18,7 @@ from .custom_policies import (
     ProviderConeID,
     OriginPrefixHijackCustomers,
     FirstASNStrippingPrefixHijackCustomers,
+    PeerROV,
 )
 
 __all__ = [
@@ -40,4 +41,5 @@ __all__ = [
     "ProviderConeID",
     "OriginPrefixHijackCustomers",
     "FirstASNStrippingPrefixHijackCustomers",
+    "PeerROV",
 ]

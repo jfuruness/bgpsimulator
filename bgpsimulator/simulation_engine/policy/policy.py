@@ -28,6 +28,7 @@ from .custom_policies import (
     ProviderConeID,
     OriginPrefixHijackCustomers,
     FirstASNStrippingPrefixHijackCustomers,
+    PeerROV,
 )
 
 if TYPE_CHECKING:
@@ -153,22 +154,29 @@ class Policy:
         """Cheks new_ann's validity, processes it, and returns best_ann_by_gao_rexford"""
 
         if self.valid_ann(new_ann, from_rel):
-            new_ann_processed = new_ann.copy(
-                as_path=(self.as_.asn, *new_ann.as_path),
-                recv_relationship=from_rel,
-            )
-            if self.settings.get(Settings.BGP_I_SEC, False) or self.settings.get(Settings.BGP_I_SEC_TRANSITIVE, False):
-                new_ann_processed = BGPiSecTransitive.process_ann(
-                    self, new_ann_processed, from_rel
-                )
-            # NOTE: THIS MUST BE ELIF!! BGPiSecTransitive is a superset of BGPSec and has different process_ann
-            elif self.settings.get(Settings.BGPSEC, False):
-                new_ann_processed = BGPSec.process_ann(
-                    self, new_ann_processed, from_rel
-                )
+            new_ann_processed = self.process_ann(new_ann, from_rel)
             return self._get_best_ann_by_gao_rexford(current_ann, new_ann_processed)
         else:
             return current_ann
+
+    def process_ann(self, unprocessed_ann: Ann, from_rel: Relationships) -> Ann:
+        """Processes an announcement going from recv_q or ribs_in to local rib
+        
+        Must prepend yourself to the AS-path, change the recv_relationship, and add policy info if needed
+        """
+        new_ann_processed = unprocessed_ann.copy(
+            as_path=(self.as_.asn, *unprocessed_ann.as_path),
+            recv_relationship=from_rel,
+        )
+        if self.settings.get(Settings.BGP_I_SEC, False) or self.settings.get(Settings.BGP_I_SEC_TRANSITIVE, False):
+            new_ann_processed = BGPiSecTransitive.process_ann(
+                self, new_ann_processed, from_rel
+            )
+        elif self.settings.get(Settings.BGPSEC, False):
+            new_ann_processed = BGPSec.process_ann(
+                self, new_ann_processed, from_rel
+            )
+        return new_ann_processed
 
     def valid_ann(self, ann: Ann, from_rel: Relationships) -> bool:
         """Determine if an announcement is valid or should be dropped"""
@@ -209,6 +217,8 @@ class Policy:
             return False
         # All use ROV for validity
         if (settings.get(Settings.ROV, False) or settings.get(Settings.ROVPP_V1_LITE, False) or settings.get(Settings.ROVPP_V2_LITE, False) or settings.get(Settings.ROVPP_V2I_LITE, False)) and not ROV.valid_ann(self, ann, from_rel):
+            return False
+        if settings.get(Settings.PEER_ROV, False) and not PeerROV.valid_ann(self, ann, from_rel):
             return False
         if settings.get(Settings.PATH_END, False) and not PathEnd.valid_ann(
             self, ann, from_rel
@@ -295,13 +305,7 @@ class Policy:
 
         return current_ann if current_neighbor_asn <= new_neighbor_asn else new_ann
 
-    def propagate_to_providers(self) -> None:
-        """Propogates to providers anns that have recv_rel from origin or customers"""
-
-        send_rels: set[Relationships] = {Relationships.ORIGIN, Relationships.CUSTOMERS}
-        self._propagate(Relationships.PROVIDERS, send_rels)
-
-    def propagate_to_customers(self) -> None:
+    def propagate_to_customers(self, propagation_round: int) -> None:
         """Propogates to customers anns that have a known recv_rel"""
 
         send_rels: set[Relationships] = {
@@ -310,16 +314,26 @@ class Policy:
             Relationships.PEERS,
             Relationships.PROVIDERS,
         }
-        self._propagate(Relationships.CUSTOMERS, send_rels)
+        self._propagate(Relationships.CUSTOMERS, send_rels, propagation_round)
 
-    def propagate_to_peers(self) -> None:
+    def propagate_to_peers(self, propagation_round: int) -> None:
         """Propogates to peers anns from this AS (origin) or from customers"""
 
         send_rels: set[Relationships] = {Relationships.ORIGIN, Relationships.CUSTOMERS}
-        self._propagate(Relationships.PEERS, send_rels)
+        if propagation_round != 0 and self.settings.get(Settings.LEAKER, False):
+            send_rels.update({Relationships.PEERS, Relationships.PROVIDERS})
+        self._propagate(Relationships.PEERS, send_rels, propagation_round)
+
+    def propagate_to_providers(self, propagation_round: int) -> None:
+        """Propogates to providers anns that have recv_rel from origin or customers"""
+
+        send_rels: set[Relationships] = {Relationships.ORIGIN, Relationships.CUSTOMERS}
+        if propagation_round != 0 and self.settings.get(Settings.LEAKER, False):
+            send_rels.update({Relationships.PEERS, Relationships.PROVIDERS})
+        self._propagate(Relationships.PROVIDERS, send_rels, propagation_round)
 
     def _propagate(
-        self, propagate_to: Relationships, send_rels: set[Relationships]
+        self, propagate_to: Relationships, send_rels: set[Relationships], propagation_round: int
     ) -> None:
         """Propogates announcements from local rib to other ASes
 
@@ -422,7 +436,7 @@ class Policy:
                 if not policy_propagate_info.send_ann_bool:
                     return True
 
-        if self.settings.get(Settings.ORIGIN_HIJACK_CUSTOMERS, False):
+        if self.settings.get(Settings.ORIGIN_PREFIX_HIJACK_CUSTOMERS, False):
             policy_propagate_info = OriginPrefixHijackCustomers.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
             )
@@ -430,7 +444,7 @@ class Policy:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
-        if self.settings.get(Settings.FIRST_ASN_STRIPPING_PREFIX_ASPA_ATTACKER, False):
+        if self.settings.get(Settings.FIRST_ASN_STRIPPING_PREFIX_HIJACK_CUSTOMERS, False):
             policy_propagate_info = FirstASNStrippingPrefixHijackCustomers.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
             )

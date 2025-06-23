@@ -92,7 +92,7 @@ class SimulationEngine:
                     )
             # Send to the higher ranks
             for as_obj in rank:
-                as_obj.policy.propagate_to_providers()
+                as_obj.policy.propagate_to_providers(propagation_round)
 
     def _propagate_to_peers(self, propagation_round: int, scenario: "Scenario") -> None:
         """Propagate to peers"""
@@ -103,7 +103,7 @@ class SimulationEngine:
         # since different customers peer to different ranks
         # So first do customer to provider propagation, then peer propagation
         for as_obj in self.as_graph:
-            as_obj.policy.propagate_to_peers()
+            as_obj.policy.propagate_to_peers(propagation_round)
         for as_obj in self.as_graph:
             as_obj.policy.process_incoming_anns(
                 from_rel=Relationships.PEERS,
@@ -129,7 +129,7 @@ class SimulationEngine:
                         scenario=scenario,
                     )
             for as_obj in rank:
-                as_obj.policy.propagate_to_customers()
+                as_obj.policy.propagate_to_customers(propagation_round)
 
     ##############
     # JSON funcs #
