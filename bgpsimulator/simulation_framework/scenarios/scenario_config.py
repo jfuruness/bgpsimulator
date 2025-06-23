@@ -2,6 +2,7 @@ from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any
 from warnings import warn
 import importlib
+from functools import cached_property
 
 from frozendict import frozendict
 
@@ -175,6 +176,16 @@ class ScenarioConfig:
         if any(policy_settings.get(x) for x in [Settings.ASRA, Settings.ASPA_W_N]):
             new_settings[Settings.ASPA] = True
         return new_settings
+
+    @cached_property
+    def get_all_used_settings(self) -> set[Settings]:
+        """Returns all the settings that are used in the scenario config"""
+        used_settings = set()
+        for setting_dict in [self.attacker_settings, self.legitimate_origin_settings, self.override_adoption_settings, self.override_base_settings, self.default_adoption_settings, self.default_base_settings]:
+            for setting, bool_val in setting_dict.items():
+                if bool_val:
+                    used_settings.add(setting)
+        return used_settings
 
     ##############
     # JSON Funcs #
