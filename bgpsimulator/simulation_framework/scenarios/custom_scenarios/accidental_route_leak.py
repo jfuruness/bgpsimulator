@@ -1,3 +1,4 @@
+from collections import deque
 from ipaddress import ip_network
 from typing import TYPE_CHECKING, Optional
 
@@ -148,7 +149,56 @@ class AccidentalRouteLeak(Scenario):
 
         return super().untracked_asns | self._attackers_customer_cones_asns
 
-    def _get_attacker_asns(self, *args, **kwargs):
-        raise NotImplementedError
-    def _get_legitimate_origin_asns(self, *args, **kwargs):
-        raise NotImplementedError
+    def _get_attacker_asns(
+        self,
+        override_attacker_asns: set[int] | None,
+        prev_attacker_asns: set[int] | None,
+        engine: SimulationEngine,
+    ) -> set[int]:
+        """Gets attacker ASNs, overriding the valid prefix which has no attackers
+
+        There is a very rare case where the attacker can not perform the route leak
+        due to a disconnection, which happens around .1% in the CAIDA topology.
+        In theory - you could just look at the provider cone of the victim,
+        and then the peers of that provider cone (and of the victim itself), and
+        then the customer cones of all of those ASes to get the list of possible
+        valid attackers. However, we consider the attacker being unable to attack
+        in extremely rare cases a valid result, and thus do not change the random
+        selection. Doing so would also be a lot slower for a very extreme edge case
+        """
+
+
+
+        attacker_asns = super()._get_attacker_asns(override_attacker_asns, prev_attacker_asns, engine)
+        # Add customer cones so that we can avoid them when tracking data
+        for attacker_asn in attacker_asns:
+            self._attackers_customer_cone_asns.update(
+                self._get_customer_cone_asns(attacker_asn, engine)
+            )
+        return attacker_asns
+
+    def _get_customer_cone_asns(self, asn: int, engine: SimulationEngine) -> set[int]:
+        """Returns the customer cone of an AS"""
+
+        customer_cone_asns: set[int] = set()
+        fifo_queue: deque[int] = deque([asn])
+        while fifo_queue:
+            asn = fifo_queue.popleft()
+            customer_cone_asns.update(engine.as_graph.as_dict[asn].customer_asns)
+            fifo_queue.extend(engine.as_graph.as_dict[asn].customer_asns)
+        return customer_cone_asns
+
+    def _get_possible_legitimate_origin_asns(
+        self,
+        engine: SimulationEngine,
+        percent_ases_randomly_adopting: float,
+    ) -> set[int]:
+        """Returns possible legitimate_origin ASNs, defaulted from config
+        
+        Removes attacker's customer cones from possible victims (or else there would be no leakage)
+        """
+
+        possible_asns = super()._get_possible_legitimate_origin_asns(engine, percent_ases_randomly_adopting)
+        # Remove attacker's customer conesfrom possible victims
+        possible_asns = possible_asns.difference(self._attackers_customer_cones_asns)
+        return possible_asns
