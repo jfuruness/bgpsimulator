@@ -213,11 +213,12 @@ class Simulation:
 
     def run(
         self,
+        **kwargs,
     ):  # , GraphFactoryCls: type[GraphFactory] = GraphFactory, graph_factory_kwargs: dict[str, Any] | None = None) -> None:
         """Runs the simulation and writes the data"""
 
         data_tracker = self._get_data()
-        self._write_data(data_tracker)
+        # self._write_data(data_tracker)
         # self._graph_data(GraphFactoryCls, graph_factory_kwargs)
         # This object holds a lot of memory, good to get rid of it
         del data_tracker
