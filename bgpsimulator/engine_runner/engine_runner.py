@@ -53,7 +53,7 @@ class EngineRunner:
         # 1. Any time the format of the metrics change, the tests break, breaking backwards compatibility
         # 2. Nobody looked at them. Like, ever. I.e. they were useless to test
         # 3. Many simulators track a very different set of metrics with no clear format
-        self._store_data(engine=engine, outcomes_dict=data_plane_outcomes)
+        self._store_data(engine=engine, asn_to_packet_outcome_dict=data_plane_outcomes)
         self._generate_diagrams(scenario, dpi=dpi)
         self._compare_against_ground_truth()
 
@@ -75,15 +75,15 @@ class EngineRunner:
             engine=engine,
         )
 
-    def _store_data(self, engine: SimulationEngine, outcomes_dict: dict[int, Outcomes]):
+    def _store_data(self, engine: SimulationEngine, asn_to_packet_outcome_dict: dict[int, Outcomes]):
         """Stores the engine and outcomes. Always stores the guess, and optionally overwrites ground truth."""
         self.engine_guess_path.write_text(engine.to_json())
-        self.outcomes_guess_path.write_text(json.dumps(outcomes_dict))
+        self.outcomes_guess_path.write_text(json.dumps(asn_to_packet_outcome_dict))
         # Only write the ground truth if we're comparing against it
         if self.compare_against_ground_truth and (self.overwrite or not self.engine_gt_path.exists()):
             self.engine_gt_path.write_text(engine.to_json())    
         if self.compare_against_ground_truth and (self.overwrite or not self.outcomes_gt_path.exists()):
-            self.outcomes_gt_path.write_text(json.dumps(outcomes_dict))
+            self.outcomes_gt_path.write_text(json.dumps(asn_to_packet_outcome_dict))
 
     def _generate_diagrams(self, scenario: Scenario, dpi: int | None = None):
         """Generates the diagrams"""

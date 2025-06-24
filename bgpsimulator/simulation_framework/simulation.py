@@ -502,7 +502,7 @@ class Simulation:
             engine=engine,
             scenario=scenario,
             propagation_round=propagation_round,
-            outcomes_dict=outcomes,
+            asn_to_packet_outcome_dict=outcomes,
         )
         return outcomes
 

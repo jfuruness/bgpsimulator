@@ -93,7 +93,7 @@ class DataTracker:
         *,
         engine: SimulationEngine,
         scenario: Scenario,
-        outcomes_dict: dict[int, int],
+        asn_to_packet_outcome_dict: dict[int, int],
         propagation_round: int,
     ) -> None:
         """Stores the data for a trial"""
@@ -117,7 +117,7 @@ class DataTracker:
                 # Don't count ASes that are preset, such as attackers, victims, etc.
                 if as_obj.asn in scenario.untracked_asns:
                     continue
-                outcome = outcomes_dict[as_obj.asn]
+                outcome = asn_to_packet_outcome_dict[as_obj.asn]
                 if line_filter.as_in_denominator(
                     as_obj, engine.as_graph, scenario, propagation_round, outcome
                 ):
