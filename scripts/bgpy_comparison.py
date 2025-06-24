@@ -18,9 +18,9 @@ def get_bgpsimulator_local_ribs_and_packet_outcomes() -> tuple[dict[int, [str, t
         name="bgpsimulator_local_ribs",
         scenario_config=ScenarioConfig(
             label="bgpsimulator_local_ribs",
-            # ScenarioCls=SubprefixHijack,
-            ScenarioCls=PassiveHijack,
-            # default_adoption_settings={Settings.ROV: True},
+            ScenarioCls=SubprefixHijack,
+            # ScenarioCls=PassiveHijack,
+            default_adoption_settings={Settings.ROV: True},
             override_attacker_asns=set([25]),
             override_legitimate_origin_asns=set([27]),
             override_adopting_asns=set([174, 43, 68]),
@@ -51,12 +51,12 @@ def get_bgpy_local_ribs_and_packet_outcomes() -> tuple[dict[int, [str, tuple[int
     conf = BGPyEngineRunConfig(
         name="bgpy_local_ribs",
         scenario_config=BGPyScenarioConfig(
-            # ScenarioCls=BGPySubprefixHijack,
-            ScenarioCls=BGPyVictimsPrefix,
+            ScenarioCls=BGPySubprefixHijack,
+            # ScenarioCls=BGPyVictimsPrefix,
             AdoptPolicyCls=BGPyROV,
             override_attacker_asns=frozenset([25]),
             override_victim_asns=frozenset([27]),
-            # override_adopting_asns=frozenset([174, 43, 68]),
+            override_adopting_asns=frozenset([174, 43, 68]),
         ),
         desc="",
         as_graph_info=as_graph_info,
