@@ -21,7 +21,6 @@ class AS:
         ixp: bool = False,
         as_graph: Optional["ASGraph"] = None,
         policy_json: dict[str, Any] | None = None,
-        PolicyCls: type[Policy] = Policy,
     ) -> None:
         # Make sure you're not accidentally passing in a string here
         self.asn: int = int(asn)
@@ -44,9 +43,7 @@ class AS:
         # Hash in advance and only once since this gets called a lot
         self.hashed_asn = hash(self.asn)
 
-        self.policy: Policy = (
-            PolicyCls.from_json(policy_json, self) if policy_json else PolicyCls(self)
-        )
+        self.policy: Policy = Policy.from_json(policy_json, self) if policy_json else Policy(self)
 
         # This is useful for some policies to have knowledge of the graph
         if as_graph is not None:
@@ -168,8 +165,6 @@ class AS:
     ) -> "AS":
         """Converts the AS to a JSON object"""
 
-        PolicyCls = Policy.name_to_cls_dict[json_obj["PolicyCls"]]
-
         return cls(
             as_graph=as_graph,
             asn=json_obj["asn"],
@@ -181,5 +176,4 @@ class AS:
             provider_cone_asns=set(json_obj["provider_cone_asns"]),
             propagation_rank=json_obj["propagation_rank"],
             policy_json=json_obj["policy"],
-            PolicyCls=PolicyCls,
         )

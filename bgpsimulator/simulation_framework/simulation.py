@@ -87,13 +87,7 @@ class Simulation:
         parse_cpus: int = args.cpus,
         python_hash_seed: int | None = None,
         as_graph_data_json_path: Path | None = None,
-        SimulationEngineCls: type[SimulationEngine] = SimulationEngine,
-        DataPlanePacketPropagatorCls: type[
-            DataPlanePacketPropagator
-        ] = DataPlanePacketPropagator,
-        DataTrackerCls: type[DataTracker] = DataTracker,
         line_filters: tuple[LineFilter, ...] = (),
-        PolicyCls: type[Policy] = Policy,
     ) -> None:
         self.output_dir: Path = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -105,18 +99,14 @@ class Simulation:
         self.parse_cpus: int = parse_cpus
         self.python_hash_seed: int | None = python_hash_seed
         self._seed_random()
-        self.PolicyCls = PolicyCls
 
         if not as_graph_data_json_path:
             caida_path: Path = CAIDAASGraphCollector().run()
             _, as_graph_data_json_path = CAIDAASGraphJSONConverter().run(
-                caida_as_graph_path=caida_path, PolicyCls=PolicyCls
+                caida_as_graph_path=caida_path
             )
         self.as_graph_data_json_path: Path = as_graph_data_json_path
 
-        self.SimulationEngineCls = SimulationEngineCls
-        self.DataPlanePacketPropagatorCls = DataPlanePacketPropagatorCls
-        self.DataTrackerCls = DataTrackerCls
         self.line_filters = line_filters
         if not self.line_filters:
             max_prop_round = max(x.propagation_rounds for x in self.scenario_configs)
@@ -330,11 +320,11 @@ class Simulation:
         self._seed_random(seed_suffix=str(chunk_id))
 
         # ASGraph is not picklable, so we need to create it here
-        engine = self.SimulationEngineCls(
-            ASGraph.from_json(json.loads(self.as_graph_data_json_path.read_text()))
+        engine = SimulationEngine(
+            as_graph=ASGraph.from_json(json.loads(self.as_graph_data_json_path.read_text()))
         )
 
-        data_tracker = self.DataTrackerCls(
+        data_tracker = DataTracker(
             line_filters=self.line_filters,
             scenario_labels=self.scenario_labels,
         )
@@ -354,7 +344,7 @@ class Simulation:
                         scenario_config=scenario_config,
                         percent_ases_randomly_adopting=percent_adopt,
                         engine=engine,
-                        route_validator=self.PolicyCls.route_validator,
+                        route_validator=Policy.route_validator,
                         attacker_asns=trial_attacker_asns,
                         legitimate_origin_asns=trial_legitimate_origin_asns,
                         adopting_asns=adopting_asns,
@@ -499,7 +489,7 @@ class Simulation:
         # the engine and doing it later, is because doing it all
         # in RAM is MUCH faster, and speed is important
         outcomes = (
-            self.DataPlanePacketPropagatorCls().get_as_outcomes_for_data_plane_packet(
+            DataPlanePacketPropagator().get_as_outcomes_for_data_plane_packet(
                 dest_ip_addr=scenario.dest_ip_addr,
                 simulation_engine=engine,
                 legitimate_origin_asns=scenario.legitimate_origin_asns,

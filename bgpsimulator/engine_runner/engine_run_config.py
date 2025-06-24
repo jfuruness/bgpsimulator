@@ -1,5 +1,6 @@
 from typing import Any
 
+from bgpsimulator.as_graphs.as_graph.as_graph import ASGraph
 from bgpsimulator.engine_runner.scenario_config import ScenarioConfig
 
 
@@ -9,42 +10,38 @@ class EngineRunConfig:
     Useful for tests and diagrams
     """
 
+    _used_names: set[str] = set()
+
     def __init__(
         self,
         name: str = "",
-        desc: str = "",
+        diagram_desc: str = "",
+        text: str = "",
         scenario_config: ScenarioConfig,
-        as_graph_json: dict[str, Any],
-        SimulationEngineCls: type[SimulationEngine],
-        DataPlanePacketPropagatorCls: type[DataPlanePacketPropagator],
-        DataTrackerCls: type[DataTracker],
-        PolicyCls: type[Policy],
-        DiagramCls: type[Diagram],
+        as_graph: ASGraph,
+        diagram_ranks: tuple[tuple[int, ...], ...] = (),
     ):
         self.name = name
-        self.desc = desc
+        if self.name in EngineRunConfig._used_names:
+            raise ValueError(f"Name {self.name} already used")
+        EngineRunConfig._used_names.add(self.name)
+        self.diagram_desc = diagram_desc
+        # Displayed in the website giant text box
+        self.text = text
         self.scenario_config = scenario_config
-        self.as_graph_json = as_graph_json
-        self.SimulationEngineCls = SimulationEngineCls
-        self.DataPlanePacketPropagatorCls = DataPlanePacketPropagatorCls
-        self.DataTrackerCls = DataTrackerCls
-        self.PolicyCls = PolicyCls
-        self.DiagramCls = DiagramCls
+        self.as_graph = as_graph
+        self.diagram_ranks = diagram_ranks
 
     def to_json(self) -> dict[str, Any]:
-        """Converts the engine run config to a JSON object.
-        
-        Only going to save the default classes here;
-        Creating name to class dicts would complicate the code
-        and would have almost no benefit since most will never use
-        the JSON functionality offered here
-        """
+        """Converts the engine run config to a JSON object"""
 
         return {
             "name": self.name,
-            "desc": self.desc,
+            "diagram_desc": self.diagram_desc,
+            "text": self.text,
             "scenario_config": self.scenario_config.to_json(),
-            "as_graph_json": self.as_graph_json,
+            "as_graph": self.as_graph.to_json(),
+            "diagram_ranks": self.diagram_ranks,
         }
 
     @classmethod
@@ -52,7 +49,9 @@ class EngineRunConfig:
         """Converts a JSON object to an engine run config"""
         return cls(
             name=json_obj["name"],
-            desc=json_obj["desc"],
+            diagram_desc=json_obj["diagram_desc"],
+            text=json_obj["text"],
             scenario_config=ScenarioConfig.from_json(json_obj["scenario_config"]),
-            as_graph_json=json_obj["as_graph_json"],
+            as_graph=ASGraph.from_json(json_obj["as_graph"]),
+            diagram_ranks=json_obj["diagram_ranks"],
         )

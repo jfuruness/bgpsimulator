@@ -1,5 +1,5 @@
 from .policy import Policy
-from .custom_policies import (
+from .policy_extensions import (
     ASPathEdgeFilter,
     ASPA,
     ASPAwN,

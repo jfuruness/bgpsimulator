@@ -9,7 +9,7 @@ from bgpsimulator.shared import Relationships
 from bgpsimulator.shared import Settings, ROAValidity
 from bgpsimulator.shared import Prefix, IPAddr
 from bgpsimulator.route_validator import RouteValidator
-from .custom_policies import (
+from .policy_extensions import (
     ASPathEdgeFilter,
     ASPA,
     ASPAwN,
@@ -43,18 +43,7 @@ class Policy:
         tuple[IPAddr, tuple[Prefix, ...]], Prefix | None
     ] = dict()
 
-    # Used when dumping the routing policy to JSON
-    name_to_cls_dict: dict[str, type["Policy"]] = {}
-
     route_validator = RouteValidator()
-
-    def __init_subclass__(cls, **kwargs):
-        """Used when dumping the routing policy to JSON
-
-        NOTE: Rust should not support this
-        """
-        super().__init_subclass__(**kwargs)
-        Policy.name_to_cls_dict[cls.__name__] = cls
 
     def __init__(
         self,
@@ -535,6 +524,3 @@ class Policy:
             },
             settings=json_obj["settings"],
         )
-
-
-Policy.name_to_cls_dict["Policy"] = Policy

@@ -14,6 +14,7 @@ class Prefix(IPv6Network):
     def __init__(self, prefix: str, *args, **kwargs):
         """Create a fast Prefix from a string."""
 
+        self._og_str_prefix = prefix
         temp_prefix = ip_network(prefix)
         if temp_prefix.is_reserved:
             raise ReservedPrefixError(
@@ -34,3 +35,9 @@ class Prefix(IPv6Network):
 
     def __hash__(self) -> int:
         return self._hash
+
+    def __str__(self) -> str:
+        return self._og_str_prefix
+
+    def __repr__(self) -> str:
+        return self._og_str_prefix
