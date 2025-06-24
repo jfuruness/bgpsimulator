@@ -509,7 +509,7 @@ class Policy:
         """Converts the routing policy to a JSON object"""
         return {
             "local_rib": {
-                prefix: ann.to_json() for prefix, ann in self.local_rib.items()
+                str(prefix): ann.to_json() for prefix, ann in self.local_rib.items()
             },
             "settings": self.settings,
         }
@@ -519,7 +519,7 @@ class Policy:
         return cls(
             as_=as_,
             local_rib={
-                prefix: Ann.from_json(ann)
+                Prefix(prefix): Ann.from_json(ann)
                 for prefix, ann in json_obj["local_rib"].items()
             },
             settings=json_obj["settings"],

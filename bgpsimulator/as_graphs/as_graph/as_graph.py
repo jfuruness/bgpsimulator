@@ -72,7 +72,7 @@ class ASGraph:
         return {
             "ases": {asn: as_obj.to_json() for asn, as_obj in self.as_dict.items()},
             "asn_groups": {
-                asn_group_key: set(asn_group)
+                asn_group_key: list(sorted(asn_group))
                 for asn_group_key, asn_group in self.asn_groups.items()
             },
             "extra_setup_complete": True,
@@ -86,4 +86,9 @@ class ASGraph:
     def from_json(cls, json_obj: dict[str, Any]) -> "ASGraph":
         """Converts the ASGraph to a JSON object"""
 
+        # Convert back to sets
+        json_obj["asn_groups"] = {
+            asn_group_key: set(asn_group)
+            for asn_group_key, asn_group in json_obj["asn_groups"].items()
+        }
         return cls(json_obj)

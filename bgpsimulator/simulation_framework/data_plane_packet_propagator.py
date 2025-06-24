@@ -48,7 +48,10 @@ class DataPlanePacketPropagator:
     ):
         """Recursively stores the outcomes of the AS on the data plane"""
 
+
+
         if as_obj.asn in outcomes:
+
             return outcomes[as_obj.asn]
         else:
             most_specific_ann = as_obj.policy.get_most_specific_ann(dest_ip_addr)

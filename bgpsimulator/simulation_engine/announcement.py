@@ -75,15 +75,16 @@ class Announcement:
     ) -> "Announcement":
         """Creates a new announcement with the same attributes"""
         return Announcement(
-            prefix=prefix or self.prefix,
-            as_path=as_path or self.as_path,
-            next_hop_asn=next_hop_asn or self.next_hop_asn,
-            recv_relationship=recv_relationship or self.recv_relationship,
-            timestamp=timestamp or self.timestamp,
-            bgpsec_next_asn=bgpsec_next_asn or self.bgpsec_next_asn,
-            bgpsec_as_path=bgpsec_as_path or self.bgpsec_as_path,
-            only_to_customers=only_to_customers or self.only_to_customers,
-            rovpp_blackhole=rovpp_blackhole or self.rovpp_blackhole,
+            # NOTE: CANT USE OR!!! some of the actual vals are falsey
+            prefix=prefix if prefix is not None else self.prefix,
+            as_path=as_path if as_path is not None else self.as_path,
+            next_hop_asn=next_hop_asn if next_hop_asn is not None else self.next_hop_asn,
+            recv_relationship=recv_relationship if recv_relationship is not None else self.recv_relationship,
+            timestamp=timestamp if timestamp is not None else self.timestamp,
+            bgpsec_next_asn=bgpsec_next_asn if bgpsec_next_asn is not None else self.bgpsec_next_asn,
+            bgpsec_as_path=bgpsec_as_path if bgpsec_as_path is not None else self.bgpsec_as_path,
+            only_to_customers=only_to_customers if only_to_customers is not None else self.only_to_customers,
+            rovpp_blackhole=rovpp_blackhole if rovpp_blackhole is not None else self.rovpp_blackhole,
         )
 
     def __str__(self) -> str:
@@ -97,18 +98,28 @@ class Announcement:
 
     def to_json(self) -> dict[str, Any]:
         """Converts the announcement to a JSON object"""
-        return vars(self)
+        return {
+            "prefix": str(self.prefix),
+            "as_path": list(self.as_path),
+            "next_hop_asn": self.next_hop_asn,
+            "recv_relationship": self.recv_relationship,
+            "timestamp": self.timestamp,
+            "bgpsec_next_asn": self.bgpsec_next_asn,
+            "bgpsec_as_path": list(self.bgpsec_as_path),
+            "only_to_customers": self.only_to_customers,
+            "rovpp_blackhole": self.rovpp_blackhole,
+        }
 
     @classmethod
     def from_json(cls, json_obj: dict[str, Any]) -> "Announcement":
         return cls(
-            prefix=json_obj["prefix"],
-            as_path=json_obj["as_path"],
+            prefix=Prefix(json_obj["prefix"]),
+            as_path=tuple(json_obj["as_path"]),
             next_hop_asn=json_obj["next_hop_asn"],
-            recv_relationship=json_obj["recv_relationship"],
+            recv_relationship=Relationships(json_obj["recv_relationship"]),
             timestamp=json_obj["timestamp"],
             bgpsec_next_asn=json_obj["bgpsec_next_asn"],
-            bgpsec_as_path=json_obj["bgpsec_as_path"],
+            bgpsec_as_path=tuple(json_obj["bgpsec_as_path"]),
             only_to_customers=json_obj["only_to_customers"],
             rovpp_blackhole=json_obj["rovpp_blackhole"],
         )

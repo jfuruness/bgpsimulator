@@ -4,7 +4,7 @@ import json
 from bgpsimulator.simulation_engine import SimulationEngine
 from bgpsimulator.simulation_framework import Scenario
 from bgpsimulator.simulation_framework import DataPlanePacketPropagator
-from bgpsimulator.simulation_framework.outcomes import Outcomes
+from bgpsimulator.shared import Outcomes
 
 from .diagram import Diagram
 from .engine_run_config import EngineRunConfig
@@ -19,6 +19,7 @@ class EngineRunner:
         base_dir: Path = Path.home() / "Desktop" / "bgpsimulator_engine_runs",
         overwrite: bool = False,
         compare_against_ground_truth: bool = False,
+        write_diagrams: bool = True,
     ):
         self.conf: EngineRunConfig = engine_run_config
         self.base_dir: Path = base_dir
@@ -27,6 +28,7 @@ class EngineRunner:
         self.compare_against_ground_truth: bool = compare_against_ground_truth
         self.storage_dir: Path = self.base_dir / self.conf.name
         self.storage_dir.mkdir(parents=True, exist_ok=True)
+        self.write_diagrams: bool = write_diagrams
 
     def run(self, dpi: int | None = None):
         """Runs the engine run"""
@@ -35,11 +37,10 @@ class EngineRunner:
 
         # Run engine
         for round_ in range(self.conf.scenario_config.propagation_rounds):
-            engine.run(propagation_round=round_, scenario=scenario)
+            engine.propagate(propagation_round=round_, scenario=scenario)
             # By default, these are both no ops
             for func in (scenario.pre_aggregation_hook, scenario.post_propagation_hook):
                 func(engine=engine, propagation_round=round_, trial=0, percent_ases_randomly_adopting=0)
-            
         data_plane_packet_propagator = DataPlanePacketPropagator()
         data_plane_outcomes = data_plane_packet_propagator.get_as_outcomes_for_data_plane_packet(
             dest_ip_addr=scenario.dest_ip_addr,
@@ -48,7 +49,6 @@ class EngineRunner:
             attacker_asns=scenario.attacker_asns,
             scenario=scenario,
         )
-
         # NOTE: We used to include the data_tracker, but we don't now for three reasons:
         # 1. Any time the format of the metrics change, the tests break, breaking backwards compatibility
         # 2. Nobody looked at them. Like, ever. I.e. they were useless to test
@@ -70,23 +70,28 @@ class EngineRunner:
 
     def _get_scenario(self, engine: SimulationEngine):
         """Gets the scenario"""
+        route_validator = next(iter(engine.as_graph.as_dict.values())).policy.route_validator
         return self.conf.scenario_config.ScenarioCls(
             scenario_config=self.conf.scenario_config,
             engine=engine,
+            route_validator=route_validator,
         )
 
     def _store_data(self, engine: SimulationEngine, asn_to_packet_outcome_dict: dict[int, Outcomes]):
         """Stores the engine and outcomes. Always stores the guess, and optionally overwrites ground truth."""
-        self.engine_guess_path.write_text(engine.to_json())
+        self.engine_guess_path.write_text(json.dumps(engine.to_json()))
         self.outcomes_guess_path.write_text(json.dumps(asn_to_packet_outcome_dict))
         # Only write the ground truth if we're comparing against it
         if self.compare_against_ground_truth and (self.overwrite or not self.engine_gt_path.exists()):
-            self.engine_gt_path.write_text(engine.to_json())    
+            self.engine_gt_path.write_text(json.dumps(engine.to_json()))    
         if self.compare_against_ground_truth and (self.overwrite or not self.outcomes_gt_path.exists()):
             self.outcomes_gt_path.write_text(json.dumps(asn_to_packet_outcome_dict))
 
     def _generate_diagrams(self, scenario: Scenario, dpi: int | None = None):
         """Generates the diagrams"""
+
+        if not self.write_diagrams:
+            return
 
         vals = [
             (self.engine_guess_path, self.outcomes_guess_path, self.diagram_guess_path),
@@ -97,9 +102,9 @@ class EngineRunner:
 
         for (engine_path, packet_outcomes_path, diagram_path) in vals:
             Diagram().run(
-                engine=SimulationEngine.from_json(engine_path.read_text()),
+                engine=SimulationEngine.from_json(json.loads(engine_path.read_text())),
                 scenario=scenario,
-                packet_outcomes=json.loads(packet_outcomes_path.read_text()),
+                packet_outcomes={int(asn): Outcomes(outcome) for asn, outcome in json.loads(packet_outcomes_path.read_text()).items()},
                 name=self.conf.name,
                 description=self.conf.diagram_desc,
                 diagram_ranks=self.conf.diagram_ranks,
@@ -112,8 +117,8 @@ class EngineRunner:
             return
 
         """Compares the guesses against ground truth for engine and packet outcomes"""
-        engine_guess = SimulationEngine.from_json(self.engine_guess_path.read_text())
-        engine_gt = SimulationEngine.from_json(self.engine_gt_path.read_text()) 
+        engine_guess = SimulationEngine.from_json(json.loads(self.engine_guess_path.read_text()))
+        engine_gt = SimulationEngine.from_json(json.loads(self.engine_gt_path.read_text())) 
         assert engine_guess == engine_gt, "Engine guess does not match engine ground truth"
 
         outcomes_guess = json.loads(self.outcomes_guess_path.read_text())

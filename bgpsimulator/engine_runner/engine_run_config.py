@@ -1,7 +1,7 @@
 from typing import Any
 
 from bgpsimulator.as_graphs.as_graph.as_graph import ASGraph
-from bgpsimulator.engine_runner.scenario_config import ScenarioConfig
+from bgpsimulator.simulation_framework.scenarios import ScenarioConfig
 
 
 class EngineRunConfig:
@@ -14,11 +14,11 @@ class EngineRunConfig:
 
     def __init__(
         self,
-        name: str = "",
-        diagram_desc: str = "",
-        text: str = "",
+        name: str,
         scenario_config: ScenarioConfig,
         as_graph: ASGraph,
+        diagram_desc: str = "",
+        text: str = "",
         diagram_ranks: tuple[tuple[int, ...], ...] = (),
     ):
         self.name = name

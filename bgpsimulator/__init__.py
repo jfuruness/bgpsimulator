@@ -4,6 +4,7 @@ from . import (  # isort: skip
     as_graphs,
     simulation_framework,
     route_validator,
+    engine_runner,
 )
 
 
@@ -13,4 +14,5 @@ __all__ = [
     "simulation_engine",
     "simulation_framework",
     "route_validator",
+    "engine_runner",
 ]

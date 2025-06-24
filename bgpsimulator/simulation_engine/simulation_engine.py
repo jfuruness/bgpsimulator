@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Any
 
-from bgpsimulator.shared.enums import Relationships
+from bgpsimulator.shared import Relationships
+from bgpsimulator.as_graphs import ASGraph
 
 if TYPE_CHECKING:
-    from bgpsimulator.as_graphs import ASGraph
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_framework import Scenario
 

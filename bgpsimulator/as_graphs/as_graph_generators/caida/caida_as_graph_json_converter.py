@@ -19,7 +19,7 @@ class CAIDAASGraphJSONConverter:
 
     def run(
         self,
-        caida_as_graph_path: Path | None,
+        caida_as_graph_path: Path | None = None,
         additional_asn_group_filters: frozendict[
             str, Callable[[dict[int, AS]], frozenset[int]]
         ] = frozendict(),

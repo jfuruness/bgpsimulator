@@ -139,13 +139,17 @@ class Diagram:
         elif as_obj.asn in scenario.attacker_asns:
             asn_str = "&#128520;" + asn_str + "&#128520;"
 
+        used_settings = [setting for setting, value in as_obj.policy.settings.items() if value]
+        policy_str = "; ".join(str(x) for x in used_settings) if used_settings else "BGP"
+
+
         html = f"""<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="{colspan}">
             <TR>
             <TD COLSPAN="{colspan}" BORDER="0">{asn_str}</TD>
             </TR>
             <TR>
-            <TD COLSPAN="{colspan}" BORDER="0">({as_obj.policy.name})</TD>
+            <TD COLSPAN="{colspan}" BORDER="0">({policy_str})</TD>
             </TR>"""
         local_rib_anns = tuple(as_obj.policy.local_rib.values())
         local_rib_anns = tuple(
