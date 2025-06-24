@@ -22,7 +22,6 @@ class ScenarioConfig:
         self,
         label: str,
         ScenarioCls: type["Scenario"],
-        policy_cls: type[Policy] = Policy,
         propagation_rounds: int | None = None,
         attacker_settings: dict[Settings, bool] | None = None,
         legitimate_origin_settings: dict[Settings, bool] | None = None,
@@ -45,7 +44,6 @@ class ScenarioConfig:
         # Label used for graphing, typically name it after the adopting policy
         self.label: str = label
         self.ScenarioCls: type["Scenario"] = ScenarioCls
-        self.PolicyCls: type[Policy] = policy_cls
         self.propagation_rounds: int | None = propagation_rounds
 
         ###########################
