@@ -480,7 +480,7 @@ class Policy:
 
         if most_specific_prefix is None:
             matching_prefixes = sorted(
-                (p for p in self.local_rib if dest_ip_addr in p),
+                (p for p in self.local_rib if p.supernet_of(dest_ip_addr)),
                 key=lambda p: p.prefixlen,
                 reverse=True,
             )

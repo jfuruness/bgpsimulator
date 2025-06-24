@@ -96,7 +96,12 @@ def main() -> None:
             print(local_ribs[asn])
             input("HERE")
     assert local_ribs == local_ribs_bgpy, "Local ribs do not match"
-    assert packet_outcomes == packet_outcomes_bgpy, "Packet outcomes do not match"
+    for asn in packet_outcomes:
+        if packet_outcomes[asn] != packet_outcomes_bgpy[asn]:
+            print(f"Packet outcome for AS{asn} does not match")
+            print(packet_outcomes[asn])
+            print(packet_outcomes_bgpy[asn])
+            input("HERE")
 
 if __name__ == "__main__":
     main()

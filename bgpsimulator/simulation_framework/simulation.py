@@ -223,7 +223,7 @@ class Simulation:
             # Results are a list of lists of metric trackers that we then sum
             return sum(
                 self._get_single_process_results(),
-                start=self.DataTrackerCls(
+                start=DataTracker(
                     line_filters=self.line_filters,
                     scenario_labels=self.scenario_labels,
                 ),
@@ -233,7 +233,7 @@ class Simulation:
             # Results are a list of lists of metric trackers that we then sum
             return sum(
                 self._get_mp_results(),
-                start=self.DataTrackerCls(
+                start=DataTracker(
                     line_filters=self.line_filters,
                     scenario_labels=self.scenario_labels,
                 ),

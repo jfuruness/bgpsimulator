@@ -25,7 +25,7 @@ class DataPlanePacketPropagator:
         for as_obj in simulation_engine.as_graph:
             self.store_as_data_plane_outcomes(
                 as_obj,
-                simulation_engine.as_graph,
+                simulation_engine,
                 dest_ip_addr,
                 outcomes=outcomes,
                 visited_asns=set(),
@@ -47,8 +47,6 @@ class DataPlanePacketPropagator:
         scenario: Scenario | None = None,
     ):
         """Recursively stores the outcomes of the AS on the data plane"""
-
-
 
         if as_obj.asn in outcomes:
 
