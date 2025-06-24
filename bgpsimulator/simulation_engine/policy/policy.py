@@ -126,6 +126,7 @@ class Policy:
                 # Save to local rib
                 self.local_rib[current_ann.prefix] = current_ann
 
+
         # NOTE: all three of these have the same process_incoming_anns
         # which just adds ROV++ blackholes to the local RIB
         if (

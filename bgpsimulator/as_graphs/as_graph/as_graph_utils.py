@@ -124,6 +124,7 @@ class ASGraphUtils:
         for as_info in as_graph_json["ases"].values():
             # Always set this to None since you can't trust this value
             as_info["propagation_rank"] = None
+        for as_info in as_graph_json["ases"].values():
             ASGraphUtils._assign_ranks_helper(as_info, 0, as_graph_json)
 
     @staticmethod

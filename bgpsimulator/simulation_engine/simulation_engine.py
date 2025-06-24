@@ -121,6 +121,7 @@ class SimulationEngine:
         # So here we start at the highest rank(input_clique) and propagate down
         for i, rank in enumerate(reversed(self.as_graph.propagation_ranks)):
             # There are no incomming Anns at the top
+            assert i != 0 or rank[0].tier_1, "Tier 1 should be at the top"
             if i > 0:
                 for as_obj in rank:
                     as_obj.policy.process_incoming_anns(

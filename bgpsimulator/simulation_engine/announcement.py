@@ -87,7 +87,7 @@ class Announcement:
             rovpp_blackhole=rovpp_blackhole if rovpp_blackhole is not None else self.rovpp_blackhole,
         )
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return f"{self.prefix} {self.as_path} {self.recv_relationship}"
 
     @property
