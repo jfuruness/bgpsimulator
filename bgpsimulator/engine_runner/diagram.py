@@ -250,7 +250,7 @@ class Diagram:
                     )
 
     def _add_diagram_ranks(
-        self, diagram_ranks: tuple[tuple["AS", ...], ...], engine: SimulationEngine
+        self, diagram_ranks: list[list[int]], engine: SimulationEngine
     ) -> None:
         # TODO: Refactor
         if diagram_ranks:
@@ -259,12 +259,12 @@ class Diagram:
                     s.attr(rank="same")  # set all nodes to the same rank
                     previous_asn: str | None = None
                     for asn in rank:
-                        asn = str(as_obj.asn)
-                        s.node(asn)
+                        assert isinstance(asn, int)
+                        s.node(str(asn))
                         if previous_asn is not None:
                             # Add invisible edge to maintain static order
-                            s.edge(previous_asn, asn, style="invis")
-                        previous_asn = asn
+                            s.edge(str(previous_asn), str(asn), style="invis")
+                        previous_asn = str(asn)
         else:
             for i, rank in enumerate(engine.as_graph.propagation_ranks):
                 g = Digraph(f"Propagation_rank_{i}")

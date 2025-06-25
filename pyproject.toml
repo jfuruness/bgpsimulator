@@ -99,6 +99,7 @@ exclude = ["scripts", "scripts.*"]
 addopts = "-rxXs -v"  # Shows reasons for skipping, xfailing, etc
 markers = [
     "slow: All slow tests",
+    "engine: All engine config tests",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:tqdm",

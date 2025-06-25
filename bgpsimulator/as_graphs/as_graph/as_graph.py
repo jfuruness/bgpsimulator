@@ -32,14 +32,14 @@ class ASGraph:
         }
         # Populate ASN groups
         self.asn_groups = {
-            asn_group_key: set(asn_group)
+            asn_group_key: set([int(x) for x in asn_group])
             for asn_group_key, asn_group in graph_data["asn_groups"].items()
         }
         # populate objects
         self._populate_objects()
         # Add propagation ranks
         self.propagation_ranks = [
-            [self.as_dict[asn] for asn in rank]
+            [self.as_dict[int(asn)] for asn in rank]
             for rank in graph_data["propagation_rank_asns"]
         ]
 
@@ -88,7 +88,7 @@ class ASGraph:
 
         # Convert back to sets
         json_obj["asn_groups"] = {
-            asn_group_key: set(asn_group)
+            asn_group_key: set([int(x) for x in asn_group])
             for asn_group_key, asn_group in json_obj["asn_groups"].items()
         }
         return cls(json_obj)

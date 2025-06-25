@@ -151,7 +151,7 @@ class Policy:
 
     def process_ann(self, unprocessed_ann: Ann, from_rel: Relationships) -> Ann:
         """Processes an announcement going from recv_q or ribs_in to local rib
-        
+
         Must prepend yourself to the AS-path, change the recv_relationship, and add policy info if needed
         """
         new_ann_processed = unprocessed_ann.copy(
@@ -521,7 +521,7 @@ class Policy:
             as_=as_,
             local_rib={
                 Prefix(prefix): Ann.from_json(ann)
-                for prefix, ann in json_obj["local_rib"].items()
+                for prefix, ann in json_obj.get("local_rib", {}).items()
             },
-            settings=json_obj["settings"],
+            settings={**{k: False for k in Settings}, **json_obj.get("settings", {})},
         )

@@ -1,14 +1,17 @@
-from typing import Any
+from typing import Any, Callable
 
-from bgpsimulator.shared import CycleError
+from frozendict import frozendict
+
+from .base_as import AS
+from bgpsimulator.shared import ASNGroups, CycleError
 
 
 class ASGraphUtils:
     """Utility functions for ASGraph"""
 
     @staticmethod
-    def add_extra_setup(as_graph_json: dict[int, dict[str, Any]]) -> None:
-        """Adds cycles, provider cone, and propagation ranks to the AS graph"""
+    def add_extra_setup(as_graph_json: dict[int, dict[str, Any]], additional_asn_group_filters: frozendict[str, Callable[[dict[int, AS]], frozenset[int]]] = frozendict()) -> None:
+        """Adds cycles, provider cone, asn_groups, and propagation ranks to the AS graph"""
 
         if not as_graph_json.get("extra_setup_complete", False):
             # Conver to ints when pulling from JSON
@@ -19,6 +22,7 @@ class ASGraphUtils:
             ASGraphUtils.add_provider_cone_asns(as_graph_json)
             ASGraphUtils.assign_as_propagation_rank(as_graph_json)
             ASGraphUtils.assign_as_graph_propagation_ranks(as_graph_json)
+            ASGraphUtils.add_asn_groups(as_graph_json, additional_asn_group_filters)
             as_graph_json["extra_setup_complete"] = True
 
     ###############
@@ -57,7 +61,7 @@ class ASGraphUtils:
             rec_stack.add(asn)
 
             # Visit all the providers (similar to graph neighbors) recursively
-            for neighbor_asn in as_info[key]:
+            for neighbor_asn in as_info.get(key, []):
                 if neighbor_asn not in visited:
                     ASGraphUtils._validate_no_cycles_helper(
                         neighbor_asn,
@@ -101,7 +105,7 @@ class ASGraphUtils:
             return cone_dict[as_asn]
         else:
             cone_dict[as_asn] = set()
-            for neighbor_asn in as_info[rel_key]:
+            for neighbor_asn in as_info.get(rel_key, []):
                 cone_dict[as_asn].add(neighbor_asn)
                 if neighbor_asn not in cone_dict:
                     ASGraphUtils._get_cone_helper(
@@ -133,11 +137,11 @@ class ASGraphUtils:
     ) -> None:
         """Assigns ranks to all ases in customer/provider chain recursively"""
 
-        if as_info["propagation_rank"] is None or as_info["propagation_rank"] < rank:
+        if as_info.get("propagation_rank") is None or as_info["propagation_rank"] < rank:
             as_info["propagation_rank"] = rank
             # Only update it's providers if it's rank becomes higher
             # This avoids a double for loop of writes
-            for provider_asn in as_info["provider_asns"]:
+            for provider_asn in as_info.get("provider_asns", []):
                 ASGraphUtils._assign_ranks_helper(
                     as_graph_json["ases"][provider_asn], rank + 1, as_graph_json
                 )
@@ -160,3 +164,91 @@ class ASGraphUtils:
 
         # Create tuple ranks
         as_graph_json["propagation_rank_asns"] = [list(sorted(rank)) for rank in ranks]
+
+    ####################
+    # ASN groups funcs #
+    ####################
+
+    @staticmethod
+    def add_asn_groups(
+        as_graph_json: dict[int, dict[str, Any]],
+        additional_asn_group_filters: frozendict[
+            str, Callable[[dict[int, AS]], frozenset[int]]
+        ],
+    ) -> frozendict[str, frozenset[int]]:
+        """Gets ASN groups. Used for choosing attackers from stubs, adopters, etc."""
+
+        asn_to_as: dict[int, AS] = {
+            asn: AS.from_json(as_info)
+            for asn, as_info in as_graph_json["ases"].items()
+        }
+
+        asn_group_filters: dict[str, Callable[[dict[int, AS]], frozenset[int]]] = dict(
+            **ASGraphUtils.get_default_as_group_filters(), **additional_asn_group_filters
+        )
+
+        asn_groups: frozendict[str, frozenset[int]] = frozendict(
+            {
+                asn_group_key: filter_func(asn_to_as)
+                for asn_group_key, filter_func in asn_group_filters.items()
+            }
+        )
+
+        as_graph_json["asn_groups"] = {k: list(asn_group) for k, asn_group in asn_groups.items()}
+
+    @staticmethod
+    def get_default_as_group_filters() -> dict[str, Callable[[dict[int, AS]], frozenset[int]]]:
+        """Returns the default filter functions for AS groups"""
+
+        def ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
+            return frozenset(asn for asn, as_ in asn_to_as.items() if as_.ixp)
+
+        def stub_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
+            return frozenset(
+                asn for asn, as_ in asn_to_as.items() if as_.stub and not as_.ixp
+            )
+
+        def multihomed_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
+            return frozenset(
+                asn for asn, as_ in asn_to_as.items() if as_.multihomed and not as_.ixp
+            )
+
+        def stubs_or_multihomed_no_ixp_filter(
+            asn_to_as: dict[int, AS],
+        ) -> frozenset[int]:
+            return frozenset(
+                asn
+                for asn, as_ in asn_to_as.items()
+                if (as_.stub or as_.multihomed) and not as_.ixp
+            )
+
+        def tier_1_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
+            return frozenset(
+                asn for asn, as_ in asn_to_as.items() if as_.tier_1 and not as_.ixp
+            )
+
+        def etc_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
+            return frozenset(
+                asn
+                for asn, as_ in asn_to_as.items()
+                if not (as_.stub or as_.multihomed or as_.tier_1 or as_.ixp)
+            )
+
+        def transit_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
+            return frozenset(
+                asn for asn, as_ in asn_to_as.items() if as_.transit and not as_.ixp
+            )
+
+        def all_no_ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:
+            return frozenset(asn_to_as.keys())
+
+        return {
+            ASNGroups.IXPS: ixp_filter,
+            ASNGroups.STUBS: stub_no_ixp_filter,
+            ASNGroups.MULTIHOMED: multihomed_no_ixp_filter,
+            ASNGroups.STUBS_OR_MH: stubs_or_multihomed_no_ixp_filter,
+            ASNGroups.TIER_1: tier_1_no_ixp_filter,
+            ASNGroups.ETC: etc_no_ixp_filter,
+            ASNGroups.TRANSIT: transit_no_ixp_filter,
+            ASNGroups.ALL_WOUT_IXPS: all_no_ixp_filter,
+        }

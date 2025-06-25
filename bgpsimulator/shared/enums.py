@@ -128,3 +128,9 @@ class InAdoptingASNs(StrEnum):
     TRUE: str = "True"
     FALSE: str = "False"
     ANY: str = "Any"
+
+class CommonASNs(IntEnum):
+    """Common ASNs"""
+
+    ATTACKER: int = 666
+    VICTIM: int = 777

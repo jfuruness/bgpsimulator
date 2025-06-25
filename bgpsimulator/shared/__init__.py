@@ -17,6 +17,7 @@ from .enums import (
     Outcomes,
     CommonPrefixes,
     Timestamps,
+    CommonASNs,
 )
 from .ip_addr import IPAddr
 from .prefix import Prefix
@@ -43,4 +44,5 @@ __all__ = [
     "CommonPrefixes",
     "Timestamps",
     "PolicyPropagateInfo",
+    "CommonASNs",
 ]
