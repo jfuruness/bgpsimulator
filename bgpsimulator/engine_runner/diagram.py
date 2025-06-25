@@ -3,7 +3,7 @@ from graphviz import Digraph
 
 from bgpsimulator.simulation_engine import SimulationEngine
 from bgpsimulator.simulation_framework import Scenario
-from bgpsimulator.shared import Outcomes
+from bgpsimulator.shared import Outcomes, Settings
 
 
 class Diagram:
@@ -140,7 +140,7 @@ class Diagram:
             asn_str = "&#128520;" + asn_str + "&#128520;"
 
         used_settings = [setting for setting, value in as_obj.policy.settings.items() if value]
-        policy_str = "; ".join(str(x) for x in used_settings) if used_settings else "BGP"
+        policy_str = "; ".join(Settings(int(x)).name for x in used_settings) if used_settings else "BGP"
 
 
         html = f"""<

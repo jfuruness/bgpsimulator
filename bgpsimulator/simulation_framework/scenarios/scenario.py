@@ -312,12 +312,10 @@ class Scenario:
 
         # NOTE: Most important updates go last
 
-        if as_obj.asn in self.scenario_config.override_base_settings:
-            as_obj.policysettings = self.scenario_config.override_base_settings[
-                as_obj.asn
-            ]
-        else:
-            as_obj.policy.settings = self.scenario_config.default_base_settings
+        as_obj.policy.settings = {
+            **self.scenario_config.default_base_settings,
+            **self.scenario_config.override_base_settings.get(as_obj.asn, {})
+        }
 
         if as_obj.asn in self.scenario_config.override_adoption_settings:
             as_obj.policy.settings.update(
