@@ -11,7 +11,7 @@ from bgpsimulator.route_validator.roa import ROA
 from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.simulation_engine import Policy, SimulationEngine
 from bgpsimulator.simulation_framework.scenarios.scenario_config import ScenarioConfig
-from bgpsimulator.shared import IPAddr
+from bgpsimulator.shared import IPAddr, Settings
 from bgpsimulator.route_validator import RouteValidator
 
 if TYPE_CHECKING:
@@ -312,26 +312,30 @@ class Scenario:
 
         # NOTE: Most important updates go last
 
-        as_obj.policy.settings = {
-            **self.scenario_config.default_base_settings,
-            **self.scenario_config.override_base_settings.get(as_obj.asn, {})
-        }
+        settings = [False for _ in Settings]
+        
+        for setting, val in self.scenario_config.default_base_settings.items():
+            settings[setting] = val
+
+        for setting, val in self.scenario_config.override_base_settings.get(as_obj.asn, {}).items():
+            settings[setting] = val
+
 
         if as_obj.asn in self.scenario_config.override_adoption_settings:
-            as_obj.policy.settings.update(
-                self.scenario_config.override_adoption_settings[as_obj.asn]
-            )
+            for setting, val in self.scenario_config.override_adoption_settings[as_obj.asn].items():
+                settings[setting] = val
         elif as_obj.asn in self.adopting_asns or as_obj.asn in self.default_adopters:
-            as_obj.policy.settings.update(
-                self.scenario_config.default_adoption_settings
-            )
+            for setting, val in self.scenario_config.default_adoption_settings.items():
+                settings[setting] = val
 
         if as_obj.asn in self.attacker_asns:
-            as_obj.policy.settings.update(self.scenario_config.attacker_settings)
+            for setting, val in self.scenario_config.attacker_settings.items():
+                settings[setting] = val
         elif as_obj.asn in self.legitimate_origin_asns:
-            as_obj.policy.settings.update(
-                self.scenario_config.legitimate_origin_settings
-            )
+            for setting, val in self.scenario_config.legitimate_origin_settings.items():
+                settings[setting] = val
+
+        as_obj.policy.settings = tuple(settings)
 
     def setup_engine(self, engine: SimulationEngine) -> None:
         """Nice hook func for setting up the engine with adopting ASes, routing policy settings, etc"""

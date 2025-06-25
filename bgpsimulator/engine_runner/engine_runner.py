@@ -147,8 +147,8 @@ class EngineRunner:
 
     @property
     def diagram_guess_path(self) -> Path:
-        return self.storage_dir / "diagram_guess.json"
+        return self.storage_dir / "diagram_guess.gv"
 
     @property
     def diagram_gt_path(self) -> Path:
-        return self.storage_dir / "diagram_gt.json"
+        return self.storage_dir / "diagram_gt.gv"

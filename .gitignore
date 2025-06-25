@@ -1,6 +1,7 @@
 .ruff_cache/
 
 # Test generates these automatically
+*.png
 *guess.json
 *guess.csv
 *guess.pickle

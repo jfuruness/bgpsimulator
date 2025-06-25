@@ -26,7 +26,7 @@ class PathEnd:
         # If the origin is deploying pathend and the path is longer than 1
         if (
             origin_as_obj
-            and origin_as_obj.policy.overriden_settings.get(Settings.PATH_END, False)
+            and origin_as_obj.policy.settings[Settings.PATH_END]
             and len(ann.as_path) > 1
         ):
             # If the provider is real, do the loop check

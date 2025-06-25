@@ -1,11 +1,6 @@
 from typing import TYPE_CHECKING
 
-from bgpsimulator.shared import (
-    Relationships,
-    PolicyPropagateInfo,
-    ROAValidity,
-    ROARouted,
-)
+from bgpsimulator.shared import Relationships, PolicyPropagateInfo, Settings
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -50,7 +45,7 @@ class BGPSec:
         """Gets the policy propagate values for a given announcement"""
 
         neighbor_bgpsec = any(
-            neighbor_as.policy.settings.get(setting, False)
+            neighbor_as.policy.settings[setting]
             for setting in [
                 Settings.BGPSEC,
                 Settings.BGP_I_SEC,

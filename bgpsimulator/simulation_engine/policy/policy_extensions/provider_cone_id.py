@@ -24,7 +24,7 @@ class ProviderConeID:
             # The ASes ASN is also not yet in the announcement, so we add it here
             for asn in (policy.as_.asn, *ann.as_path[:-1]):
                 # not in provider cone of the origin, and is adopting
-                if asn not in provider_cone_asns and as_dict[asn].policy.settings.get(Settings.BGP_I_SEC, False) or as_dict[asn].policy.settings.get(Settings.PROVIDER_CONE_ID, False):
+                if asn not in provider_cone_asns and (as_dict[asn].policy.settings[Settings.BGP_I_SEC] or as_dict[asn].policy.settings[Settings.PROVIDER_CONE_ID] or as_dict[asn].policy.settings[Settings.ASPAPP]):
                     return False
 
         return True

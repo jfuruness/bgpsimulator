@@ -20,6 +20,7 @@ from .policy import (
     OriginPrefixHijackCustomers,
     FirstASNStrippingPrefixHijackCustomers,
     PeerROV,
+    ASPAPP,
 )
 from .simulation_engine import SimulationEngine
 
@@ -46,4 +47,5 @@ __all__ = [
     "OriginPrefixHijackCustomers",
     "FirstASNStrippingPrefixHijackCustomers",
     "PeerROV",
+    "ASPAPP",
 ]

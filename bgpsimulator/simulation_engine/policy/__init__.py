@@ -19,6 +19,7 @@ from .policy_extensions import (
     OriginPrefixHijackCustomers,
     FirstASNStrippingPrefixHijackCustomers,
     PeerROV,
+    ASPAPP,
 )
 
 __all__ = [
@@ -42,4 +43,5 @@ __all__ = [
     "OriginPrefixHijackCustomers",
     "FirstASNStrippingPrefixHijackCustomers",
     "PeerROV",
+    "ASPAPP",
 ]

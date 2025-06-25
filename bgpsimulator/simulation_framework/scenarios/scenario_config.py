@@ -161,6 +161,9 @@ class ScenarioConfig:
             new_settings[Settings.ROV] = True
         if any(policy_settings.get(x) for x in [Settings.ASRA, Settings.ASPA_W_N]):
             new_settings[Settings.ASPA] = True
+        if any(policy_settings.get(x) for x in [Settings.ASPAPP]):
+            # TODO for later - add all three
+            raise NotImplementedError("ASPAPP is not supported yet")
         return new_settings
 
     @cached_property

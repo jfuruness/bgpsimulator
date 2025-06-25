@@ -37,9 +37,7 @@ class ASPAwN:
             # Get the AS object for the current AS in the AS Path
             asra_as_obj = as_dict.get(asn)
             # If the AS is an ASRA AS
-            if asra_as_obj and asra_as_obj.policy.overriden_settings.get(
-                Settings.ASPA_W_N, False
-            ):
+            if asra_as_obj and asra_as_obj.policy.settings[Settings.ASPA_W_N]:
                 # Check that both of it's neighbors are in the valid next hops
                 for neighbor_index in (i - 1, i + 1):
                     # Can't use try except IndexError here, since -1 is a valid index

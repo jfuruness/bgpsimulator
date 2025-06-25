@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from bgpsimulator.shared.enums import Relationships
+from bgpsimulator.shared.enums import Relationships, Settings
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -144,9 +144,7 @@ class ASPA:
         """
 
         cur_as_obj = policy.as_.as_graph.as_dict.get(asn1)
-        if cur_as_obj and cur_as_obj.policy.overriden_settings.get(
-            Settings.ASPA, False
-        ):
+        if cur_as_obj and cur_as_obj.policy.settings[Settings.ASPA]:
             next_as_obj = policy.as_.as_graph.as_dict.get(asn2)
             next_asn = next_as_obj.asn if next_as_obj else next_as_obj
             if next_asn not in cur_as_obj.provider_asns:

@@ -139,9 +139,8 @@ class Diagram:
         elif as_obj.asn in scenario.attacker_asns:
             asn_str = "&#128520;" + asn_str + "&#128520;"
 
-        used_settings = [setting for setting, value in as_obj.policy.settings.items() if value]
-        policy_str = "; ".join(Settings(int(x)).name for x in used_settings) if used_settings else "BGP"
-
+        used_settings = [setting for setting, value in zip(Settings, as_obj.policy.settings) if value]
+        policy_str = "; ".join(x.name for x in used_settings) if used_settings else "BGP"
 
         html = f"""<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="{colspan}">

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from bgpsimulator.shared import Relationships, PolicyPropagateInfo, ROAValidity, ROARouted
+from bgpsimulator.shared import Relationships, PolicyPropagateInfo, Settings
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -54,6 +54,6 @@ class BGPiSecTransitive:
         as_graph = policy.as_.as_graph
         bgpsec_signatures = ann.bgpsec_as_path
         for asn in ann.as_path:
-            if asn not in bgpsec_signatures and as_graph.as_dict[asn].policy.settings.get(Settings.BGP_I_SEC, False) or as_graph.as_dict[asn].policy.settings.get(Settings.BGP_I_SEC_TRANSITIVE, False):
+            if asn not in bgpsec_signatures and (as_graph.as_dict[asn].policy.settings[Settings.BGP_I_SEC] or as_graph.as_dict[asn].policy.settings[Settings.BGP_I_SEC_TRANSITIVE]):
                 return False
         return True

@@ -81,9 +81,7 @@ class ASRA:
             # 1/5/2024 JF: Added check for if as1_obj doesn't exist
             # If asn1 does not adopt ASPA, we treat that
             # as 'No Attestation', so min_up_ramp ends here.
-            if not asn1_obj or not asn1_obj.policy.overriden_settings.get(
-                Settings.ASPA, False
-            ):
+            if not asn1_obj or not asn1_obj.policy.settings[Settings.ASPA]:
                 return i
 
             # If asn2 is not in asn1's provider list => 'Not Provider+',
@@ -115,14 +113,14 @@ class ASRA:
         # 1) asn1 adopts ASPA and does NOT list asn2 as a provider
         has_aspa_but_not_provider = (
             asn1_obj
-            and asn1_obj.policy.overriden_settings.get(Settings.ASPA, False)
+            and asn1_obj.policy.settings[Settings.ASPA]
             and asn2 not in asn1_obj.provider_asns
         )
 
         # 2) asn1 also adopts ASRA and does NOT list asn2 as neighbor
         has_asra_but_not_neighbor = (
             asn1_obj
-            and asn1_obj.policy.overriden_settings.get(Settings.ASRA, False)
+            and asn1_obj.policy.settings[Settings.ASRA]
             and asn2 not in asn1_obj.neighbor_asns
         )
 
