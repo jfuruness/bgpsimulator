@@ -320,18 +320,18 @@ class Scenario:
         for setting, val in self.scenario_config.override_base_settings.get(as_obj.asn, {}).items():
             settings[setting] = val
 
-
-        if as_obj.asn in self.scenario_config.override_adoption_settings:
-            for setting, val in self.scenario_config.override_adoption_settings[as_obj.asn].items():
+        asn = as_obj.asn
+        if asn in self.scenario_config.override_adoption_settings:
+            for setting, val in self.scenario_config.override_adoption_settings[asn].items():
                 settings[setting] = val
-        elif as_obj.asn in self.adopting_asns or as_obj.asn in self.default_adopters:
+        elif asn in self.adopting_asns or asn in self.default_adopters:
             for setting, val in self.scenario_config.default_adoption_settings.items():
                 settings[setting] = val
 
-        if as_obj.asn in self.attacker_asns:
+        if asn in self.attacker_asns:
             for setting, val in self.scenario_config.attacker_settings.items():
                 settings[setting] = val
-        elif as_obj.asn in self.legitimate_origin_asns:
+        elif asn in self.legitimate_origin_asns:
             for setting, val in self.scenario_config.legitimate_origin_settings.items():
                 settings[setting] = val
 

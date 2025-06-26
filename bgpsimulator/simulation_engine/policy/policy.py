@@ -40,10 +40,6 @@ if TYPE_CHECKING:
 class Policy:
     __slots__ = ("local_rib", "recv_q", "settings", "as_")
 
-    most_specific_prefix_cache: dict[
-        tuple[IPAddr, tuple[Prefix, ...]], Prefix | None
-    ] = dict()
-
     route_validator = RouteValidator()
 
     def __init__(
@@ -465,32 +461,16 @@ class Policy:
         however, don't cache large RIBs, there won't be duplicates,
         and don't keep too many in the cache, there won't be duplicates
         We need to watch our RAM here
+
+        NOTE: Caching actually slowed this down by about 1.5x so we don't do it anymore
         """
 
-        most_specific_prefix = None
-
-        # Dont' cache massive RIBs, there won't be duplicates
-        if len(self.local_rib) < 10:
-            most_specific_prefix = self.most_specific_prefix_cache.get(
-                (dest_ip_addr, tuple(list(self.local_rib.keys())))
-            )
-
-        if most_specific_prefix is None:
-            matching_prefixes = sorted(
+        matching_prefixes = sorted(
                 (p for p in self.local_rib if p.supernet_of(dest_ip_addr)),
                 key=lambda p: p.prefixlen,
                 reverse=True,
-            )
-            most_specific_prefix = matching_prefixes[0] if matching_prefixes else None
-
-        # Don't cache massive ribs, pointless, there won't be duplicates
-        if len(self.local_rib) < 10:
-            self.most_specific_prefix_cache[
-                (dest_ip_addr, tuple(list(self.local_rib.keys())))
-            ] = most_specific_prefix
-            # Don't cache too many, it's pointless
-            if len(self.most_specific_prefix_cache) > 10:
-                self.most_specific_prefix_cache.pop()
+        )
+        most_specific_prefix = matching_prefixes[0] if matching_prefixes else None
 
         return self.local_rib[most_specific_prefix] if most_specific_prefix else None
 
