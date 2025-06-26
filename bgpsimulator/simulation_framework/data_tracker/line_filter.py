@@ -14,6 +14,8 @@ class LineFilter:
     You can always subclass this and change your criteria for the numerator and denominator
     """
 
+    __slots__ = ("asn_group", "in_adopting_asns", "prop_round", "outcome", "_hash")
+
     def __init__(
         self,
         as_group: ASNGroups,
@@ -25,6 +27,7 @@ class LineFilter:
         self.in_adopting_asns = in_adopting_asns
         self.prop_round = prop_round
         self.outcome = outcome
+        self._hash = hash(self.to_json())
 
     def as_in_denominator(
         self,
@@ -38,7 +41,6 @@ class LineFilter:
 
         The outcome is used only for the numerator of the data point, the denominator is always the total number of ASes in the group
         """
-
         if propagation_round != self.prop_round:
             return False
         elif as_obj.asn not in as_graph.asn_groups[self.asn_group]:
@@ -72,7 +74,7 @@ class LineFilter:
         return outcome == self.outcome
 
     def __hash__(self) -> int:
-        return hash(self.to_json())
+        return self._hash
 
     def __repr__(self) -> str:
         return self.to_json()

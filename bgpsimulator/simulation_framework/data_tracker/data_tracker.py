@@ -9,6 +9,8 @@ from statistics import stdev
 class DataTracker:
     """Tracks data for later use in creating line charts"""
 
+    __slots__ = ("line_filters", "scenario_labels", "percent_ases_randomly_adopting", "unaggregated_data", "aggregated_data")
+
     def __init__(self, line_filters, scenario_labels, percent_ases_randomly_adopting, unaggregated_data=None, aggregated_data=None) -> None:
         """Format of the unaggregated_data below
 
