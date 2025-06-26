@@ -9,7 +9,7 @@ from statistics import stdev
 class DataTracker:
     """Tracks data for later use in creating line charts"""
 
-    def __init__(self, line_filters, scenario_labels, unaggregated_data=None) -> None:
+    def __init__(self, line_filters, scenario_labels, percent_ases_randomly_adopting, unaggregated_data=None, aggregated_data=None) -> None:
         """Format of the unaggregated_data below
 
 
@@ -45,13 +45,14 @@ class DataTracker:
         """
         self.line_filters = line_filters
         self.scenario_labels = scenario_labels
+        self.percent_ases_randomly_adopting = percent_ases_randomly_adopting
         self.unaggregated_data = (
             unaggregated_data or self._create_new_unaggregated_data()
         )
-        self.aggregated_data = {
+        self.aggregated_data = aggregated_data or {
             label: {line_filter: {} for line_filter in line_filters}
             for label in self.scenario_labels
-        }
+        } or {}
 
     def _create_new_unaggregated_data(self) -> dict:
         """Creates a new unaggregated data dictionary"""
@@ -60,7 +61,10 @@ class DataTracker:
             label: {
                 # These are the filters for the scenario_config
                 # to create the line seen in the graph
-                line_filter: {}
+                line_filter: {
+                    percent_ases_randomly_adopting: []
+                    for percent_ases_randomly_adopting in self.percent_ases_randomly_adopting
+                }
                 for line_filter in self.line_filters
             }
             for label in self.scenario_labels
@@ -80,11 +84,11 @@ class DataTracker:
                             self.unaggregated_data[label][line_filter][
                                 percent_ases_randomly_adopting
                             ]
-                            + other.unaggregated_data[label][line_chart_filter][
+                            + other.unaggregated_data[label][line_filter][
                                 percent_ases_randomly_adopting
                             ]
                         )
-            return DataTracker(self.line_filters, self.scenario_labels, new_data)
+            return DataTracker(self.line_filters, self.scenario_labels, self.percent_ases_randomly_adopting, new_data)
         else:
             return NotImplemented
 
@@ -150,6 +154,8 @@ class DataTracker:
                         "value": sum(decimal_vals) / len(decimal_vals),  # average
                         "yerr": self._get_yerr(decimal_vals),
                     }
+        # Clear the unaggregated data to save memory
+        self.unaggregated_data = {}
 
     def _get_yerr(self, percent_list: list[float]) -> float:
         """Returns 90% confidence interval for graphing"""
@@ -169,31 +175,34 @@ class DataTracker:
         return {
             "line_filters": [x.to_json() for x in self.line_filters],
             "scenario_labels": self.scenario_labels,
-            "unaggregated_data": json_data,
+            "percent_ases_randomly_adopting": self.percent_ases_randomly_adopting,
+            "aggregated_data": json_data,
             "schema_description": DataTracker.__init__.__doc__,
         }
 
     @classmethod
     def from_json(cls, json_data: dict) -> "DataTracker":
         """Converts the data from a JSON-friendly format"""
-        unaggregated_data = {}
-        for label, inner_dict in json_data["unaggregated_data"].items():
-            unaggregated_data[label] = {}
+        aggregated_data = {}
+        for label, inner_dict in json_data["aggregated_data"].items():
+            aggregated_data[label] = {}
             for line_filter, trial_data in inner_dict.items():
-                unaggregated_data[label][LineFilter.from_json(line_filter)] = trial_data
+                aggregated_data[label][LineFilter.from_json(line_filter)] = trial_data
         return cls(
             line_filters=[LineFilter.from_json(x) for x in json_data["line_filters"]],
             scenario_labels=json_data["scenario_labels"],
-            unaggregated_data=unaggregated_data,
+            percent_ases_randomly_adopting=json_data["percent_ases_randomly_adopting"],
+            aggregated_data=aggregated_data,
         )
 
     def to_csv(self) -> str:
         """Converts the data to a CSV-friendly format"""
+
         csv_data = (
-            "scenario_label,line_filter,percent_ases_randomly_adopting,value,yerr\n"
+            "scenario_label,as_group,in_adopting_asns,prop_round,outcome,percent_ases_randomly_adopting,value,yerr,line_filter_json\n"
         )
         for label, inner_dict in self.aggregated_data.items():
             for line_filter, trial_data in inner_dict.items():
                 for percent_ases_randomly_adopting, data_point in trial_data.items():
-                    csv_data += f"{label},{line_filter.to_json()},{percent_ases_randomly_adopting},{data_point['value']},{data_point['yerr']}\n"
+                    csv_data += f"{label},{line_filter.to_csv()},{percent_ases_randomly_adopting},{data_point['value']},{data_point['yerr']},{line_filter.to_json()}\n"
         return csv_data

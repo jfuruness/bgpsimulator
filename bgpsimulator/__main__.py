@@ -13,11 +13,11 @@ def main():
 
     sim = Simulation(
         percent_ases_randomly_adopting=(
-            0.1,
-            0.2,
-            0.5,
-            0.8,
-            0.99,
+            10,
+            20,
+            50,
+            80,
+            99,
         ),
         scenario_configs=(
             ScenarioConfig(

@@ -36,6 +36,12 @@ class Prefix(IPv6Network):
     def __hash__(self) -> int:
         return self._hash
 
+    def __eq__(self, other) -> bool:
+        if isinstance(other, Prefix):
+            return self._hash == other._hash
+        else:
+            return NotImplemented
+
     def __str__(self) -> str:
         return self._og_str_prefix
 

@@ -71,6 +71,23 @@ class LineFilter:
 
         return outcome == self.outcome
 
+    def __hash__(self) -> int:
+        return hash(self.to_json())
+
+    def __repr__(self) -> str:
+        return self.to_json()
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, LineFilter):
+            return (
+                self.asn_group == other.asn_group
+                and self.in_adopting_asns == other.in_adopting_asns
+                and self.prop_round == other.prop_round
+                and self.outcome == other.outcome
+            )
+        else:
+            return NotImplemented
+
     def to_json(self) -> str:
         """Returns a JSON-friendly string that can be used as a key"""
         return (
@@ -79,6 +96,10 @@ class LineFilter:
             f"and propagation round is ({self.prop_round}) "
             f"and outcome is ({self.outcome})"
         )
+
+    def to_csv(self) -> str:
+        """Returns a CSV-friendly string"""
+        return f"{self.asn_group},{self.in_adopting_asns},{self.prop_round},{self.outcome.name}"
 
     @classmethod
     def from_json(cls, string: str) -> "LineFilter":
@@ -93,5 +114,5 @@ class LineFilter:
             as_group=ASNGroups(as_group),
             in_adopting_asns=InAdoptingASNs(in_adopting_asns),
             prop_round=int(prop_round),
-            outcome=Outcomes(outcome),
+            outcome=Outcomes(int(outcome)),
         )

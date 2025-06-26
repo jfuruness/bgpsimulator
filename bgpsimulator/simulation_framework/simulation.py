@@ -30,7 +30,7 @@ from bgpsimulator.simulation_engine import SimulationEngine, Policy
 from .data_plane_packet_propagator import DataPlanePacketPropagator
 from .scenarios.scenario import Scenario
 from .scenarios import SubprefixHijack
-from .graph_factory import GraphFactory
+from .line_chart_factory.line_chart_factory import LineChartFactory
 from bgpsimulator.shared import (
     bgpsimulator_logger,
     ASNGroups,
@@ -73,7 +73,7 @@ class Simulation:
     def __init__(
         self,
         output_dir: Path = Path("~/Desktop/sims").expanduser() / "bgpsimulator",
-        percent_ases_randomly_adopting: tuple[float, ...] = (0.1, 0.2, 0.5, 0.8, 0.99),
+        percent_ases_randomly_adopting: tuple[float, ...] = (10, 20, 50, 80, 99),
         scenario_configs: tuple[ScenarioConfig, ...] = (
             ScenarioConfig(
                 label="Subprefix Hijack; ROV Adopting",
@@ -109,17 +109,19 @@ class Simulation:
 
         self.line_filters = line_filters
         if not self.line_filters:
-            max_prop_round = max(x.propagation_rounds for x in self.scenario_configs)
+            max_prop_rounds = max(x.propagation_rounds for x in self.scenario_configs)
             line_filters: list[LineFilter] = []
-            for as_group in ASNGroups:
+            for as_group in [ASNGroups.ALL_WOUT_IXPS]:
                 for in_adopting_asns in InAdoptingASNs:
                     for outcome in Outcomes:
+                        if outcome == Outcomes.UNDETERMINED:
+                            continue
                         line_filters.append(
                             LineFilter(
                                 as_group=as_group,
                                 in_adopting_asns=in_adopting_asns,
                                 # By default, we only track the last propagation round
-                                prop_round=max_prop_round,
+                                prop_round=max_prop_rounds - 1,
                                 outcome=outcome,
                             )
                         )
@@ -203,13 +205,14 @@ class Simulation:
 
     def run(
         self,
-        **kwargs,
+        GraphFactoryCls: type[LineChartFactory] = LineChartFactory,
+        graph_factory_kwargs: dict[str, Any] | None = None,
     ):  # , GraphFactoryCls: type[GraphFactory] = GraphFactory, graph_factory_kwargs: dict[str, Any] | None = None) -> None:
         """Runs the simulation and writes the data"""
 
         data_tracker = self._get_data()
-        # self._write_data(data_tracker)
-        # self._graph_data(GraphFactoryCls, graph_factory_kwargs)
+        self._write_data(data_tracker)
+        self._graph_data(GraphFactoryCls, graph_factory_kwargs)
         # This object holds a lot of memory, good to get rid of it
         del data_tracker
         gc.collect()
@@ -226,6 +229,7 @@ class Simulation:
                 start=DataTracker(
                     line_filters=self.line_filters,
                     scenario_labels=self.scenario_labels,
+                    percent_ases_randomly_adopting=self.percent_ases_randomly_adopting,
                 ),
             )
         # Multiprocess
@@ -236,6 +240,7 @@ class Simulation:
                 start=DataTracker(
                     line_filters=self.line_filters,
                     scenario_labels=self.scenario_labels,
+                    percent_ases_randomly_adopting=self.percent_ases_randomly_adopting,
                 ),
             )
 
@@ -327,6 +332,7 @@ class Simulation:
         data_tracker = DataTracker(
             line_filters=self.line_filters,
             scenario_labels=self.scenario_labels,
+            percent_ases_randomly_adopting=self.percent_ases_randomly_adopting,
         )
 
         for trial_index, trial in self._get_run_chunk_iter(trials):
@@ -510,9 +516,20 @@ class Simulation:
     # Graph Writing Funcs #
     #######################
 
+    def _write_data(self, data_tracker: DataTracker) -> None:
+        """Writes data to file"""
+
+        data_tracker.aggregate_data()
+
+        with self.json_path.open("w") as f:
+            json.dump(data_tracker.to_json(), f, indent=4, sort_keys=True)
+        with self.csv_path.open("w") as f:
+            f.write(data_tracker.to_csv())
+        bgpsimulator_logger.info(f"Wrote data to {self.json_path} and {self.csv_path}")
+
     def _graph_data(
         self,
-        GraphFactoryCls: type[GraphFactory] | None = GraphFactory,
+        GraphFactoryCls: type[LineChartFactory] | None = LineChartFactory,
         kwargs=None,
     ) -> None:
         """Generates some default graphs"""
@@ -521,10 +538,10 @@ class Simulation:
         # outside of this file, since we modify it
         kwargs = dict() if kwargs is None else deepcopy(kwargs)
         # Set defaults for kwargs
-        kwargs["pickle_path"] = kwargs.pop("pickle_path", self.pickle_path)
+        kwargs["json_path"] = kwargs.pop("json_path", self.json_path)
         kwargs["graph_dir"] = kwargs.pop("graph_dir", self.graph_output_dir)
         if GraphFactoryCls:
-            GraphFactoryCls(**kwargs).generate_graphs()
+            GraphFactoryCls(**kwargs).generate_line_charts()
             bgpsimulator_logger.info(f"\nWrote graphs to {kwargs['graph_dir']}")
 
     ##############
@@ -540,9 +557,9 @@ class Simulation:
         return self.output_dir / "graphs"
 
     @cached_property
-    def csv_path(self) -> Path:
-        return self.output_dir / "data.csv"
+    def json_path(self) -> Path:
+        return self.output_dir / "data.json"
 
     @cached_property
-    def pickle_path(self) -> Path:
-        return self.output_dir / "data.pickle"
+    def csv_path(self) -> Path:
+        return self.output_dir / "data.csv"
