@@ -1,18 +1,19 @@
-from collections import deque
 import warnings
+from collections import deque
 
 from bgpsimulator.as_graphs import AS
 from bgpsimulator.route_validator import ROA
-from bgpsimulator.simulation_engine import Announcement as Ann, SimulationEngine
-from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 from bgpsimulator.shared import (
-    Settings,
-    bgpsimulator_logger,
-    Prefix,
-    Relationships,
-    Timestamps,
+    CommonPrefixes,
     IPAddr,
+    Relationships,
+    Settings,
+    Timestamps,
+    bgpsimulator_logger,
 )
+from bgpsimulator.simulation_engine import Announcement as Ann
+from bgpsimulator.simulation_engine import SimulationEngine
+from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 
 
 class ShortestPathPrefixHijack(Scenario):
@@ -177,7 +178,7 @@ class ShortestPathPrefixHijack(Scenario):
                 # or when valid ann is in one of those disconnected ASes
                 # this happens if you run 1k trials
                 bgpsimulator_logger.info(
-                    f"Couldn't find best_ann at {percent_adopt}% adoption"
+                    f"Couldn't find best_ann at {percent_ases_randomly_adopting}% adoption"
                 )
                 # When this occurs, use victim's ann to at least do forged-origin
                 victim_as_obj = engine.as_graph.as_dict[

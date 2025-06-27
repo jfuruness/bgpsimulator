@@ -12,7 +12,8 @@ from .rov import ROV
 class PathEnd:
     """A Policy that deploys Path-End
 
-    Jump starting BGP with Path-End validation"""
+    Jump starting BGP with Path-End validation
+    """
 
     @staticmethod
     def valid_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> bool:

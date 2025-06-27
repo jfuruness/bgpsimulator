@@ -2,8 +2,9 @@ from typing import Any, Callable
 
 from frozendict import frozendict
 
-from .base_as import AS
 from bgpsimulator.shared import ASNGroups, CycleError
+
+from .base_as import AS
 
 
 class ASGraphUtils:
@@ -90,7 +91,7 @@ class ASGraphUtils:
         """Adds provider cone ASNs to the AS graph"""
 
         cone_dict: dict[int, set[int]] = {}
-        for asn, as_info in as_graph_json["ases"].items():
+        for _asn, as_info in as_graph_json["ases"].items():
             provider_cone: set[int] = ASGraphUtils._get_cone_helper(
                 as_info, cone_dict, as_graph_json, "provider_asns"
             )
@@ -171,7 +172,7 @@ class ASGraphUtils:
             ranks[as_info["propagation_rank"]].append(asn)
 
         # Create tuple ranks
-        as_graph_json["propagation_rank_asns"] = [list(sorted(rank)) for rank in ranks]
+        as_graph_json["propagation_rank_asns"] = [sorted(rank) for rank in ranks]
 
     ####################
     # ASN groups funcs #

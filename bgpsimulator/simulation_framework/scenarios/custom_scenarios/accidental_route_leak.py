@@ -1,19 +1,17 @@
 from collections import deque
-from ipaddress import ip_network
-from typing import TYPE_CHECKING, Optional
+
+import warning
 
 from bgpsimulator.route_validator import ROA
-from bgpsimulator.simulation_engine import Announcement as Ann
-from bgpsimulator.simulation_engine import SimulationEngine
+from bgpsimulator.shared import ASNGroups, IPAddr, bgpsimulator_logger
 from bgpsimulator.shared.enums import (
     CommonPrefixes,
     Relationships,
     Timestamps,
-    Settings,
 )
+from bgpsimulator.simulation_engine import Announcement as Ann
+from bgpsimulator.simulation_engine import SimulationEngine
 from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
-from bgpsimulator.shared import IPAddr, ASNGroups
-from bgpsimulator.shared import bgpsimulator_logger
 
 
 class AccidentalRouteLeak(Scenario):

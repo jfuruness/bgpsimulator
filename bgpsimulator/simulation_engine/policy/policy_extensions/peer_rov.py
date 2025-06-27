@@ -1,11 +1,12 @@
 from typing import TYPE_CHECKING
 
 from bgpsimulator.shared import Relationships
+
 from .rov import ROV
 
 if TYPE_CHECKING:
-    from bgpsimulator.simulationengine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
+    from bgpsimulator.simulationengine import Announcement as Ann
 
 
 class PeerROV:

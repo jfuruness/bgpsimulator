@@ -1,13 +1,14 @@
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING
 
 from bgpsimulator.shared import (
-    Relationships,
     PolicyPropagateInfo,
-    ROAValidity,
+    Relationships,
     ROARouted,
+    ROAValidity,
 )
-from .rovpp_v1_lite import ROVPPV1Lite
+
 from .rov import ROV
+from .rovpp_v1_lite import ROVPPV1Lite
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS

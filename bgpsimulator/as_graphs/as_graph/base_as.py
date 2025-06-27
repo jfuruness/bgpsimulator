@@ -5,6 +5,8 @@ from weakref import CallableProxyType, proxy
 from bgpsimulator.shared import Relationships
 from bgpsimulator.simulation_engine import Policy
 
+if TYPE_CHECKING:
+    from .as_graph import ASGraph
 
 class AS:
     """Autonomous System class. Contains attributes of an AS"""
@@ -15,7 +17,7 @@ class AS:
         peer_asns: set[int] | None = None,
         provider_asns: set[int] | None = None,
         customer_asns: set[int] | None = None,
-        provider_cone_asns: set[int] = None,
+        provider_cone_asns: set[int] | None = None,
         propagation_rank: int | None = None,
         tier_1: bool = False,
         ixp: bool = False,
@@ -176,6 +178,6 @@ class AS:
             tier_1=json_obj.get("tier_1", False),
             ixp=json_obj.get("ixp", False),
             provider_cone_asns=set(json_obj.get("provider_cone_asns", [])),
-            propagation_rank=json_obj.get("propagation_rank", None),
+            propagation_rank=json_obj.get("propagation_rank"),
             policy_json=json_obj.get("policy", {}),
         )

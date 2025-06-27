@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from bgpsimulator.shared import Relationships, Settings
 
 if TYPE_CHECKING:
-    from bgpsimulator.as_graphs import AS
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 

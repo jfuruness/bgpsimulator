@@ -1,39 +1,38 @@
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
-from warnings import warn
 from weakref import proxy
 
+from bgpsimulator.route_validator import RouteValidator
+from bgpsimulator.shared import IPAddr, Prefix, Relationships, ROAValidity, Settings
 from bgpsimulator.shared.exceptions import GaoRexfordError
 from bgpsimulator.simulation_engine.announcement import Announcement as Ann
-from bgpsimulator.shared import Relationships
-from bgpsimulator.shared import Settings, ROAValidity
-from bgpsimulator.shared import Prefix, IPAddr
-from bgpsimulator.route_validator import RouteValidator
+
 from .policy_extensions import (
-    ASPathEdgeFilter,
     ASPA,
-    ASPAwN,
+    ASPAPP,
     ASRA,
     BGP,
-    OnlyToCustomers,
-    EnforceFirstAS,
     ROV,
+    ASPathEdgeFilter,
+    ASPAwN,
+    BGPiSecTransitive,
+    BGPSec,
+    EnforceFirstAS,
+    FirstASNStrippingPrefixHijackCustomers,
+    OnlyToCustomers,
+    OriginPrefixHijackCustomers,
     PathEnd,
     PeerLockLite,
-    ROVPPV1Lite,
-    ROVPPV2Lite,
-    ROVPPV2iLite,
-    BGPSec,
-    BGPiSecTransitive,
-    ProviderConeID,
-    OriginPrefixHijackCustomers,
-    FirstASNStrippingPrefixHijackCustomers,
     PeerROV,
-    ASPAPP,
+    ProviderConeID,
+    ROVPPV1Lite,
+    ROVPPV2iLite,
+    ROVPPV2Lite,
 )
 
 if TYPE_CHECKING:
     from weakref import CallableProxyType
+
     from bgpsimulator.as_graphs import AS
 
 
@@ -63,7 +62,7 @@ class Policy:
         else:
             self.settings = [False for _ in Settings]
         # The AS object that this routing policy is associated with
-        self.as_: CallableProxyType["AS"] = proxy(as_)
+        self.as_: CallableProxyType[AS] = proxy(as_)
 
     def __eq__(self, other) -> bool:
         if isinstance(other, Policy):

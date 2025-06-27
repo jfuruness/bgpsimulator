@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from bgpsimulator.shared import Relationships, PolicyPropagateInfo
+from bgpsimulator.shared import PolicyPropagateInfo, Relationships
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS

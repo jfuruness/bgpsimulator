@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, ClassVar
 
 from bgpsimulator.as_graphs.as_graph.as_graph import ASGraph
 from bgpsimulator.simulation_framework.scenarios import ScenarioConfig
@@ -10,7 +10,7 @@ class EngineRunConfig:
     Useful for tests and diagrams
     """
 
-    _used_names: set[str] = set()
+    _used_names: ClassVar[set[str]] = set()
 
     def __init__(
         self,

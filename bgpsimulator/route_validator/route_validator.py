@@ -1,6 +1,7 @@
 from functools import lru_cache
 
-from bgpsimulator.shared import Prefix, ROAValidity, ROARouted
+from bgpsimulator.shared import Prefix, ROARouted, ROAValidity
+
 from .roa import ROA
 from .roas_node import ROASNode
 
@@ -65,7 +66,7 @@ class RouteValidator:
             binary_str += str(bin(_byte))[2:].zfill(8)
         return binary_str
 
-    @lru_cache(maxsize=10_000)
+    @lru_cache(maxsize=10_000)  # noqa: B019
     def get_roa_outcome(
         self, prefix: Prefix, origin: int
     ) -> tuple[ROAValidity, ROARouted]:

@@ -1,7 +1,6 @@
 from .data_tracker import DataTracker, LineFilter
 from .scenarios import (
     ScenarioConfig,
-    SubprefixHijack,
     Scenario,
     AccidentalRouteLeak,
     FirstASNStrippingPrefixHijack,

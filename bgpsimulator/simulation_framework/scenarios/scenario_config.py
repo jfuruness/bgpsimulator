@@ -1,18 +1,11 @@
-from dataclasses import asdict, dataclass, field
-from typing import TYPE_CHECKING, Any
-from warnings import warn
-import importlib
 from functools import cached_property
-
-from frozendict import frozendict
+from typing import Any
 
 from bgpsimulator.route_validator import ROA
-from bgpsimulator.shared import ASNGroups, Settings
-from bgpsimulator.simulation_engine import Policy, Announcement as Ann
-from bgpsimulator.shared import IPAddr
+from bgpsimulator.shared import ASNGroups, IPAddr, Settings
+from bgpsimulator.simulation_engine import Announcement as Ann
 
-if TYPE_CHECKING:
-    from .scenario import Scenario
+from .scenario import Scenario
 
 
 class ScenarioConfig:
@@ -43,7 +36,7 @@ class ScenarioConfig:
     ):
         # Label used for graphing, typically name it after the adopting policy
         self.label: str = label
-        self.ScenarioCls: type["Scenario"] = ScenarioCls
+        self.ScenarioCls: type[Scenario] = ScenarioCls
         self.propagation_rounds: int | None = propagation_rounds
 
         ###########################
@@ -80,7 +73,7 @@ class ScenarioConfig:
         # 5. Base routing policy settings that will be applied to all ASes
         self.default_base_settings: dict[str, bool] = self.update_supersets(
             default_base_settings
-        ) or {x: False for x in Settings}
+        ) or dict.fromkeys(Settings, False)
 
         # Number of attackers/legitimate_origins/adopting ASes
         self.num_attackers: int = num_attackers

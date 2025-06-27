@@ -1,13 +1,12 @@
 from typing import TYPE_CHECKING, Iterator
 
-from bgpsimulator.shared import Relationships, PolicyPropagateInfo, Timestamps, Settings
-from .bgpisec_transitive import BGPiSecTransitive
-from .bgpsec import BGPSec
+from bgpsimulator.shared import PolicyPropagateInfo, Relationships, Timestamps
+from bgpsimulator.simulation_engine import Announcement as Ann
+
 from .rov import ROV
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
-    from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
 

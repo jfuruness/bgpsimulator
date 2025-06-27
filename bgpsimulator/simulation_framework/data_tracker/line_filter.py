@@ -1,8 +1,9 @@
-from bgpsimulator.as_graphs import ASGraph, AS
-from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
-from bgpsimulator.shared import ASNGroups, InAdoptingASNs, Outcomes
-from pathlib import Path
 import re
+from pathlib import Path
+
+from bgpsimulator.as_graphs import AS, ASGraph
+from bgpsimulator.shared import ASNGroups, InAdoptingASNs, Outcomes
+from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 
 
 class LineFilter:

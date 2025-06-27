@@ -1,45 +1,46 @@
 import argparse
+import gc
+import json
 import os
 import random
-from pathlib import Path
-from typing import Any
+import shutil
+import time
 from copy import deepcopy
 from functools import cached_property
-from multiprocessing import Pool
-from multiprocessing.pool import ApplyResult
+from multiprocessing import Pool, cpu_count
+from pathlib import Path
 from tempfile import TemporaryDirectory
-import time
-import gc
-import shutil
-from tqdm import tqdm
-import psutil
+from typing import TYPE_CHECKING, Any, Iterable
 from warnings import warn
-from typing import TYPE_CHECKING, Iterable
-from multiprocessing import cpu_count
-import json
+
+import psutil
+from tqdm import tqdm
 
 from bgpsimulator.as_graphs import (
+    ASGraph,
     CAIDAASGraphCollector,
     CAIDAASGraphJSONConverter,
-    ASGraph,
 )
-from .data_tracker.line_filter import LineFilter
-from .data_tracker.data_tracker import DataTracker
-from .scenarios.scenario_config import ScenarioConfig
-from bgpsimulator.simulation_engine import SimulationEngine, Policy
-from .data_plane_packet_propagator import DataPlanePacketPropagator
-from .scenarios.scenario import Scenario
-from .scenarios import SubprefixHijack
-from .line_chart_factory.line_chart_factory import LineChartFactory
 from bgpsimulator.shared import (
-    bgpsimulator_logger,
     ASNGroups,
     InAdoptingASNs,
     Outcomes,
     Settings,
+    bgpsimulator_logger,
 )
+from bgpsimulator.simulation_engine import Policy, SimulationEngine
+
+from .data_plane_packet_propagator import DataPlanePacketPropagator
+from .data_tracker.data_tracker import DataTracker
+from .data_tracker.line_filter import LineFilter
+from .line_chart_factory.line_chart_factory import LineChartFactory
+from .scenarios import SubprefixHijack
+from .scenarios.scenario import Scenario
+from .scenarios.scenario_config import ScenarioConfig
 
 if TYPE_CHECKING:
+    from multiprocessing.pool import ApplyResult
+
     from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 
 parser = argparse.ArgumentParser(description="Runs BGPy simulations")

@@ -1,9 +1,6 @@
-from dataclasses import asdict, dataclass, replace
-from typing import Any, Optional
-from warnings import warn
+from typing import Any
 
-from bgpsimulator.shared import Relationships
-from bgpsimulator.shared import Prefix
+from bgpsimulator.shared import Prefix, Relationships
 
 
 class Announcement:

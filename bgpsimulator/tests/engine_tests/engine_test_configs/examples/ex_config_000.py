@@ -1,7 +1,7 @@
 from bgpsimulator.as_graphs.as_graph import ASGraph
 from bgpsimulator.engine_runner import EngineRunConfig
-from bgpsimulator.simulation_framework import ScenarioConfig, LegitimatePrefixOnly
 from bgpsimulator.shared import CommonASNs
+from bgpsimulator.simulation_framework import LegitimatePrefixOnly, ScenarioConfig
 
 graph_data = {
     "ases": {

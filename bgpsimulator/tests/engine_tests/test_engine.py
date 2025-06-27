@@ -2,8 +2,9 @@ from pathlib import Path
 
 import pytest
 
-from .engine_test_configs import engine_test_configs
 from bgpsimulator.engine_runner import EngineRunConfig, EngineRunner
+
+from .engine_test_configs import engine_test_configs
 
 
 @pytest.mark.engine

@@ -9,7 +9,11 @@ from typing import cast
 import requests
 from bs4 import BeautifulSoup as Soup
 
-from bgpsimulator.shared import SINGLE_DAY_CACHE_DIR, NoCAIDAURLError
+from bgpsimulator.shared import (
+    SINGLE_DAY_CACHE_DIR,
+    NoCAIDAURLError,
+    bgpsimulator_logger,
+)
 
 
 class CAIDAASGraphCollector:
@@ -31,7 +35,7 @@ class CAIDAASGraphCollector:
         try:
             return self._run()
         except Exception as e:
-            print(f"Error {e}, deleting cached as graph file at {self.cache_path}")
+            bgpsimulator_logger.error(f"Error {e}, deleting cached as graph file at {self.cache_path}")
             # Make sure no matter what don't create a messed up cache
             shutil.rmtree(self.cache_path)
             raise
@@ -53,7 +57,7 @@ class CAIDAASGraphCollector:
         """
 
         if not self.cache_path.exists():
-            print("No caida graph cached. Caching...")
+            bgpsimulator_logger.info("No caida graph cached. Caching...")
             # Create a temporary dir to write to
             with TemporaryDirectory() as tmp_dir:
                 # Path to bz2 download
@@ -107,7 +111,7 @@ class CAIDAASGraphCollector:
             soup = Soup(r.text, "html.parser")
             # Extract hrefs from a tags
             rv = [x.get("href") for x in soup.select("a") if x.get("href") is not None]
-            return cast(list[str], rv)
+            return cast("list[str]", rv)
 
     #########################
     # File formatting funcs #

@@ -1,4 +1,5 @@
 from enum import Enum, IntEnum, StrEnum
+
 from .prefix import Prefix
 
 

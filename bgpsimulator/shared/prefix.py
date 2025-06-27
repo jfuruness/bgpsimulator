@@ -1,4 +1,5 @@
-from ipaddress import ip_network, IPv4Network, IPv6Network
+from ipaddress import IPv6Network, ip_network
+
 from .exceptions import ReservedPrefixError
 
 
@@ -9,7 +10,7 @@ class Prefix(IPv6Network):
     using IPv4-mapped IPv6 format (::ffff:a.b.c.d) for IPv4 addresses.
     """
 
-    __slots__ = "_hash"
+    __slots__ = ("_hash",)
 
     def __init__(self, prefix: str, *args, **kwargs):
         """Create a fast Prefix from a string."""

@@ -280,6 +280,11 @@ ignore = [
     "PT018",
     # This seems to want me to define a hash for every class
     "PLW1641",
+    # RUF023 - wants to sort every __slots__; but I prefer order of attribute assignment
+    "RUF023",
+    # Wants to prevent from func calls in arg defaults.
+    # But things like Path("~/Desktop").expanduser() get flagged... nah
+    "B008",
 ]
 
 unfixable = []

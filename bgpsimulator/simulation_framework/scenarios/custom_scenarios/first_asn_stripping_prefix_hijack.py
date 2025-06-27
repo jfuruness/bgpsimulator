@@ -1,10 +1,11 @@
+from bgpsimulator.route_validator import ROA
+from bgpsimulator.shared import IPAddr
+from bgpsimulator.shared.enums import CommonPrefixes, Relationships, Timestamps
+from bgpsimulator.simulation_engine import Announcement as Ann
+from bgpsimulator.simulation_engine import SimulationEngine
 from bgpsimulator.simulation_framework.scenarios.custom_scenarios.shortest_path_prefix_hijack import (
     ShortestPathPrefixHijack,
 )
-from bgpsimulator.simulation_engine import Announcement as Ann, SimulationEngine
-from bgpsimulator.shared.enums import CommonPrefixes, Relationships, Timestamps
-from bgpsimulator.shared import IPAddr
-from bgpsimulator.route_validator import ROA
 
 
 class FirstASNStrippingPrefixHijack(ShortestPathPrefixHijack):

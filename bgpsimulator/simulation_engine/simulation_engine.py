@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING, Any
 
-from bgpsimulator.shared import Relationships
 from bgpsimulator.as_graphs import ASGraph
+from bgpsimulator.shared import Relationships
 
 if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann

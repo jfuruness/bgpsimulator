@@ -1,5 +1,5 @@
-from .prefix import Prefix
 from .exceptions import InvalidIPAddressError
+from .prefix import Prefix
 
 
 class IPAddr(Prefix):
@@ -13,5 +13,5 @@ class IPAddr(Prefix):
 
     def __init__(self, address: str):
         super().__init__(address)
-        if self.prefixlen != 32 and self.prefixlen != 128:
+        if self.prefixlen not in {32, 128}:
             raise InvalidIPAddressError(f"Invalid IP address: {address}")

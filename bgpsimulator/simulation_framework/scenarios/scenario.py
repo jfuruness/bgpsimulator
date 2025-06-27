@@ -1,18 +1,14 @@
 import math
 import random
-from dataclasses import replace
 from functools import cached_property
-from ipaddress import IPv4Network, IPv6Network, ip_network
-from typing import TYPE_CHECKING, Any, Optional
-from warnings import warn
+from typing import TYPE_CHECKING, ClassVar
 
-from bgpsimulator.route_validator.roa import ROA
-
-from bgpsimulator.simulation_engine import Announcement as Ann
-from bgpsimulator.simulation_engine import Policy, SimulationEngine
-from bgpsimulator.simulation_framework.scenarios.scenario_config import ScenarioConfig
-from bgpsimulator.shared import IPAddr, Settings
 from bgpsimulator.route_validator import RouteValidator
+from bgpsimulator.route_validator.roa import ROA
+from bgpsimulator.shared import IPAddr, Settings
+from bgpsimulator.simulation_engine import Announcement as Ann
+from bgpsimulator.simulation_engine import SimulationEngine
+from bgpsimulator.simulation_framework.scenarios.scenario_config import ScenarioConfig
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -27,7 +23,7 @@ class Scenario:
     min_propagation_rounds: int = 1
 
     # Used when dumping the scenario_config to JSON
-    name_to_cls_dict: dict[str, type["Scenario"]] = {}
+    name_to_cls_dict: ClassVar[dict[str, type["Scenario"]]] = {}
 
     def __init_subclass__(cls, **kwargs):
         """Used when dumping the scenario_config to JSON
@@ -372,7 +368,8 @@ class Scenario:
     def _get_dest_ip_addr(self) -> IPAddr:
         """Returns the destination IP address for the scenario
 
-        Subclass must implement this"""
+        Subclass must implement this
+        """
 
         raise NotImplementedError("Subclass must implement this")
 

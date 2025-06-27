@@ -1,9 +1,14 @@
 from pathlib import Path
+from typing import TYPE_CHECKING
+
 from graphviz import Digraph
 
+from bgpsimulator.shared import Outcomes, Settings
 from bgpsimulator.simulation_engine import SimulationEngine
 from bgpsimulator.simulation_framework import Scenario
-from bgpsimulator.shared import Outcomes, Settings
+
+if TYPE_CHECKING:
+    from bgpsimulator.as_graphs import AS
 
 
 class Diagram:
@@ -161,7 +166,7 @@ class Diagram:
             asn_str = "&#128520;" + asn_str + "&#128520;"
 
         used_settings = [
-            setting for setting, value in zip(Settings, as_obj.policy.settings) if value
+            setting for setting, value in zip(Settings, as_obj.policy.settings, strict=False) if value
         ]
         policy_str = (
             "; ".join(x.name for x in used_settings) if used_settings else "BGP"

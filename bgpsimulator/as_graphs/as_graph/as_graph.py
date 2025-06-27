@@ -1,7 +1,7 @@
-from .base_as import AS
-from .as_graph_utils import ASGraphUtils
 from typing import Any
-from weakref import proxy
+
+from .as_graph_utils import ASGraphUtils
+from .base_as import AS
 
 
 class ASGraph:
@@ -32,7 +32,7 @@ class ASGraph:
         }
         # Populate ASN groups
         self.asn_groups = {
-            asn_group_key: set([int(x) for x in asn_group])
+            asn_group_key: {int(x) for x in asn_group}
             for asn_group_key, asn_group in graph_data["asn_groups"].items()
         }
         # populate objects
@@ -45,7 +45,7 @@ class ASGraph:
 
     def _populate_objects(self) -> None:
         """Populates the AS objects with the relationships"""
-        for asn, as_obj in self.as_dict.items():
+        for _asn, as_obj in self.as_dict.items():
             as_obj.set_relations()
 
     ##################
@@ -72,7 +72,7 @@ class ASGraph:
         return {
             "ases": {asn: as_obj.to_json() for asn, as_obj in self.as_dict.items()},
             "asn_groups": {
-                asn_group_key: list(sorted(asn_group))
+                asn_group_key: sorted(asn_group)
                 for asn_group_key, asn_group in self.asn_groups.items()
             },
             "extra_setup_complete": True,
@@ -88,7 +88,7 @@ class ASGraph:
 
         # Convert back to sets
         json_obj["asn_groups"] = {
-            asn_group_key: set([int(x) for x in asn_group])
+            asn_group_key: {int(x) for x in asn_group}
             for asn_group_key, asn_group in json_obj["asn_groups"].items()
         }
         return cls(json_obj)

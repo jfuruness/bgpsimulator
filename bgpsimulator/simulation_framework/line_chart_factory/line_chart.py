@@ -1,11 +1,14 @@
-from typing import Any
+import gc
 from pathlib import Path
-from ..data_tracker.line_filter import LineFilter
-from .line import Line
+from statistics import mean
+from typing import Any
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import gc
-from statistics import mean
+
+from bgpsimulator.simulation_framework.data_tracker import LineFilter
+
+from .line import Line
 
 
 class LineChart:
@@ -68,7 +71,7 @@ class LineChart:
         )
         sorted_handles = [label_to_handle_dict[lbl] for lbl in sorted_labels]
 
-        first_legend = ax.legend(sorted_handles, sorted_labels)
+        ax.legend(sorted_handles, sorted_labels)
         plt.tight_layout()
         plt.savefig(path)
 

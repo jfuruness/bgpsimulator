@@ -1,10 +1,9 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
-from bgpsimulator.simulation_engine import SimulationEngine
-from bgpsimulator.simulation_framework import Scenario
-from bgpsimulator.simulation_framework import DataPlanePacketPropagator
 from bgpsimulator.shared import Outcomes
+from bgpsimulator.simulation_engine import SimulationEngine
+from bgpsimulator.simulation_framework import DataPlanePacketPropagator, Scenario
 
 from .diagram import Diagram
 from .engine_run_config import EngineRunConfig

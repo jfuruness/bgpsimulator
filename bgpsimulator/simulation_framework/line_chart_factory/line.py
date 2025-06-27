@@ -1,6 +1,6 @@
-from .line_properties_generator import LinePropertiesGenerator
 from typing import Any
 
+from .line_properties_generator import LinePropertiesGenerator
 
 GENERATOR = LinePropertiesGenerator()
 

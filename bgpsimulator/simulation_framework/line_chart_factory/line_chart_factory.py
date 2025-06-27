@@ -1,10 +1,9 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
 from bgpsimulator.simulation_framework.data_tracker.data_tracker import DataTracker
 from bgpsimulator.simulation_framework.data_tracker.line_filter import LineFilter
-from bgpsimulator.simulation_framework.scenarios.scenario_config import ScenarioConfig
-from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
+
 from .line import Line
 from .line_chart import LineChart
 

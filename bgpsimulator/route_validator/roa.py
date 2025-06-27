@@ -1,8 +1,6 @@
 from functools import cached_property
-from ipaddress import IPv4Network, IPv6Network
 
-from bgpsimulator.shared import Prefix
-from bgpsimulator.shared import ROAValidity, ROARouted
+from bgpsimulator.shared import Prefix, ROARouted, ROAValidity
 
 
 class ROA:

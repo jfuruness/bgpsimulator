@@ -1,9 +1,10 @@
-from bgpsimulator.simulation_engine import SimulationEngine
-from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
-from .line_filter import LineFilter
-from bgpsimulator.shared import Outcomes
 from math import sqrt
 from statistics import stdev
+
+from bgpsimulator.simulation_engine import SimulationEngine
+from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
+
+from .line_filter import LineFilter
 
 
 class DataTracker:
@@ -97,7 +98,7 @@ class DataTracker:
                 for line_filter, trial_data in inner_dict.items():
                     for (
                         percent_ases_randomly_adopting,
-                        data_points,
+                        _data_points,
                     ) in trial_data.items():
                         new_data[label][line_filter][percent_ases_randomly_adopting] = (
                             self.unaggregated_data[label][line_filter][
@@ -127,8 +128,8 @@ class DataTracker:
         """Stores the data for a trial"""
 
         # Initialize the trial data
-        for label, inner_dict in self.unaggregated_data.items():
-            for line_filter, trial_data in inner_dict.items():
+        for _label, inner_dict in self.unaggregated_data.items():
+            for _line_filter, trial_data in inner_dict.items():
                 trial_data.setdefault(
                     scenario.percent_ases_randomly_adopting, []
                 ).append({"numerator": 0, "denominator": 0})
