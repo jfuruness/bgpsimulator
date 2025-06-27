@@ -38,6 +38,7 @@ def main():
     )
     sim.run(GraphFactoryCls=None)
 
+
 if __name__ == "__main__":
     start = time.perf_counter()
     profiler = cProfile.Profile()
@@ -55,12 +56,12 @@ if __name__ == "__main__":
     s = io.StringIO()
 
     # Create a Stats object with the profiling results
-    sortby = 'cumtime'
+    sortby = "cumtime"
     ps = pstats.Stats(profiler, stream=s).sort_stats(sortby)
 
     # Print the profiling results to the StringIO object
     ps.print_stats()
 
     # Write the profiling results to a file
-    with open('/home/anon/Desktop/bgpsimulator_profile_output.txt', 'w') as f:
+    with open("/home/anon/Desktop/bgpsimulator_profile_output.txt", "w") as f:
         f.write(s.getvalue())

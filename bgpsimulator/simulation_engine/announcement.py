@@ -78,13 +78,25 @@ class Announcement:
             # NOTE: CANT USE OR!!! some of the actual vals are falsey
             prefix=prefix if prefix is not None else self.prefix,
             as_path=as_path if as_path is not None else self.as_path,
-            next_hop_asn=next_hop_asn if next_hop_asn is not None else self.next_hop_asn,
-            recv_relationship=recv_relationship if recv_relationship is not None else self.recv_relationship,
+            next_hop_asn=next_hop_asn
+            if next_hop_asn is not None
+            else self.next_hop_asn,
+            recv_relationship=recv_relationship
+            if recv_relationship is not None
+            else self.recv_relationship,
             timestamp=timestamp if timestamp is not None else self.timestamp,
-            bgpsec_next_asn=bgpsec_next_asn if bgpsec_next_asn is not None else self.bgpsec_next_asn,
-            bgpsec_as_path=bgpsec_as_path if bgpsec_as_path is not None else self.bgpsec_as_path,
-            only_to_customers=only_to_customers if only_to_customers is not None else self.only_to_customers,
-            rovpp_blackhole=rovpp_blackhole if rovpp_blackhole is not None else self.rovpp_blackhole,
+            bgpsec_next_asn=bgpsec_next_asn
+            if bgpsec_next_asn is not None
+            else self.bgpsec_next_asn,
+            bgpsec_as_path=bgpsec_as_path
+            if bgpsec_as_path is not None
+            else self.bgpsec_as_path,
+            only_to_customers=only_to_customers
+            if only_to_customers is not None
+            else self.only_to_customers,
+            rovpp_blackhole=rovpp_blackhole
+            if rovpp_blackhole is not None
+            else self.rovpp_blackhole,
         )
 
     def __repr__(self) -> str:

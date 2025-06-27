@@ -7,14 +7,21 @@ if TYPE_CHECKING:
     from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
+
 class FirstASNStrippingPrefixHijackCustomers:
     """A Policy that performs prefix origin hijacks against customers, but strips the first ASN
-    
+
     ASPA and enforce-first-asn prevent this
     """
-    
+
     @staticmethod
-    def policy_propagate_vals(policy: "Policy", neighbor_as: "AS", ann: "Ann", propagate_to: Relationships, send_rels: set[Relationships]) -> PolicyPropagateInfo:
+    def policy_propagate_vals(
+        policy: "Policy",
+        neighbor_as: "AS",
+        ann: "Ann",
+        propagate_to: Relationships,
+        send_rels: set[Relationships],
+    ) -> PolicyPropagateInfo:
         """Performs prefix origin hijacks against customers, but strips the first ASN"""
 
         # This ann is originating from here, the attacker, so it's an attacker's ann

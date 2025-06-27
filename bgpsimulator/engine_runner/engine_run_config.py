@@ -6,7 +6,7 @@ from bgpsimulator.simulation_framework.scenarios import ScenarioConfig
 
 class EngineRunConfig:
     """Gemerates a JSON config for a single engine run
-    
+
     Useful for tests and diagrams
     """
 

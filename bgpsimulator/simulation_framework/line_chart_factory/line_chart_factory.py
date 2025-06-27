@@ -8,10 +8,19 @@ from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 from .line import Line
 from .line_chart import LineChart
 
+
 class LineChartFactory:
     """Factory for creating line charts"""
 
-    def __init__(self, json_path: Path, graph_dir: Path, xlabel: str = "Percent Adoption", xlim: tuple[float, float] = (0, 100), ylim: tuple[float, float] = (0, 100), legend_loc: str = "best") -> None:
+    def __init__(
+        self,
+        json_path: Path,
+        graph_dir: Path,
+        xlabel: str = "Percent Adoption",
+        xlim: tuple[float, float] = (0, 100),
+        ylim: tuple[float, float] = (0, 100),
+        legend_loc: str = "best",
+    ) -> None:
         self.data_tracker = DataTracker.from_json(json.loads(json_path.read_text()))
         self.graph_dir = graph_dir
         self.xlabel = xlabel
@@ -39,16 +48,29 @@ class LineChartFactory:
         lines = []
         for scenario_label, inner_dict in self.data_tracker.aggregated_data.items():
             line = Line(scenario_label, [], [], [])
-            for percent_ases_randomly_adopting, data_point in inner_dict[line_filter].items():
+            for percent_ases_randomly_adopting, data_point in inner_dict[
+                line_filter
+            ].items():
                 line.xs.append(percent_ases_randomly_adopting)
                 line.ys.append(data_point["value"])
                 line.yerrs.append(data_point["yerr"])
             lines.append(line)
-        
+
         y_label = f"Percent {line_filter.outcome.name.replace('_', ' ').title()}"
-        line_chart = LineChart(line_filter, lines, title=line_filter.to_csv(), xlabel=self.xlabel, ylabel=y_label, xlim=self.xlim, ylim=self.ylim, legend_loc=self.legend_loc)
+        line_chart = LineChart(
+            line_filter,
+            lines,
+            title=line_filter.to_csv(),
+            xlabel=self.xlabel,
+            ylabel=y_label,
+            xlim=self.xlim,
+            ylim=self.ylim,
+            legend_loc=self.legend_loc,
+        )
         line_chart_path = line_filter.get_json_path(self.graph_dir)
-        line_chart_path.write_text(json.dumps(line_chart.to_json(), indent=4, sort_keys=True))
+        line_chart_path.write_text(
+            json.dumps(line_chart.to_json(), indent=4, sort_keys=True)
+        )
         return line_chart_path
 
     def _json_mod_hook(self, paths: list[Path]) -> list[Path]:

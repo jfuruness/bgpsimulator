@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING, Optional
 from bgpsimulator.route_validator import ROA
 from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.simulation_engine import SimulationEngine
-from bgpsimulator.shared.enums import CommonPrefixes, Relationships, Timestamps, Settings
+from bgpsimulator.shared.enums import (
+    CommonPrefixes,
+    Relationships,
+    Timestamps,
+    Settings,
+)
 from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 from bgpsimulator.shared import IPAddr, ASNGroups
 from bgpsimulator.shared import bgpsimulator_logger
@@ -24,7 +29,10 @@ class AccidentalRouteLeak(Scenario):
     def _validate_attacker_asn_group(self):
         """Validates that the attacker is in an ASN group that can leak"""
 
-        if self.scenario_config.attacker_asn_group in self.warning_asn_groups and not self.scenario_config.override_attacker_asns:
+        if (
+            self.scenario_config.attacker_asn_group in self.warning_asn_groups
+            and not self.scenario_config.override_attacker_asns
+        ):
             msg = (
                 "You used the ASNGroup of "
                 f"{self.scenario_config.attacker_asn_group} "
@@ -49,6 +57,7 @@ class AccidentalRouteLeak(Scenario):
                 ASNGroups.ALL_WOUT_IXPS.value,
             ]
         )
+
     def post_propagation_hook(
         self,
         engine: "SimulationEngine",
@@ -167,9 +176,9 @@ class AccidentalRouteLeak(Scenario):
         selection. Doing so would also be a lot slower for a very extreme edge case
         """
 
-
-
-        attacker_asns = super()._get_attacker_asns(override_attacker_asns, prev_attacker_asns, engine)
+        attacker_asns = super()._get_attacker_asns(
+            override_attacker_asns, prev_attacker_asns, engine
+        )
         # Add customer cones so that we can avoid them when tracking data
         for attacker_asn in attacker_asns:
             self._attackers_customer_cone_asns.update(
@@ -194,11 +203,13 @@ class AccidentalRouteLeak(Scenario):
         percent_ases_randomly_adopting: float,
     ) -> set[int]:
         """Returns possible legitimate_origin ASNs, defaulted from config
-        
+
         Removes attacker's customer cones from possible victims (or else there would be no leakage)
         """
 
-        possible_asns = super()._get_possible_legitimate_origin_asns(engine, percent_ases_randomly_adopting)
+        possible_asns = super()._get_possible_legitimate_origin_asns(
+            engine, percent_ases_randomly_adopting
+        )
         # Remove attacker's customer conesfrom possible victims
         possible_asns = possible_asns.difference(self._attackers_customer_cones_asns)
         return possible_asns

@@ -84,7 +84,9 @@ class ROVPPV1Lite:
 
         routed_blackholes_to_add = []
         for ann in policy.local_rib.values():
-            for unprocessed_sub_ann in ROVPPV1Lite.invalid_subprefixes_from_neighbor(policy, ann):
+            for unprocessed_sub_ann in ROVPPV1Lite.invalid_subprefixes_from_neighbor(
+                policy, ann
+            ):
                 processed_sub_ann = policy.process_ann(unprocessed_sub_ann, from_rel)
                 # Add blackhole attributes to the processed ann
                 blackhole_ann = processed_sub_ann.copy(

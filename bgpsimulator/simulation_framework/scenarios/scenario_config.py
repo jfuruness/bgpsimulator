@@ -58,19 +58,29 @@ class ScenarioConfig:
         # 5. default_base_settings
 
         # 1a. This will update the base routing policy settings for the attacker ASes
-        self.attacker_settings: dict[Settings, bool] = self.update_supersets(attacker_settings) or dict()
+        self.attacker_settings: dict[Settings, bool] = (
+            self.update_supersets(attacker_settings) or dict()
+        )
         # 1v. This will update the base routing policy settings for the legitimate_origin ASes
-        self.legitimate_origin_settings: dict[Settings, bool] = self.update_supersets(legitimate_origin_settings) or dict()
+        self.legitimate_origin_settings: dict[Settings, bool] = (
+            self.update_supersets(legitimate_origin_settings) or dict()
+        )
         # 2. This will completely override the default adopt routing policy settings
-        self.override_adoption_settings: dict[int, dict[str, bool]] = self.update_supersets(override_adoption_settings) or dict()
+        self.override_adoption_settings: dict[int, dict[str, bool]] = (
+            self.update_supersets(override_adoption_settings) or dict()
+        )
         # 3. This will completely override the default base routing policy settings
-        self.override_base_settings: dict[int, dict[str, bool]] = self.update_supersets(override_base_settings) or dict()
+        self.override_base_settings: dict[int, dict[str, bool]] = (
+            self.update_supersets(override_base_settings) or dict()
+        )
         # 4. This will update the base routing policy settings for the adopting ASes
-        self.default_adoption_settings: dict[str, bool] = self.update_supersets(default_adoption_settings) or dict()
+        self.default_adoption_settings: dict[str, bool] = (
+            self.update_supersets(default_adoption_settings) or dict()
+        )
         # 5. Base routing policy settings that will be applied to all ASes
-        self.default_base_settings: dict[str, bool] = self.update_supersets(default_base_settings) or {
-            x: False for x in Settings
-        }
+        self.default_base_settings: dict[str, bool] = self.update_supersets(
+            default_base_settings
+        ) or {x: False for x in Settings}
 
         # Number of attackers/legitimate_origins/adopting ASes
         self.num_attackers: int = num_attackers
@@ -101,10 +111,7 @@ class ScenarioConfig:
         # This is used for the ASGraphAnalyzer to determine the outcome of a packet
         self.override_dest_ip_addr: IPAddr | None = override_dest_ip_addr
 
-
         # Below this point 99% of devs will not need to touch
-
-
 
         if self.propagation_rounds is None:
             # BGP-iSec needs this.
@@ -142,7 +149,9 @@ class ScenarioConfig:
             )
 
     @staticmethod
-    def update_supersets(policy_settings: dict[Settings, bool] | None) -> dict[Settings, bool] | None:
+    def update_supersets(
+        policy_settings: dict[Settings, bool] | None,
+    ) -> dict[Settings, bool] | None:
         """Updates the supersets of a policy setting"""
 
         if policy_settings is None:
@@ -155,7 +164,10 @@ class ScenarioConfig:
             new_settings[Settings.ONLY_TO_CUSTOMERS] = True
         if policy_settings.get(Settings.PATH_END, False):
             new_settings[Settings.ROV] = True
-        if any(policy_settings.get(x) for x in [Settings.ROVPP_V2_LITE, Settings.ROVPP_V2I_LITE]):
+        if any(
+            policy_settings.get(x)
+            for x in [Settings.ROVPP_V2_LITE, Settings.ROVPP_V2I_LITE]
+        ):
             new_settings[Settings.ROVPP_V1_LITE] = True
         if policy_settings.get(Settings.ROVPP_V1_LITE, False):
             new_settings[Settings.ROV] = True
@@ -170,7 +182,14 @@ class ScenarioConfig:
     def get_all_used_settings(self) -> set[Settings]:
         """Returns all the settings that are used in the scenario config"""
         used_settings = set()
-        for setting_dict in [self.attacker_settings, self.legitimate_origin_settings, self.override_adoption_settings, self.override_base_settings, self.default_adoption_settings, self.default_base_settings]:
+        for setting_dict in [
+            self.attacker_settings,
+            self.legitimate_origin_settings,
+            self.override_adoption_settings,
+            self.override_base_settings,
+            self.default_adoption_settings,
+            self.default_base_settings,
+        ]:
             for setting, bool_val in setting_dict.items():
                 if bool_val:
                     used_settings.add(setting)

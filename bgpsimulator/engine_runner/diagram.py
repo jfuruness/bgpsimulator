@@ -33,14 +33,18 @@ class Diagram:
         self._add_description(description, display_next_hop_asn)
         self._render(path=path, view=view, dpi=dpi)
 
-    def _add_legend(self, packet_outcomes: dict[int, Outcomes], scenario: Scenario) -> None:
+    def _add_legend(
+        self, packet_outcomes: dict[int, Outcomes], scenario: Scenario
+    ) -> None:
         """Adds legend to the graph with outcome counts"""
 
         attacker_success_count = sum(
             1 for x in packet_outcomes.values() if x == Outcomes.ATTACKER_SUCCESS.value
         )
         victim_success_count = sum(
-            1 for x in packet_outcomes.values() if x == Outcomes.LEGITIMATE_ORIGIN_SUCCESS.value
+            1
+            for x in packet_outcomes.values()
+            if x == Outcomes.LEGITIMATE_ORIGIN_SUCCESS.value
         )
         disconnect_count = sum(
             1 for x in packet_outcomes.values() if x == Outcomes.DISCONNECTED.value
@@ -80,9 +84,18 @@ class Diagram:
               </TR>"""
         html += """</TABLE>>"""
 
-        self.dot.node("Legend", html, shape="plaintext", color="black", style="filled", fillcolor="white")
+        self.dot.node(
+            "Legend",
+            html,
+            shape="plaintext",
+            color="black",
+            style="filled",
+            fillcolor="white",
+        )
 
-    def _display_next_hop_asn(self, engine: SimulationEngine, scenario: Scenario) -> bool:
+    def _display_next_hop_asn(
+        self, engine: SimulationEngine, scenario: Scenario
+    ) -> bool:
         """Displays the next hop ASN
 
         We want to display the next hop ASN any time it has been manipulated
@@ -98,7 +111,13 @@ class Diagram:
                     return True
         return False
 
-    def _add_ases(self, engine: SimulationEngine, packet_outcomes: dict[int, Outcomes], scenario: Scenario, display_next_hop_asn: bool) -> None:
+    def _add_ases(
+        self,
+        engine: SimulationEngine,
+        packet_outcomes: dict[int, Outcomes],
+        scenario: Scenario,
+        display_next_hop_asn: bool,
+    ) -> None:
         """Adds the ASes to the graph"""
         pass
 
@@ -118,7 +137,9 @@ class Diagram:
     ) -> None:
         kwargs = dict()
 
-        html = self._get_html(as_obj, engine, packet_outcomes, scenario, display_next_hop_asn)
+        html = self._get_html(
+            as_obj, engine, packet_outcomes, scenario, display_next_hop_asn
+        )
 
         kwargs = self._get_kwargs(as_obj, engine, packet_outcomes, scenario)
 
@@ -139,8 +160,12 @@ class Diagram:
         elif as_obj.asn in scenario.attacker_asns:
             asn_str = "&#128520;" + asn_str + "&#128520;"
 
-        used_settings = [setting for setting, value in zip(Settings, as_obj.policy.settings) if value]
-        policy_str = "; ".join(x.name for x in used_settings) if used_settings else "BGP"
+        used_settings = [
+            setting for setting, value in zip(Settings, as_obj.policy.settings) if value
+        ]
+        policy_str = (
+            "; ".join(x.name for x in used_settings) if used_settings else "BGP"
+        )
 
         html = f"""<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="{colspan}">
@@ -220,7 +245,9 @@ class Diagram:
         else:
             if packet_outcomes[as_obj.asn] == Outcomes.ATTACKER_SUCCESS.value:
                 kwargs.update({"fillcolor": "#ff6060:yellow"})
-            elif packet_outcomes[as_obj.asn] == Outcomes.LEGITIMATE_ORIGIN_SUCCESS.value:
+            elif (
+                packet_outcomes[as_obj.asn] == Outcomes.LEGITIMATE_ORIGIN_SUCCESS.value
+            ):
                 kwargs.update({"fillcolor": "#90ee90:white"})
             elif packet_outcomes[as_obj.asn] == Outcomes.DISCONNECTED.value:
                 kwargs.update({"fillcolor": "grey:white"})

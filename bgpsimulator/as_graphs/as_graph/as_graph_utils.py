@@ -10,7 +10,12 @@ class ASGraphUtils:
     """Utility functions for ASGraph"""
 
     @staticmethod
-    def add_extra_setup(as_graph_json: dict[int, dict[str, Any]], additional_asn_group_filters: frozendict[str, Callable[[dict[int, AS]], frozenset[int]]] = frozendict()) -> None:
+    def add_extra_setup(
+        as_graph_json: dict[int, dict[str, Any]],
+        additional_asn_group_filters: frozendict[
+            str, Callable[[dict[int, AS]], frozenset[int]]
+        ] = frozendict(),
+    ) -> None:
         """Adds cycles, provider cone, asn_groups, and propagation ranks to the AS graph"""
 
         if not as_graph_json.get("extra_setup_complete", False):
@@ -137,7 +142,10 @@ class ASGraphUtils:
     ) -> None:
         """Assigns ranks to all ases in customer/provider chain recursively"""
 
-        if as_info.get("propagation_rank") is None or as_info["propagation_rank"] < rank:
+        if (
+            as_info.get("propagation_rank") is None
+            or as_info["propagation_rank"] < rank
+        ):
             as_info["propagation_rank"] = rank
             # Only update it's providers if it's rank becomes higher
             # This avoids a double for loop of writes
@@ -179,12 +187,12 @@ class ASGraphUtils:
         """Gets ASN groups. Used for choosing attackers from stubs, adopters, etc."""
 
         asn_to_as: dict[int, AS] = {
-            asn: AS.from_json(as_info)
-            for asn, as_info in as_graph_json["ases"].items()
+            asn: AS.from_json(as_info) for asn, as_info in as_graph_json["ases"].items()
         }
 
         asn_group_filters: dict[str, Callable[[dict[int, AS]], frozenset[int]]] = dict(
-            **ASGraphUtils.get_default_as_group_filters(), **additional_asn_group_filters
+            **ASGraphUtils.get_default_as_group_filters(),
+            **additional_asn_group_filters,
         )
 
         asn_groups: frozendict[str, frozenset[int]] = frozendict(
@@ -194,10 +202,14 @@ class ASGraphUtils:
             }
         )
 
-        as_graph_json["asn_groups"] = {k: list(asn_group) for k, asn_group in asn_groups.items()}
+        as_graph_json["asn_groups"] = {
+            k: list(asn_group) for k, asn_group in asn_groups.items()
+        }
 
     @staticmethod
-    def get_default_as_group_filters() -> dict[str, Callable[[dict[int, AS]], frozenset[int]]]:
+    def get_default_as_group_filters() -> dict[
+        str, Callable[[dict[int, AS]], frozenset[int]]
+    ]:
         """Returns the default filter functions for AS groups"""
 
         def ixp_filter(asn_to_as: dict[int, AS]) -> frozenset[int]:

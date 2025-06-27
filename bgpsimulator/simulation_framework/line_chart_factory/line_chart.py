@@ -33,15 +33,15 @@ class LineChart:
 
     def write_graph(self, path: Path) -> None:
         """Writes the graph to a file"""
-    
+
         mpl.use("Agg")
         fig, ax = plt.subplots()
         fig.set_dpi(300)
         plt.rcParams.update({"font.size": 14, "lines.markersize": 10})
 
         # Set labels
-        #ax.set_ylabel(self.ylabel)
-        #ax.set_xlabel(self.xlabel)
+        # ax.set_ylabel(self.ylabel)
+        # ax.set_xlabel(self.xlabel)
         for line in self.lines:
             ax.errorbar(
                 line.xs,
@@ -71,7 +71,7 @@ class LineChart:
         first_legend = ax.legend(sorted_handles, sorted_labels)
         plt.tight_layout()
         plt.savefig(path)
-        
+
         # https://stackoverflow.com/a/33343289/8903959
         ax.cla()
         plt.cla()

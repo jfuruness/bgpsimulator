@@ -55,7 +55,6 @@ class Settings(IntEnum):
     ROVPP_V2_LITE = 19
 
 
-
 class ROAValidity(IntEnum):
     """ROAValidity values
 
@@ -128,6 +127,7 @@ class InAdoptingASNs(StrEnum):
     TRUE: str = "True"
     FALSE: str = "False"
     ANY: str = "Any"
+
 
 class CommonASNs(IntEnum):
     """Common ASNs"""

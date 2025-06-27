@@ -4,10 +4,20 @@ from typing import Any
 
 GENERATOR = LinePropertiesGenerator()
 
+
 class Line:
     """A line in a line chart"""
 
-    def __init__(self, label: str, xs: list[float], ys: list[float], yerrs: list[float], marker: str = "", ls: str = "", color: str = "") -> None:
+    def __init__(
+        self,
+        label: str,
+        xs: list[float],
+        ys: list[float],
+        yerrs: list[float],
+        marker: str = "",
+        ls: str = "",
+        color: str = "",
+    ) -> None:
         self.label: str = label
         self.xs: list[float] = xs
         self.ys: list[float] = ys

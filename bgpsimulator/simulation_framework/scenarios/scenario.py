@@ -313,16 +313,20 @@ class Scenario:
         # NOTE: Most important updates go last
 
         settings = [False for _ in Settings]
-        
+
         for setting, val in self.scenario_config.default_base_settings.items():
             settings[setting] = val
 
-        for setting, val in self.scenario_config.override_base_settings.get(as_obj.asn, {}).items():
+        for setting, val in self.scenario_config.override_base_settings.get(
+            as_obj.asn, {}
+        ).items():
             settings[setting] = val
 
         asn = as_obj.asn
         if asn in self.scenario_config.override_adoption_settings:
-            for setting, val in self.scenario_config.override_adoption_settings[asn].items():
+            for setting, val in self.scenario_config.override_adoption_settings[
+                asn
+            ].items():
                 settings[setting] = val
         elif asn in self.adopting_asns or asn in self.default_adopters:
             for setting, val in self.scenario_config.default_adoption_settings.items():

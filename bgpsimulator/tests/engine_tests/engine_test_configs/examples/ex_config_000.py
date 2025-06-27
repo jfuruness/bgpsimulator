@@ -60,7 +60,7 @@ graph_data = {
         "12": {
             "asn": 12,
             "customer_asns": [10],
-        }
+        },
     },
 }
 

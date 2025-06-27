@@ -5,7 +5,14 @@ from bgpsimulator.as_graphs import AS
 from bgpsimulator.route_validator import ROA
 from bgpsimulator.simulation_engine import Announcement as Ann, SimulationEngine
 from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
-from bgpsimulator.shared import Settings, bgpsimulator_logger, Prefix, Relationships, Timestamps, IPAddr
+from bgpsimulator.shared import (
+    Settings,
+    bgpsimulator_logger,
+    Prefix,
+    Relationships,
+    Timestamps,
+    IPAddr,
+)
 
 
 class ShortestPathPrefixHijack(Scenario):
@@ -23,7 +30,9 @@ class ShortestPathPrefixHijack(Scenario):
     # Legitimate origin funcs #
     ###########################
 
-    def _get_legitimate_origin_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
+    def _get_legitimate_origin_seed_asn_ann_dict(
+        self, engine: SimulationEngine
+    ) -> dict[int, list[Ann]]:
         anns = dict()
         for legitimate_origin_asn in self.legitimate_origin_asns:
             anns[legitimate_origin_asn] = [
@@ -58,8 +67,9 @@ class ShortestPathPrefixHijack(Scenario):
     # Attacker funcs #
     ##################
 
-    def _get_attacker_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
-
+    def _get_attacker_seed_asn_ann_dict(
+        self, engine: SimulationEngine
+    ) -> dict[int, list[Ann]]:
         all_used_settings = self.scenario_config.get_all_used_settings()
         # Go strongest to weakest
         if any(setting in all_used_settings for setting in self.bgpisec_settings):
@@ -70,7 +80,9 @@ class ShortestPathPrefixHijack(Scenario):
         elif any(setting in all_used_settings for setting in self.asra_settings):
             return self._get_aspa_seed_asn_ann_dict(engine)
         elif any(setting in all_used_settings for setting in self.aspa_settings):
-            return self._get_aspa_seed_asn_ann_dict(engine, self.required_aspa_attacker_setting)
+            return self._get_aspa_seed_asn_ann_dict(
+                engine, self.required_aspa_attacker_setting
+            )
         elif any(setting in all_used_settings for setting in self.path_end_settings):
             return self._get_path_end_seed_asn_ann_dict(engine)
         elif any(setting in all_used_settings for setting in self.rov_settings):
@@ -78,7 +90,9 @@ class ShortestPathPrefixHijack(Scenario):
         elif any(setting in all_used_settings for setting in self.pre_rov_settings):
             return self._get_prefix_attacker_seed_asn_ann_dict(engine)
         else:
-            raise NotImplementedError(f"Need to code shortest path attack against {all_used_settings}")
+            raise NotImplementedError(
+                f"Need to code shortest path attack against {all_used_settings}"
+            )
 
     def post_propagation_hook(
         self,
@@ -128,7 +142,10 @@ class ShortestPathPrefixHijack(Scenario):
         at once, this is possible.
         """
 
-        if not any(setting in self.scenario_config.get_all_used_settings() for setting in self.bgpisec_settings):
+        if not any(
+            setting in self.scenario_config.get_all_used_settings()
+            for setting in self.bgpisec_settings
+        ):
             return
         elif propagation_round == 0:
             # Force their to be two rounds of propagation
@@ -159,9 +176,13 @@ class ShortestPathPrefixHijack(Scenario):
                 # NOTE: may be possible due to the 1% being all disconnected ASes
                 # or when valid ann is in one of those disconnected ASes
                 # this happens if you run 1k trials
-                bgpsimulator_logger.info(f"Couldn't find best_ann at {percent_adopt}% adoption")
+                bgpsimulator_logger.info(
+                    f"Couldn't find best_ann at {percent_adopt}% adoption"
+                )
                 # When this occurs, use victim's ann to at least do forged-origin
-                victim_as_obj = engine.as_graph.as_dict[next(iter(self.legitimate_origin_asns))]
+                victim_as_obj = engine.as_graph.as_dict[
+                    next(iter(self.legitimate_origin_asns))
+                ]
                 for ann in victim_as_obj.policy.local_rib.values():
                     best_ann = ann
 
@@ -185,9 +206,15 @@ class ShortestPathPrefixHijack(Scenario):
             self.seed_asn_ann_dict = seed_asn_ann_dict
             self.setup_engine(engine)
         elif propagation_round > 1:
-            raise NotImplementedError("Shortest path prefix hijack is not supported for multiple propagation rounds with BGPiSec")
+            raise NotImplementedError(
+                "Shortest path prefix hijack is not supported for multiple propagation rounds with BGPiSec"
+            )
 
-    def _get_aspa_seed_asn_ann_dict(self, engine: SimulationEngine, required_attacker_setting: Settings | None = None) -> dict[int, list[Ann]]:
+    def _get_aspa_seed_asn_ann_dict(
+        self,
+        engine: SimulationEngine,
+        required_attacker_setting: Settings | None = None,
+    ) -> dict[int, list[Ann]]:
         """Gets the shortest path undetected by ASPA"""
 
         if len(self.legitimate_origin_asns) > 1:
@@ -220,7 +247,9 @@ class ShortestPathPrefixHijack(Scenario):
 
         return seed_asn_ann_dict
 
-    def _validate_required_aspa_attacker_setting(self, required_attacker_setting: Settings) -> None:
+    def _validate_required_aspa_attacker_setting(
+        self, required_attacker_setting: Settings
+    ) -> None:
         """Validates that the required ASPA attacker setting is used"""
 
         if required_attacker_setting not in self.scenario_config.attacker_settings:
@@ -231,7 +260,9 @@ class ShortestPathPrefixHijack(Scenario):
                 "from bgpsimulator.shared import Settings"
             )
 
-    def _find_shortest_valley_free_non_aspa_adopting_path(self, root_asn: int, engine: SimulationEngine) -> tuple[int, ...]:
+    def _find_shortest_valley_free_non_aspa_adopting_path(
+        self, root_asn: int, engine: SimulationEngine
+    ) -> tuple[int, ...]:
         """Finds the shortest non adopting path from the root asn
 
         Announcements from customers > peers > providers, since
@@ -352,18 +383,23 @@ class ShortestPathPrefixHijack(Scenario):
 
     def as_is_adopting_aspa(self, as_obj: AS) -> bool:
         """Returns True if the AS is adopting ASPA"""
-        return any(as_obj.policy.settings[setting] for setting in self.aspa_settings | self.asra_settings)
+        return any(
+            as_obj.policy.settings[setting]
+            for setting in self.aspa_settings | self.asra_settings
+        )
 
     def as_is_adopting_bgpisec(self, as_obj: AS) -> bool:
         """Returns True if the AS is adopting BGP-I-SEC"""
         return any(as_obj.policy.settings[setting] for setting in self.bgpisec_settings)
 
-    def _get_path_end_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
+    def _get_path_end_seed_asn_ann_dict(
+        self, engine: SimulationEngine
+    ) -> dict[int, list[Ann]]:
         """Gets the shortest path undetected by Path-End"""
 
         if len(self.legitimate_origin_asns) > 1:
             raise NotImplementedError
-        
+
         root_asn = next(iter(self.legitimate_origin_asns))
         root_as_obj = engine.as_graph.as_dict[root_asn]
         shortest_valid_path: tuple[int, ...] | None = None
@@ -373,13 +409,13 @@ class ShortestPathPrefixHijack(Scenario):
             #     return (secondary_provider.asn, first_provider.asn, root_asn)
             shortest_valid_path = (first_provider_asn, root_asn)
             break
-        
+
         if not shortest_valid_path:
             # Some ASes don't have providers, and are stubs that are peered
             for first_peer_asn in root_as_obj.peers:
                 shortest_valid_path = (first_peer_asn, root_asn)
                 break
-        
+
         if not shortest_valid_path:
             # Strange case but it could happen
             for first_customer_asn in root_as_obj.customers:
@@ -408,7 +444,9 @@ class ShortestPathPrefixHijack(Scenario):
 
         return seed_asn_ann_dict
 
-    def _get_forged_origin_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
+    def _get_forged_origin_seed_asn_ann_dict(
+        self, engine: SimulationEngine
+    ) -> dict[int, list[Ann]]:
         """Returns a dict of ASNs to announcements for the forged origin attacker"""
 
         legitimate_origin_asn = next(iter(self.legitimate_origin_asns))
@@ -426,7 +464,9 @@ class ShortestPathPrefixHijack(Scenario):
 
         return seed_asn_ann_dict
 
-    def _get_prefix_attacker_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
+    def _get_prefix_attacker_seed_asn_ann_dict(
+        self, engine: SimulationEngine
+    ) -> dict[int, list[Ann]]:
         """Returns a dict of ASNs to announcements for the prefix attacker"""
 
         seed_asn_ann_dict = dict()
@@ -453,21 +493,31 @@ class ShortestPathPrefixHijack(Scenario):
     @property
     def asra_settings(self) -> set[Settings]:
         return {Settings.ASRA, Settings.ASPA_W_N, Settings.ASPAPP}
-    
+
     @property
     def aspa_settings(self) -> set[Settings]:
         return {Settings.ASPA}
-    
+
     @property
     def path_end_settings(self) -> set[Settings]:
         return {Settings.PATH_END}
-    
+
     @property
     def rov_settings(self) -> set[Settings]:
-        return {Settings.ROV, Settings.ROVPP_V1_LITE, Settings.ROVPP_V2_LITE, Settings.ROVPP_V2I_LITE}
-    
+        return {
+            Settings.ROV,
+            Settings.ROVPP_V1_LITE,
+            Settings.ROVPP_V2_LITE,
+            Settings.ROVPP_V2I_LITE,
+        }
+
     @property
     def pre_rov_settings(self) -> set[Settings]:
-        return {Settings.BGPSEC, Settings.PROVIDER_CONE_ID, Settings.ONLY_TO_CUSTOMERS, Settings.AS_PATH_EDGE_FILTER, Settings.ENFORCE_FIRST_AS, Settings.PEERLOCK_LITE}
-    
-    
+        return {
+            Settings.BGPSEC,
+            Settings.PROVIDER_CONE_ID,
+            Settings.ONLY_TO_CUSTOMERS,
+            Settings.AS_PATH_EDGE_FILTER,
+            Settings.ENFORCE_FIRST_AS,
+            Settings.PEERLOCK_LITE,
+        }

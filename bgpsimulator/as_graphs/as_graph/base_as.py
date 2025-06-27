@@ -43,7 +43,9 @@ class AS:
         # Hash in advance and only once since this gets called a lot
         self.hashed_asn = hash(self.asn)
 
-        self.policy: Policy = Policy.from_json(policy_json, self) if policy_json else Policy(self)
+        self.policy: Policy = (
+            Policy.from_json(policy_json, self) if policy_json else Policy(self)
+        )
 
         # This is useful for some policies to have knowledge of the graph
         if as_graph is not None:

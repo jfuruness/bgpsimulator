@@ -12,6 +12,17 @@ from .subprefix_hijack import SubprefixHijack
 from .superprefix_prefix_hijack import SuperprefixPrefixHijack
 
 
-
-
-__all__ = ["AccidentalRouteLeak", "FirstASNStrippingPrefixHijack", "ForgedOriginPrefixHijack", "LegitimatePrefixOnly", "NonRoutedPrefixHijack", "NonRoutedSuperprefixHijack", "NonRoutedSuperprefixPrefixHijack", "PassiveHijack", "PrefixHijack", "ShortestPathPrefixHijack", "SubprefixHijack", "SuperprefixPrefixHijack"]
+__all__ = [
+    "AccidentalRouteLeak",
+    "FirstASNStrippingPrefixHijack",
+    "ForgedOriginPrefixHijack",
+    "LegitimatePrefixOnly",
+    "NonRoutedPrefixHijack",
+    "NonRoutedSuperprefixHijack",
+    "NonRoutedSuperprefixPrefixHijack",
+    "PassiveHijack",
+    "PrefixHijack",
+    "ShortestPathPrefixHijack",
+    "SubprefixHijack",
+    "SuperprefixPrefixHijack",
+]

@@ -89,7 +89,11 @@ class Policy:
         assert self.local_rib.get(ann.prefix) is None, err
 
         # If BGPSEC is deployed, modify the announcement
-        if self.settings[Settings.BGPSEC] or self.settings[Settings.BGP_I_SEC] or self.settings[Settings.BGP_I_SEC_TRANSITIVE]:
+        if (
+            self.settings[Settings.BGPSEC]
+            or self.settings[Settings.BGP_I_SEC]
+            or self.settings[Settings.BGP_I_SEC_TRANSITIVE]
+        ):
             ann = BGPSec.get_modified_seed_ann(self, ann)
         # Seed by placing in the local rib
         self.local_rib[ann.prefix] = ann
@@ -123,7 +127,6 @@ class Policy:
                 # Save to local rib
                 self.local_rib[current_ann.prefix] = current_ann
 
-
         # NOTE: all three of these have the same process_incoming_anns
         # which just adds ROV++ blackholes to the local RIB
         if (
@@ -155,14 +158,15 @@ class Policy:
             as_path=(self.as_.asn, *unprocessed_ann.as_path),
             recv_relationship=from_rel,
         )
-        if self.settings[Settings.BGP_I_SEC] or self.settings[Settings.BGP_I_SEC_TRANSITIVE]:
+        if (
+            self.settings[Settings.BGP_I_SEC]
+            or self.settings[Settings.BGP_I_SEC_TRANSITIVE]
+        ):
             new_ann_processed = BGPiSecTransitive.process_ann(
                 self, new_ann_processed, from_rel
             )
         elif self.settings[Settings.BGPSEC]:
-            new_ann_processed = BGPSec.process_ann(
-                self, new_ann_processed, from_rel
-            )
+            new_ann_processed = BGPSec.process_ann(self, new_ann_processed, from_rel)
         return new_ann_processed
 
     def valid_ann(self, ann: Ann, from_rel: Relationships) -> bool:
@@ -186,32 +190,43 @@ class Policy:
             and not ASPAwN.valid_ann(self, ann, from_rel)
         ):
             return False
-        if settings[Settings.ASRA] and not ASRA.valid_ann(
+        if settings[Settings.ASRA] and not ASRA.valid_ann(self, ann, from_rel):
+            return False
+        if settings[Settings.AS_PATH_EDGE_FILTER] and not ASPathEdgeFilter.valid_ann(
             self, ann, from_rel
         ):
             return False
-        if settings[Settings.AS_PATH_EDGE_FILTER] and not ASPathEdgeFilter.valid_ann(self, ann, from_rel):
+        if settings[Settings.ENFORCE_FIRST_AS] and not EnforceFirstAS.valid_ann(
+            self, ann, from_rel
+        ):
             return False
-        if settings[Settings.ENFORCE_FIRST_AS] and not EnforceFirstAS.valid_ann(self, ann, from_rel):
-            return False
-        if settings[Settings.ONLY_TO_CUSTOMERS] and not OnlyToCustomers.valid_ann(self, ann, from_rel):
+        if settings[Settings.ONLY_TO_CUSTOMERS] and not OnlyToCustomers.valid_ann(
+            self, ann, from_rel
+        ):
             return False
         # All use ROV for validity
-        if (settings[Settings.ROV] or settings[Settings.ROVPP_V1_LITE] or settings[Settings.ROVPP_V2_LITE] or settings[Settings.ROVPP_V2I_LITE]) and not ROV.valid_ann(self, ann, from_rel):
+        if (
+            settings[Settings.ROV]
+            or settings[Settings.ROVPP_V1_LITE]
+            or settings[Settings.ROVPP_V2_LITE]
+            or settings[Settings.ROVPP_V2I_LITE]
+        ) and not ROV.valid_ann(self, ann, from_rel):
             return False
         if settings[Settings.PEER_ROV] and not PeerROV.valid_ann(self, ann, from_rel):
             return False
-        if settings[Settings.PATH_END] and not PathEnd.valid_ann(
-            self, ann, from_rel
-        ):
+        if settings[Settings.PATH_END] and not PathEnd.valid_ann(self, ann, from_rel):
             return False
         if settings[Settings.PEERLOCK_LITE] and not PeerLockLite.valid_ann(
             self, ann, from_rel
         ):
             return False
-        if (settings[Settings.BGP_I_SEC] or settings[Settings.BGP_I_SEC_TRANSITIVE]) and not BGPiSecTransitive.valid_ann(self, ann, from_rel):
+        if (
+            settings[Settings.BGP_I_SEC] or settings[Settings.BGP_I_SEC_TRANSITIVE]
+        ) and not BGPiSecTransitive.valid_ann(self, ann, from_rel):
             return False
-        if settings[Settings.PROVIDER_CONE_ID] and not ProviderConeID.valid_ann(self, ann, from_rel):
+        if settings[Settings.PROVIDER_CONE_ID] and not ProviderConeID.valid_ann(
+            self, ann, from_rel
+        ):
             return False
         if settings[Settings.ASPAPP] and not ASPAPP.valid_ann(self, ann, from_rel):
             return False
@@ -360,7 +375,10 @@ class Policy:
         """
 
         og_ann = ann
-        if self.settings[Settings.BGP_I_SEC] or self.settings[Settings.BGP_I_SEC_TRANSITIVE]:
+        if (
+            self.settings[Settings.BGP_I_SEC]
+            or self.settings[Settings.BGP_I_SEC_TRANSITIVE]
+        ):
             policy_propagate_info = BGPiSecTransitive.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
             )
@@ -386,7 +404,6 @@ class Policy:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
-
 
         if self.settings[Settings.ROVPP_V2I_LITE]:
             policy_propagate_info = ROVPPV2iLite.get_policy_propagate_vals(
@@ -416,16 +433,20 @@ class Policy:
                     return True
 
         if self.settings[Settings.ORIGIN_PREFIX_HIJACK_CUSTOMERS]:
-            policy_propagate_info = OriginPrefixHijackCustomers.get_policy_propagate_vals(
-                self, neighbor_as, ann, propagate_to, send_rels
+            policy_propagate_info = (
+                OriginPrefixHijackCustomers.get_policy_propagate_vals(
+                    self, neighbor_as, ann, propagate_to, send_rels
+                )
             )
             if policy_propagate_info.policy_propagate_bool:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
         if self.settings[Settings.FIRST_ASN_STRIPPING_PREFIX_HIJACK_CUSTOMERS]:
-            policy_propagate_info = FirstASNStrippingPrefixHijackCustomers.get_policy_propagate_vals(
-                self, neighbor_as, ann, propagate_to, send_rels
+            policy_propagate_info = (
+                FirstASNStrippingPrefixHijackCustomers.get_policy_propagate_vals(
+                    self, neighbor_as, ann, propagate_to, send_rels
+                )
             )
             if policy_propagate_info.policy_propagate_bool:
                 ann = policy_propagate_info.ann
@@ -466,9 +487,9 @@ class Policy:
         """
 
         matching_prefixes = sorted(
-                (p for p in self.local_rib if p.supernet_of(dest_ip_addr)),
-                key=lambda p: p.prefixlen,
-                reverse=True,
+            (p for p in self.local_rib if p.supernet_of(dest_ip_addr)),
+            key=lambda p: p.prefixlen,
+            reverse=True,
         )
         most_specific_prefix = matching_prefixes[0] if matching_prefixes else None
 

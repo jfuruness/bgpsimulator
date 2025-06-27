@@ -60,7 +60,7 @@ graph_data = {
         "12": {
             "asn": 12,
             "customer_asns": [10],
-        }
+        },
     },
 }
 
@@ -73,9 +73,7 @@ ex_config_004 = EngineRunConfig(
         override_attacker_asns={CommonASNs.ATTACKER},
         override_legitimate_origin_asns={CommonASNs.VICTIM},
         # AS 9 uses ROV
-        override_base_settings={
-            9: {Settings.ROV: True}
-        }
+        override_base_settings={9: {Settings.ROV: True}},
     ),
     as_graph=ASGraph(graph_data),
     diagram_desc="Subprefix hijack with ROV Simple",

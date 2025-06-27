@@ -1,4 +1,6 @@
-from bgpsimulator.simulation_framework.scenarios.custom_scenarios.shortest_path_prefix_hijack import ShortestPathPrefixHijack
+from bgpsimulator.simulation_framework.scenarios.custom_scenarios.shortest_path_prefix_hijack import (
+    ShortestPathPrefixHijack,
+)
 from bgpsimulator.simulation_engine import Announcement as Ann, SimulationEngine
 from bgpsimulator.shared.enums import CommonPrefixes, Relationships, Timestamps
 from bgpsimulator.shared import IPAddr
@@ -20,12 +22,19 @@ class FirstASNStrippingPrefixHijack(ShortestPathPrefixHijack):
                     timestamp=Timestamps.LEGITIMATE_ORIGIN,
                 )
             ]
-        seed_asn_ann_dict = {**seed_asn_ann_dict, **self._get_first_asn_stripped_attacker_seed_asn_ann_dict(engine)}
+        seed_asn_ann_dict = {
+            **seed_asn_ann_dict,
+            **self._get_first_asn_stripped_attacker_seed_asn_ann_dict(engine),
+        }
         return seed_asn_ann_dict
 
-    def _get_first_asn_stripped_attacker_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
+    def _get_first_asn_stripped_attacker_seed_asn_ann_dict(
+        self, engine: SimulationEngine
+    ) -> dict[int, list[Ann]]:
         attacker_seed_asn_ann_dict = self._get_attacker_seed_asn_ann_dict(engine)
-        stripped_attacker_seed_asn_ann_dict = {attacker_asn: [] for attacker_asn in self.attacker_asns}
+        stripped_attacker_seed_asn_ann_dict = {
+            attacker_asn: [] for attacker_asn in self.attacker_asns
+        }
         for attacker_asn, anns in attacker_seed_asn_ann_dict.items():
             for ann in anns:
                 # Remove the attacker's ASN

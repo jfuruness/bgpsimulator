@@ -121,11 +121,25 @@ class LineFilter:
         )
 
     def get_json_path(self, base_dir: Path) -> Path:
-        path = base_dir / "graph_jsons" / f"as_group_is_{self.asn_group.name}" / f"adopting_is_{self.in_adopting_asns.name}" / f"propagation_round_{self.prop_round}" / f"{self.outcome.name}.json"
+        path = (
+            base_dir
+            / "graph_jsons"
+            / f"as_group_is_{self.asn_group.name}"
+            / f"adopting_is_{self.in_adopting_asns.name}"
+            / f"propagation_round_{self.prop_round}"
+            / f"{self.outcome.name}.json"
+        )
         path.parent.mkdir(exist_ok=True, parents=True)
         return path
 
-    def get_png_path(self, base_dir: Path) -> Path: 
-        path = base_dir / "graph_pngs" / f"as_group_is_{self.asn_group.name}" / f"adopting_is_{self.in_adopting_asns.name}" / f"propagation_round_{self.prop_round}" / f"{self.outcome.name}.png"
+    def get_png_path(self, base_dir: Path) -> Path:
+        path = (
+            base_dir
+            / "graph_pngs"
+            / f"as_group_is_{self.asn_group.name}"
+            / f"adopting_is_{self.in_adopting_asns.name}"
+            / f"propagation_round_{self.prop_round}"
+            / f"{self.outcome.name}.png"
+        )
         path.parent.mkdir(exist_ok=True, parents=True)
         return path

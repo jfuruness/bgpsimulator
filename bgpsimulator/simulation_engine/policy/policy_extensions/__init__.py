@@ -15,9 +15,12 @@ from .bgpsec import BGPSec
 from .bgpisec_transitive import BGPiSecTransitive
 from .provider_cone_id import ProviderConeID
 from .origin_prefix_hijack_customers import OriginPrefixHijackCustomers
-from .first_asn_stripping_prefix_hijack_customers import FirstASNStrippingPrefixHijackCustomers
+from .first_asn_stripping_prefix_hijack_customers import (
+    FirstASNStrippingPrefixHijackCustomers,
+)
 from .peer_rov import PeerROV
 from .aspapp import ASPAPP
+
 __all__ = [
     "ASPathEdgeFilter",
     "ASPA",

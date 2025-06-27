@@ -1,4 +1,3 @@
-
 import json
 from pathlib import Path
 from typing import Any, Callable
@@ -87,10 +86,7 @@ class CAIDAASGraphJSONConverter:
                     self._extract_peers(line, asn_to_as)
 
         final_json = {
-            "ases": {
-                k: as_.to_json()
-                for k, as_ in asn_to_as.items()
-            },
+            "ases": {k: as_.to_json() for k, as_ in asn_to_as.items()},
         }
         ASGraphUtils.add_extra_setup(final_json, additional_asn_group_filters)
 

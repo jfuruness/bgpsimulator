@@ -326,7 +326,9 @@ class Simulation:
 
         # ASGraph is not picklable, so we need to create it here
         engine = SimulationEngine(
-            as_graph=ASGraph.from_json(json.loads(self.as_graph_data_json_path.read_text()))
+            as_graph=ASGraph.from_json(
+                json.loads(self.as_graph_data_json_path.read_text())
+            )
         )
 
         data_tracker = DataTracker(
@@ -494,14 +496,12 @@ class Simulation:
         # The reason we aggregate info right now, instead of saving
         # the engine and doing it later, is because doing it all
         # in RAM is MUCH faster, and speed is important
-        outcomes = (
-            DataPlanePacketPropagator().get_as_outcomes_for_data_plane_packet(
-                dest_ip_addr=scenario.dest_ip_addr,
-                simulation_engine=engine,
-                legitimate_origin_asns=scenario.legitimate_origin_asns,
-                attacker_asns=scenario.attacker_asns,
-                scenario=scenario,
-            )
+        outcomes = DataPlanePacketPropagator().get_as_outcomes_for_data_plane_packet(
+            dest_ip_addr=scenario.dest_ip_addr,
+            simulation_engine=engine,
+            legitimate_origin_asns=scenario.legitimate_origin_asns,
+            attacker_asns=scenario.attacker_asns,
+            scenario=scenario,
         )
 
         data_tracker.store_trial_data(

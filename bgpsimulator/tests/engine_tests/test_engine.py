@@ -21,7 +21,11 @@ class TestEngine:
         """
 
         EngineRunner(
-            base_dir=self.base_dir, engine_run_config=conf, overwrite=overwrite, compare_against_ground_truth=True, write_diagrams=True
+            base_dir=self.base_dir,
+            engine_run_config=conf,
+            overwrite=overwrite,
+            compare_against_ground_truth=True,
+            write_diagrams=True,
         ).run(dpi=dpi)
 
     @property
