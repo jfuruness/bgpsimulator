@@ -16,5 +16,6 @@ class ROV:
         (roa_validity, roa_routed) = policy.route_validator.get_roa_outcome(
             ann.prefix, ann.origin
         )
-        # NOTE: Must work off of isinvalid, since Valid could be False but value could be ROAValidity.UNKNOWN, which should not result in a reject.
+        # NOTE: Must work off of isinvalid, since Valid could be False but value could
+        # be ROAValidity.UNKNOWN, which should not result in a reject.
         return not ROAValidity.is_invalid(roa_validity)

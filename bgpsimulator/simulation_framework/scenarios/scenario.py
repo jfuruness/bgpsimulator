@@ -97,7 +97,10 @@ class Scenario:
             self.dest_ip_addr = self._get_dest_ip_addr()
 
     def _reset_and_add_roas_to_route_validator(self, route_validator) -> None:
-        """Clears & adds ROAs to route_validator which serves as RPKI+Routinator combo"""
+        """Clears & adds ROAs to route_validator.
+        
+        Which serves as RPKI+Routinator combo.
+        """
 
         route_validator.clear()
         for roa in self.roas:
@@ -126,7 +129,8 @@ class Scenario:
         ):
             attacker_asns = prev_attacker_asns
             branch = 1
-        # This is being initialized for the first time, or old scenario has a different number of attackers
+        # This is being initialized for the first time, or old scenario has a
+        # different number of attackers
         else:
             branch = 3
             assert engine
@@ -250,7 +254,8 @@ class Scenario:
         for subcategory in self.scenario_config.adoption_asn_groups:
             asns = engine.as_graph.asn_groups[subcategory]
             # Remove ASes that are already pre-set
-            # Ex: Attackers and legitimate_origins, self.scenario_config.hardcoded_asn_cls_dict
+            # Ex: Attackers and legitimate_origins,
+            # self.scenario_config.hardcoded_asn_cls_dict
             possible_adopters = asns.difference(self.preset_asns)
 
             # Get how many ASes should be adopting (store as k)
@@ -338,7 +343,10 @@ class Scenario:
         as_obj.policy.settings = tuple(settings)
 
     def setup_engine(self, engine: SimulationEngine) -> None:
-        """Nice hook func for setting up the engine with adopting ASes, routing policy settings, etc"""
+        """Nice hook func for setting up the engine.
+        
+        With adopting ASes, routing policy settings, etc.
+        """
         engine.setup(self)
 
     ##################

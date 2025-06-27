@@ -44,7 +44,8 @@ class ScenarioConfig:
         ###########################
 
         # When determining if an AS is using a setting, the following order is used:
-        # 1. attacker_settings or legitimate_origin_settings (if AS is an attacker or legitimate_origin)
+        # 1. attacker_settings or legitimate_origin_settings (if AS is an attacker or
+        #    legitimate_origin)
         # 2. override_adoption_settings (if set)
         # 3. override_base_settings
         # 4. default_adoption_settings
@@ -54,7 +55,8 @@ class ScenarioConfig:
         self.attacker_settings: dict[Settings, bool] = (
             self.update_supersets(attacker_settings) or dict()
         )
-        # 1v. This will update the base routing policy settings for the legitimate_origin ASes
+        # 1v. This will update the base routing policy settings for the
+        #     legitimate_origin ASes
         self.legitimate_origin_settings: dict[Settings, bool] = (
             self.update_supersets(legitimate_origin_settings) or dict()
         )
@@ -90,7 +92,8 @@ class ScenarioConfig:
             ASNGroups.TIER_1.value,
         ]
 
-        # Forces the attackers/legitimate_origins/adopting ASes to be a specific set of ASes rather than random
+        # Forces the attackers/legitimate_origins/adopting ASes to be a specific set
+        # of ASes rather than random
         self.override_attacker_asns: set[int] | None = override_attacker_asns
         self.override_legitimate_origin_asns: set[int] | None = (
             override_legitimate_origin_asns
@@ -120,7 +123,7 @@ class ScenarioConfig:
                         self.default_base_settings,
                     ]
                 ):
-                    from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import (
+                    from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import (  # noqa: E501
                         ShortestPathPrefixHijack,
                     )
 

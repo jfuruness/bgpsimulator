@@ -23,7 +23,8 @@ class ASGraph:
     ) -> None:
         """Reads in relationship data from a JSON and generate graph"""
 
-        # Always add cycles, provider cones, and propagation ranks if it hasn't been done already
+        # Always add cycles, provider cones, and propagation ranks
+        # if it hasn't been done already
         ASGraphUtils.add_extra_setup(graph_data)
         # populate basic info
         self.as_dict = {

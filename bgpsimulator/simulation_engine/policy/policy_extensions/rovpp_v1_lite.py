@@ -104,7 +104,9 @@ class ROVPPV1Lite:
         # If we are the origin, then there are zero invalid anns from the same neighbor
         if ann.recv_relationship == Relationships.ORIGIN:
             return ()
-        # for each subprefix ann recieved (NOTE: these aren't in local RIB since they're invalid) and dropped by default (but they are recieved so we can check there)
+        # for each subprefix ann recieved (NOTE: these aren't in local RIB since
+        # they're invalid) and dropped by default (but they are recieved so we can
+        # check there)
         for recvq_prefix, recvq_anns_list in policy.recv_q.items():
             # recvq prefix is a subprefix of ann
             if ann.prefix.supernet_of(recvq_prefix) and ann.prefix != recvq_prefix:

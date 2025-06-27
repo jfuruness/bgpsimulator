@@ -23,7 +23,10 @@ class ROVPPV2Lite:
     def process_incoming_anns(
         policy: "Policy", from_rel: Relationships, propagation_round: int
     ) -> None:
-        """Additional processing for incoming announcements - the same as ROV++v1 (adding blackholes)"""
+        """Additional processing for incoming announcements.
+        
+        The same as ROV++v1 (adding blackholes).
+        """
 
         return ROVPPV1Lite.process_incoming_anns(policy, from_rel, propagation_round)
 
@@ -53,7 +56,10 @@ class ROVPPV2Lite:
     def send_competing_hijack_allowed(
         policy: "Policy", ann: "Ann", propagate_to: Relationships
     ) -> bool:
-        """You can send blackhole to customers if from peer/provider and either subprefix or non-routed"""
+        """You can send blackhole to customers if from peer/provider.
+        
+        And either subprefix or non-routed.
+        """
 
         roa_validity, roa_routed = policy.route_validator.get_roa_outcome(
             ann.prefix, ann.origin

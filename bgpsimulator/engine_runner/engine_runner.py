@@ -56,7 +56,8 @@ class EngineRunner:
             )
         )
         # NOTE: We used to include the data_tracker, but we don't now for three reasons:
-        # 1. Any time the format of the metrics change, the tests break, breaking backwards compatibility
+        # 1. Any time the format of the metrics change, the tests break, breaking
+        #    backwards compatibility
         # 2. Nobody looked at them. Like, ever. I.e. they were useless to test
         # 3. Many simulators track a very different set of metrics with no clear format
         self._store_data(engine=engine, asn_to_packet_outcome_dict=data_plane_outcomes)
@@ -88,7 +89,10 @@ class EngineRunner:
     def _store_data(
         self, engine: SimulationEngine, asn_to_packet_outcome_dict: dict[int, Outcomes]
     ):
-        """Stores the engine and outcomes. Always stores the guess, and optionally overwrites ground truth."""
+        """Stores the engine and outcomes.
+        
+        Always stores the guess, and optionally overwrites ground truth.
+        """
         self.engine_guess_path.write_text(json.dumps(engine.to_json()))
         self.outcomes_guess_path.write_text(json.dumps(asn_to_packet_outcome_dict))
         # Only write the ground truth if we're comparing against it

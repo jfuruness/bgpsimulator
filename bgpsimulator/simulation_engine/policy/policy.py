@@ -140,7 +140,7 @@ class Policy:
     def _get_new_best_ann(
         self, current_ann: Ann | None, new_ann: Ann, from_rel: Relationships
     ) -> Ann | None:
-        """Cheks new_ann's validity, processes it, and returns best_ann_by_gao_rexford"""
+        """Checks new_ann's validity, processes it, returns best_ann_by_gao_rexford."""
 
         if self.valid_ann(new_ann, from_rel):
             new_ann_processed = self.process_ann(new_ann, from_rel)
@@ -149,9 +149,10 @@ class Policy:
             return current_ann
 
     def process_ann(self, unprocessed_ann: Ann, from_rel: Relationships) -> Ann:
-        """Processes an announcement going from recv_q or ribs_in to local rib
+        """Processes an announcement going from recv_q or ribs_in to local rib.
 
-        Must prepend yourself to the AS-path, change the recv_relationship, and add policy info if needed
+        Must prepend yourself to the AS-path, change the recv_relationship, and add
+        policy info if needed.
         """
         new_ann_processed = unprocessed_ann.copy(
             as_path=(self.as_.asn, *unprocessed_ann.as_path),
@@ -281,7 +282,10 @@ class Policy:
             return new_ann
 
     def _get_best_ann_by_as_path(self, current_ann: Ann, new_ann: Ann) -> Ann | None:
-        """Returns best announcement by as path length, or None if tie. Shorter is better"""
+        """Returns best announcement by as path length, or None if tie.
+        
+        Shorter is better.
+        """
 
         if len(current_ann.as_path) < len(new_ann.as_path):
             return current_ann
@@ -368,9 +372,9 @@ class Policy:
         1. policy_propagate_bool. If this is False, the policy did nothing, if it is
         true, Policy should return True from this method
         2. ann: The modified ann. This can be then be passed into the other funcs
-        3. send_ann_bool. Sometimes a policy may declare the ann shoulldn't be sent at all
-        (for example, ROV++V1 won't send blackholes), in which case, just return True immediately
-        without sending any anns
+        3. send_ann_bool. Sometimes a policy may declare the ann shoulldn't be sent at
+        all (for example, ROV++V1 won't send blackholes), in which case, just return
+        True immediately without sending any anns
         """
 
         og_ann = ann
@@ -385,7 +389,8 @@ class Policy:
                 ann = policy_propagate_info.ann
                 if not policy_propagate_info.send_ann_bool:
                     return True
-        # NOTE: THIS MUST BE ELIF!! BGPiSecTransitive is a superset of BGPSec and has different get_policy_propagate_vals
+        # NOTE: THIS MUST BE ELIF!! BGPiSecTransitive is a superset of BGPSec and has
+        # different get_policy_propagate_vals
         elif self.settings[Settings.BGPSEC]:
             policy_propagate_info = BGPSec.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels

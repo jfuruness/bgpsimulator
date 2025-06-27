@@ -4,7 +4,10 @@ from .prefix import Prefix
 
 
 class Relationships(IntEnum):
-    """Relationships between ASes. Higher numbers == higher priority for announcements"""
+    """Relationships between ASes.
+    
+    Higher numbers == higher priority for announcements
+    """
 
     # Must start at one for the priority
     PROVIDERS = 1
@@ -102,7 +105,10 @@ class ROARouted(IntEnum):
 
 
 class CommonPrefixes(Enum):
-    """Prefixes for attacks. Prefixes tend to be in reference to the legitimate origin"""
+    """Prefixes for attacks.
+    
+    Prefixes tend to be in reference to the legitimate origin.
+    """
 
     SUPERPREFIX: Prefix = Prefix("1.0.0.0/8")
     PREFIX: Prefix = Prefix("1.2.0.0/16")

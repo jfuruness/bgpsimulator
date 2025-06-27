@@ -34,7 +34,8 @@ class CAIDAASGraphJSONConverter:
         """
 
         caida_as_graph_path = caida_as_graph_path or CAIDAASGraphCollector().run()
-        # /home/anon/.cache/bgpsimulator/2025-06-24/CAIDAASGraphCollector_2025.06.14.json
+        # /home/anon/.cache/bgpsimulator/2025-06-24/
+        # CAIDAASGraphCollector_2025.06.14.json
         json_cache_path = caida_as_graph_path.with_suffix(".json")
         if not json_cache_path.exists():
             self._write_as_graph_json(

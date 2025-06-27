@@ -40,7 +40,8 @@ class ASPA:
     def _next_hop_valid(policy: "Policy", ann: "Ann") -> bool:
         """Ensures the next hop is the first ASN in the AS-Path
 
-        Route servers are allowed to strip their own ASN (and in most cases are obligated to)
+        Route servers are allowed to strip their own ASN (and in most cases are
+        obligated to)
         """
 
         return ann.next_hop_asn == ann.as_path[0] or policy.as_.ixp

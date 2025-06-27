@@ -208,7 +208,8 @@ class Simulation:
         self,
         GraphFactoryCls: type[LineChartFactory] = LineChartFactory,
         graph_factory_kwargs: dict[str, Any] | None = None,
-    ):  # , GraphFactoryCls: type[GraphFactory] = GraphFactory, graph_factory_kwargs: dict[str, Any] | None = None) -> None:
+    ):  # , GraphFactoryCls: type[GraphFactory] = GraphFactory,
+        # graph_factory_kwargs: dict[str, Any] | None = None) -> None:
         """Runs the simulation and writes the data"""
 
         data_tracker = self._get_data()
@@ -395,14 +396,20 @@ class Simulation:
 
     @cached_property
     def reuse_attacker_asns(self) -> bool:
-        """Reuse the same attacker ASes across all scenarios configs if they're from the same ASN group"""
+        """Reuse the same attacker ASes across all scenarios configs.
+        
+        If they're from the same ASN group.
+        """
         num_attackers_set = {x.num_attackers for x in self.scenario_configs}
         attacker_asn_groups_set = {x.attacker_asn_group for x in self.scenario_configs}
         return len(num_attackers_set) == 1 and len(attacker_asn_groups_set) == 1
 
     @cached_property
     def reuse_legitimate_origin_asns(self) -> bool:
-        """Reuse the same victim ASes across all scenarios configs if they're from the same ASN group"""
+        """Reuse the same victim ASes across all scenarios configs.
+        
+        If they're from the same ASN group.
+        """
         num_legitimate_origins_set = {
             x.num_legitimate_origins for x in self.scenario_configs
         }

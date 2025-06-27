@@ -96,7 +96,8 @@ class AS:
     def stub(self) -> bool:
         """Returns True if AS is a stub by RFC1772
 
-        Use neighbor_asns instead of neighbors so you can use this during graph construction
+        Use neighbor_asns instead of neighbors so you can use this
+        during graph construction
         """
 
         return len(self.neighbor_asns) == 1
@@ -105,7 +106,8 @@ class AS:
     def multihomed(self) -> bool:
         """Returns True if AS is multihomed by RFC1772
 
-        Use customer_asns instead of customers so you can use this during graph construction
+        Use customer_asns instead of customers so you can use this
+        during graph construction
         """
 
         return (
@@ -117,7 +119,8 @@ class AS:
     def transit(self) -> bool:
         """Returns True if AS is a transit AS by RFC1772
 
-        Use customer_asns instead of customers so you can use this during graph construction
+        Use customer_asns instead of customers so you can use this
+        during graph construction
         """
 
         return (

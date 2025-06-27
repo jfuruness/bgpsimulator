@@ -35,7 +35,9 @@ class CAIDAASGraphCollector:
         try:
             return self._run()
         except Exception as e:
-            bgpsimulator_logger.error(f"Error {e}, deleting cached as graph file at {self.cache_path}")
+            bgpsimulator_logger.error(
+                f"Error {e}, deleting cached as graph file at {self.cache_path}"
+            )
             # Make sure no matter what don't create a messed up cache
             shutil.rmtree(self.cache_path)
             raise

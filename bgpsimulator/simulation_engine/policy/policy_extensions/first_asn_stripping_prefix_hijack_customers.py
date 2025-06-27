@@ -9,7 +9,9 @@ if TYPE_CHECKING:
 
 
 class FirstASNStrippingPrefixHijackCustomers:
-    """A Policy that performs prefix origin hijacks against customers, but strips the first ASN
+    """A Policy that performs prefix origin hijacks against customers.
+    
+    But strips the first ASN.
 
     ASPA and enforce-first-asn prevent this
     """
