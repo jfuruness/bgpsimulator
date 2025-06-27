@@ -14,8 +14,6 @@ class LineChartFactory:
     def __init__(self, json_path: Path, graph_dir: Path, xlabel: str = "Percent Adoption", xlim: tuple[float, float] = (0, 100), ylim: tuple[float, float] = (0, 100), legend_loc: str = "best") -> None:
         self.data_tracker = DataTracker.from_json(json.loads(json_path.read_text()))
         self.graph_dir = graph_dir
-        self.graph_json_dir.mkdir(parents=True, exist_ok=True)
-        self.graph_png_dir.mkdir(parents=True, exist_ok=True)
         self.xlabel = xlabel
         self.xlim = xlim
         self.ylim = ylim
@@ -49,7 +47,7 @@ class LineChartFactory:
         
         y_label = f"Percent {line_filter.outcome.name.replace('_', ' ').title()}"
         line_chart = LineChart(line_filter, lines, title=line_filter.to_csv(), xlabel=self.xlabel, ylabel=y_label, xlim=self.xlim, ylim=self.ylim, legend_loc=self.legend_loc)
-        line_chart_path = self.get_line_chart_path(line_filter, extension="json")
+        line_chart_path = line_filter.get_json_path(self.graph_dir)
         line_chart_path.write_text(json.dumps(line_chart.to_json(), indent=4, sort_keys=True))
         return line_chart_path
 
@@ -61,19 +59,5 @@ class LineChartFactory:
         """Writes the pngs"""
         for path in paths:
             line_chart = LineChart.from_json(json.loads(path.read_text()))
-            png_path = Path(str(path.with_suffix(".png")).replace("graph_jsons", "graph_pngs"))
-            png_path.parent.mkdir(parents=True, exist_ok=True)
+            png_path = line_chart.line_filter.get_png_path(self.graph_dir)
             line_chart.write_graph(png_path)
-
-    @property
-    def graph_json_dir(self) -> Path:
-        return self.graph_dir / "graph_jsons"
-
-    @property
-    def graph_png_dir(self) -> Path:
-        return self.graph_dir / "graph_pngs"
-
-    def get_line_chart_path(self, line_filter: LineFilter, extension: str = "json") -> Path:
-        path = self.graph_json_dir / f"{line_filter.to_csv().replace(',', '/')}.{extension}"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        return path

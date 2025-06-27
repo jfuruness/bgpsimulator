@@ -1,6 +1,7 @@
 from bgpsimulator.as_graphs import ASGraph, AS
 from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 from bgpsimulator.shared import ASNGroups, InAdoptingASNs, Outcomes
+from pathlib import Path
 import re
 
 
@@ -118,3 +119,13 @@ class LineFilter:
             prop_round=int(prop_round),
             outcome=Outcomes(int(outcome)),
         )
+
+    def get_json_path(self, base_dir: Path) -> Path:
+        path = base_dir / "graph_jsons" / f"as_group_is_{self.asn_group.name}" / f"adopting_is_{self.in_adopting_asns.name}" / f"propagation_round_{self.prop_round}" / f"{self.outcome.name}.json"
+        path.parent.mkdir(exist_ok=True, parents=True)
+        return path
+
+    def get_png_path(self, base_dir: Path) -> Path: 
+        path = base_dir / "graph_pngs" / f"as_group_is_{self.asn_group.name}" / f"adopting_is_{self.in_adopting_asns.name}" / f"propagation_round_{self.prop_round}" / f"{self.outcome.name}.png"
+        path.parent.mkdir(exist_ok=True, parents=True)
+        return path
