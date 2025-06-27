@@ -1,7 +1,7 @@
 from math import sqrt
 from statistics import stdev
 
-from typechecking import Any
+from typing import Any
 
 from bgpsimulator.shared import Outcomes
 from bgpsimulator.simulation_engine import SimulationEngine
