@@ -82,9 +82,7 @@ class ASPA:
         reversed_path = ann.as_path[::-1]
 
         for i in range(len(reversed_path) - 1):
-            if not ASPA._provider_check(
-                reversed_path[i], reversed_path[i + 1], policy.as_
-            ):
+            if not ASPA._provider_check(policy, reversed_path[i], reversed_path[i + 1]):
                 return i + 1
         return len(ann.as_path)
 

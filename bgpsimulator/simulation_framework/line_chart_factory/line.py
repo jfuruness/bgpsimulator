@@ -45,7 +45,7 @@ class Line:
         }
 
     @classmethod
-    def from_json(cls, json_data: dict) -> "Line":
+    def from_json(cls, json_data: dict[str, Any]) -> "Line":
         return cls(
             label=json_data["label"],
             xs=[float(x) for x in json_data["xs"]],

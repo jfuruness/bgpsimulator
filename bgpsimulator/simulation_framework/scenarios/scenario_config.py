@@ -30,14 +30,13 @@ class ScenarioConfig:
         override_attacker_asns: set[int] | None = None,
         override_legitimate_origin_asns: set[int] | None = None,
         override_adopting_asns: set[int] | None = None,
-        override_announcements: set[Ann] | None = None,
-        override_roas: set[ROA] | None = None,
+        override_seed_asn_ann_dict: dict[int, list[Ann]] | None = None,
+        override_roas: list[ROA] | None = None,
         override_dest_ip_addr: IPAddr | None = None,
     ):
         # Label used for graphing, typically name it after the adopting policy
         self.label: str = label
         self.ScenarioCls: type[Scenario] = ScenarioCls
-        self.propagation_rounds: int | None = propagation_rounds
 
         ###########################
         # Routing Policy Settings #
@@ -61,21 +60,27 @@ class ScenarioConfig:
             self.update_supersets(legitimate_origin_settings) or dict()
         )
         # 2. This will completely override the default adopt routing policy settings
-        self.override_adoption_settings: dict[int, dict[str, bool]] = (
-            self.update_supersets(override_adoption_settings) or dict()
-        )
+        self.override_adoption_settings: dict[int, dict[Settings, bool]] = dict()
+        if override_adoption_settings:
+            self.override_adoption_setting = {
+                asn: self.update_supersets(settings_dict)
+                for asn, settings_dict in override_adoption_settings.items()
+            }
         # 3. This will completely override the default base routing policy settings
-        self.override_base_settings: dict[int, dict[str, bool]] = (
-            self.update_supersets(override_base_settings) or dict()
-        )
+        self.override_base_settings: dict[int, dict[Settings, bool]] = dict()
+        if override_base_settings:
+            self.override_base_settings = {
+                asn: self.update_supersets(settings_dict)
+                for asn, settings_dict in override_base_settings.items()
+            }
         # 4. This will update the base routing policy settings for the adopting ASes
-        self.default_adoption_settings: dict[str, bool] = (
+        self.default_adoption_settings: dict[Settings, bool] = (
             self.update_supersets(default_adoption_settings) or dict()
         )
         # 5. Base routing policy settings that will be applied to all ASes
-        self.default_base_settings: dict[str, bool] = self.update_supersets(
-            default_base_settings
-        ) or dict.fromkeys(Settings, False)
+        self.default_base_settings: dict[Settings, bool] = (
+            self.update_supersets(default_base_settings) or dict()
+        )
 
         # Number of attackers/legitimate_origins/adopting ASes
         self.num_attackers: int = num_attackers
@@ -101,41 +106,36 @@ class ScenarioConfig:
         self.override_adopting_asns: set[int] | None = override_adopting_asns
         # Forces the announcements/roas to be a specific set of announcements/roas
         # rather than generated dynamically based on attackers/legitimate_origins
-        self.override_announcements: set[Ann] | None = override_announcements
-        self.override_roas: set[ROA] | None = override_roas
+
+        self.override_seed_asn_ann_dict: dict[int, list[Ann]] | None = (
+            override_seed_asn_ann_dict
+        )
+        self.override_roas: list[ROA] | None = override_roas
         # Every AS will attempt to send a packet to this IP address post propagation
         # This is used for the ASGraphAnalyzer to determine the outcome of a packet
         self.override_dest_ip_addr: IPAddr | None = override_dest_ip_addr
 
         # Below this point 99% of devs will not need to touch
 
-        if self.propagation_rounds is None:
+        if propagation_rounds is None:
             # BGP-iSec needs this.
-            for policy_setting in [Settings.BGP_I_SEC, Settings.BGP_I_SEC_TRANSITIVE]:
-                if any(
-                    x.get(policy_setting)
-                    for x in [
-                        self.attacker_settings,
-                        self.legitimate_origin_settings,
-                        self.override_adoption_settings,
-                        self.override_base_settings,
-                        self.default_adoption_settings,
-                        self.default_base_settings,
-                    ]
-                ):
-                    from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import (  # noqa: E501
-                        ShortestPathPrefixHijack,
-                    )
+            if any(
+                x in self.all_used_settings
+                for x in [Settings.BGP_I_SEC, Settings.BGP_I_SEC_TRANSITIVE]
+            ):
+                from bgpsimulator.simulation_framework.scenarios.shortest_path_prefix_hijack import (  # noqa: E501
+                    ShortestPathPrefixHijack,
+                )
 
-                    if issubclass(self.ScenarioCls, ShortestPathPrefixHijack):
-                        # ShortestPathPrefixHijack needs 2 propagation rounds
-                        self.propagation_rounds = 2
-                    else:
-                        self.propagation_rounds = (
-                            self.ScenarioCls.min_propagation_rounds
-                        )
-            if self.propagation_rounds is None:
+                if issubclass(self.ScenarioCls, ShortestPathPrefixHijack):
+                    # ShortestPathPrefixHijack needs 2 propagation rounds
+                    self.propagation_rounds: int = 2
+                else:
+                    self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
+            else:
                 self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
+        else:
+            self.propagation_rounds = propagation_rounds
         if self.ScenarioCls.min_propagation_rounds > self.propagation_rounds:
             raise ValueError(
                 f"{self.ScenarioCls.__name__} requires a minimum of "
@@ -147,11 +147,11 @@ class ScenarioConfig:
     @staticmethod
     def update_supersets(
         policy_settings: dict[Settings, bool] | None,
-    ) -> dict[Settings, bool] | None:
+    ) -> dict[Settings, bool]:
         """Updates the supersets of a policy setting"""
 
         if policy_settings is None:
-            return
+            return dict()
 
         new_settings = policy_settings.copy()
         if policy_settings.get(Settings.BGP_I_SEC, False):
@@ -175,21 +175,28 @@ class ScenarioConfig:
         return new_settings
 
     @cached_property
-    def get_all_used_settings(self) -> set[Settings]:
+    def all_used_settings(self) -> frozenset[Settings]:
         """Returns all the settings that are used in the scenario config"""
         used_settings = set()
-        for setting_dict in [
+        for settings_dict in [
             self.attacker_settings,
             self.legitimate_origin_settings,
-            self.override_adoption_settings,
-            self.override_base_settings,
             self.default_adoption_settings,
             self.default_base_settings,
         ]:
-            for setting, bool_val in setting_dict.items():
+            # Mypy can't detect this type is {Settings: bool} for some reason
+            for setting, bool_val in settings_dict.items():
                 if bool_val:
                     used_settings.add(setting)
-        return used_settings
+        for asn_to_settings_dict in (
+            self.override_adoption_settings,
+            self.override_base_settings,
+        ):
+            for settings_dict in asn_to_settings_dict.values():
+                for setting, bool_val in settings_dict.items():
+                    if bool_val:
+                        used_settings.add(setting)
+        return frozenset(used_settings)
 
     ##############
     # JSON Funcs #

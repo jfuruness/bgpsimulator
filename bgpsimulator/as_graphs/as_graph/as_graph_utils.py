@@ -12,7 +12,7 @@ class ASGraphUtils:
 
     @staticmethod
     def add_extra_setup(
-        as_graph_json: dict[int, dict[str, Any]],
+        as_graph_json: dict[str, Any],
         additional_asn_group_filters: frozendict[
             str, Callable[[dict[int, AS]], frozenset[int]]
         ] = frozendict(),
@@ -38,13 +38,15 @@ class ASGraphUtils:
     ###############
 
     @staticmethod
-    def check_for_cycles(as_graph_json: dict[int, dict[str, Any]]) -> None:
+    def check_for_cycles(as_graph_json: dict[str, Any]) -> None:
         """Checks for cycles in the AS graph"""
 
         # Apply cycle detection to each node in the graph
         for key in ("provider_asns", "customer_asns"):
-            visited = set()  # To track nodes that have been fully processed
-            rec_stack = set()  # Tracks current recursion stack (for cycle detection)
+            visited: set[int] = set()  # To track nodes that have been fully processed
+            rec_stack: set[int] = (
+                set()
+            )  # Tracks current recursion stack (for cycle detection)
 
             for asn, as_info in as_graph_json["ases"].items():
                 if asn not in visited:
@@ -57,7 +59,7 @@ class ASGraphUtils:
     def _validate_no_cycles_helper(
         asn: int,
         as_info: dict[str, Any],
-        as_graph_json: dict[int, dict[str, Any]],
+        as_graph_json: dict[str, Any],
         visited: set[int],
         rec_stack: set[int],
         key: str,
@@ -89,7 +91,7 @@ class ASGraphUtils:
     #################
 
     @staticmethod
-    def add_provider_cone_asns(as_graph_json: dict[int, dict[str, Any]]) -> None:
+    def add_provider_cone_asns(as_graph_json: dict[str, Any]) -> None:
         """Adds provider cone ASNs to the AS graph"""
 
         cone_dict: dict[int, set[int]] = {}
@@ -103,7 +105,7 @@ class ASGraphUtils:
     def _get_cone_helper(
         as_info: dict[str, Any],
         cone_dict: dict[int, set[int]],
-        as_graph_json: dict[int, dict[str, Any]],
+        as_graph_json: dict[str, Any],
         rel_key: str,
     ) -> set[int]:
         """Recursively determines the cone of an AS"""
@@ -130,7 +132,7 @@ class ASGraphUtils:
     ##########################
 
     @staticmethod
-    def assign_as_propagation_rank(as_graph_json: dict[int, dict[str, Any]]) -> None:
+    def assign_as_propagation_rank(as_graph_json: dict[str, Any]) -> None:
         """Adds propagation rank from the leafs to the input clique"""
 
         for as_info in as_graph_json["ases"].values():
@@ -141,7 +143,7 @@ class ASGraphUtils:
 
     @staticmethod
     def _assign_ranks_helper(
-        as_info: dict[str, Any], rank: int, as_graph_json: dict[int, dict[str, Any]]
+        as_info: dict[str, Any], rank: int, as_graph_json: dict[str, Any]
     ) -> None:
         """Assigns ranks to all ases in customer/provider chain recursively"""
 
@@ -159,7 +161,7 @@ class ASGraphUtils:
 
     @staticmethod
     def assign_as_graph_propagation_ranks(
-        as_graph_json: dict[int, dict[str, Any]],
+        as_graph_json: dict[str, Any],
     ) -> None:
         """Orders ASes by rank"""
 
@@ -182,11 +184,11 @@ class ASGraphUtils:
 
     @staticmethod
     def add_asn_groups(
-        as_graph_json: dict[int, dict[str, Any]],
+        as_graph_json: dict[str, Any],
         additional_asn_group_filters: frozendict[
             str, Callable[[dict[int, AS]], frozenset[int]]
         ],
-    ) -> frozendict[str, frozenset[int]]:
+    ) -> None:
         """Gets ASN groups. Used for choosing attackers from stubs, adopters, etc."""
 
         asn_to_as: dict[int, AS] = {

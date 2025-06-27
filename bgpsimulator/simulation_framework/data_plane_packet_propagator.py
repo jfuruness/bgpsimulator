@@ -13,7 +13,7 @@ class DataPlanePacketPropagator:
         simulation_engine: SimulationEngine,
         legitimate_origin_asns: set[int],
         attacker_asns: set[int],
-        scenario: Scenario | None = None,
+        scenario: Scenario,
     ) -> dict[int, Outcomes]:
         """For each AS, determine the outcome of a packet sent to the
         destination IP address
@@ -45,7 +45,7 @@ class DataPlanePacketPropagator:
         visited_asns: set[int],
         legitimate_origin_asns: set[int],
         attacker_asns: set[int],
-        scenario: Scenario | None = None,
+        scenario: Scenario,
     ):
         """Recursively stores the outcomes of the AS on the data plane"""
 
@@ -64,6 +64,9 @@ class DataPlanePacketPropagator:
                 scenario,
             )
             if outcome == Outcomes.UNDETERMINED:
+                # outcome won't ever be undetermined if most_specific_ann is None
+                assert most_specific_ann, "for mypy"
+
                 # next as in the AS path to traceback to
                 # Ignore type because only way for this to be here
                 # Is if the most specific "Ann" was NOT None.
@@ -93,7 +96,7 @@ class DataPlanePacketPropagator:
         as_obj: AS,
         engine: SimulationEngine,
         dest_ip_addr: IPAddr,
-        most_specific_ann: Ann,
+        most_specific_ann: Ann | None,
         visited_asns: set[int],
         legitimate_origin_asns: set[int],
         attacker_asns: set[int],

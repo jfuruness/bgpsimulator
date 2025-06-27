@@ -45,7 +45,7 @@ class ROVPPV2iLite:
                 )
             else:
                 return PolicyPropagateInfo(
-                    policy_propagate_bool=True, ann=None, send_ann_bool=False
+                    policy_propagate_bool=True, ann=ann, send_ann_bool=False
                 )
         else:
             return PolicyPropagateInfo(

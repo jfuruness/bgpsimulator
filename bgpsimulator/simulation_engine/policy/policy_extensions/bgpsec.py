@@ -24,7 +24,7 @@ class BGPSec:
 
         # If the path is valid, add bgpsec_as_path
         if ann.as_path == (policy.as_.asn,):
-            return ann.copy(bgpsec_as_path=ann.as_path.copy())
+            return ann.copy(bgpsec_as_path=ann.as_path)
         return ann
 
     @staticmethod
@@ -68,7 +68,7 @@ class BGPSec:
         """Sets the bgpsec_as_path. Prepends ASN if valid, otherwise clears"""
 
         if BGPSec.bgpsec_valid(policy, ann):
-            return ann.copy(bgpsec_as_path=ann.as_path.copy())
+            return ann.copy(bgpsec_as_path=ann.as_path)
         else:
             return ann.copy(bgpsec_as_path=())
 

@@ -21,7 +21,7 @@ class AccidentalRouteLeak(Scenario):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._attacker_customer_cone_asns: set[int] = set()
+        self._attackers_customer_cone_asns: set[int] = set()
         self._validate_attacker_asn_group()
 
     def _validate_attacker_asn_group(self):
@@ -154,7 +154,7 @@ class AccidentalRouteLeak(Scenario):
         leaker, since you can not "leak" to your own customers
         """
 
-        return super().untracked_asns | self._attackers_customer_cones_asns
+        return super().untracked_asns | self._attackers_customer_cone_asns
 
     def _get_attacker_asns(
         self,
@@ -210,5 +210,5 @@ class AccidentalRouteLeak(Scenario):
             engine, percent_ases_randomly_adopting
         )
         # Remove attacker's customer conesfrom possible victims
-        possible_asns = possible_asns.difference(self._attackers_customer_cones_asns)
+        possible_asns = possible_asns.difference(self._attackers_customer_cone_asns)
         return possible_asns

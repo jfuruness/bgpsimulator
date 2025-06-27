@@ -1,6 +1,9 @@
 from math import sqrt
 from statistics import stdev
 
+from typechecking import Any
+
+from bgpsimulator.shared import Outcomes
 from bgpsimulator.simulation_engine import SimulationEngine
 from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 
@@ -83,22 +86,22 @@ class DataTracker:
             or {}
         )
 
-    def _create_new_unaggregated_data(self) -> dict:
+    def _create_new_unaggregated_data(
+        self,
+    ) -> dict[str, dict[LineFilter, dict[float, list[dict[str, int]]]]]:
         """Creates a new unaggregated data dictionary"""
-        return {
-            # This is the label of the scenario_config
-            label: {
-                # These are the filters for the scenario_config
-                # to create the line seen in the graph
-                line_filter: {
-                    percent_ases_randomly_adopting: []
-                    for percent_ases_randomly_adopting
-                    in self.percent_ases_randomly_adopting
-                }
-                for line_filter in self.line_filters
-            }
-            for label in self.scenario_labels
-        }
+
+        data: dict[str, dict[LineFilter, dict[float, list[dict[str, int]]]]] = dict()
+        # This is the label of the scenario_config
+        for label in self.scenario_labels:
+            data[label] = dict()
+            # These are the filters for the scenario_config
+            # to create the line seen in the graph
+            for line_filter in self.line_filters:
+                data[label][line_filter] = dict()
+                for percent_adopt in self.percent_ases_randomly_adopting:
+                    data[label][line_filter][percent_adopt] = list()
+        return data
 
     def __add__(self, other) -> "DataTracker":
         if isinstance(other, DataTracker):
@@ -110,9 +113,7 @@ class DataTracker:
                         percent_ases_randomly_adopting,
                         _data_points,
                     ) in trial_data.items():
-                        new_data[label][line_filter][
-                            percent_ases_randomly_adopting
-                        ] = (
+                        new_data[label][line_filter][percent_ases_randomly_adopting] = (
                             self.unaggregated_data[label][line_filter][
                                 percent_ases_randomly_adopting
                             ]
@@ -134,7 +135,7 @@ class DataTracker:
         *,
         engine: SimulationEngine,
         scenario: Scenario,
-        asn_to_packet_outcome_dict: dict[int, int],
+        asn_to_packet_outcome_dict: dict[int, Outcomes],
         propagation_round: int,
     ) -> None:
         """Stores the data for a trial"""
@@ -204,9 +205,9 @@ class DataTracker:
         else:
             return 0
 
-    def to_json(self) -> dict:
+    def to_json(self) -> dict[str, Any]:
         """Converts the data to a JSON-friendly format"""
-        json_data = {}
+        json_data: dict[str, dict[str, dict[str, int]]] = {}
         for label, inner_dict in self.aggregated_data.items():
             json_data[label] = {}
             for line_filter, trial_data in inner_dict.items():
@@ -220,9 +221,9 @@ class DataTracker:
         }
 
     @classmethod
-    def from_json(cls, json_data: dict) -> "DataTracker":
+    def from_json(cls, json_data: dict[str, Any]) -> "DataTracker":
         """Converts the data from a JSON-friendly format"""
-        aggregated_data = {}
+        aggregated_data: dict[str, dict[LineFilter, dict[str, int]]] = {}
         for label, inner_dict in json_data["aggregated_data"].items():
             aggregated_data[label] = {}
             for line_filter, trial_data in inner_dict.items():

@@ -3,8 +3,10 @@ from bgpsimulator.shared import IPAddr
 from bgpsimulator.shared.enums import CommonPrefixes, Relationships, Timestamps
 from bgpsimulator.simulation_engine import Announcement as Ann
 from bgpsimulator.simulation_engine import SimulationEngine
-from bgpsimulator.simulation_framework.scenarios.custom_scenarios. \
-    shortest_path_prefix_hijack import ShortestPathPrefixHijack
+
+from .shortest_path_prefix_hijack import (
+    ShortestPathPrefixHijack,
+)
 
 
 class FirstASNStrippingPrefixHijack(ShortestPathPrefixHijack):
@@ -32,7 +34,7 @@ class FirstASNStrippingPrefixHijack(ShortestPathPrefixHijack):
         self, engine: SimulationEngine
     ) -> dict[int, list[Ann]]:
         attacker_seed_asn_ann_dict = self._get_attacker_seed_asn_ann_dict(engine)
-        stripped_attacker_seed_asn_ann_dict = {
+        stripped_attacker_seed_asn_ann_dict: dict[int, list[Ann]] = {
             attacker_asn: [] for attacker_asn in self.attacker_asns
         }
         for attacker_asn, anns in attacker_seed_asn_ann_dict.items():

@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from weakref import proxy
 
 from bgpsimulator.route_validator import RouteValidator
@@ -31,8 +31,6 @@ from .policy_extensions import (
 )
 
 if TYPE_CHECKING:
-    from weakref import CallableProxyType
-
     from bgpsimulator.as_graphs import AS
 
 
@@ -44,8 +42,8 @@ class Policy:
     def __init__(
         self,
         as_: "AS",
-        settings: list[bool] | None = None,
-        local_rib: dict[str, Ann] | None = None,
+        settings: tuple[bool] | None = None,
+        local_rib: dict[Prefix, Ann] | None = None,
     ) -> None:
         """Add local rib and data structures here
 
@@ -58,11 +56,12 @@ class Policy:
         self.local_rib: dict[Prefix, Ann] = local_rib or dict()
         self.recv_q: defaultdict[Prefix, list[Ann]] = defaultdict(list)
         if settings:
-            self.settings: list[bool] = settings
+            self.settings: tuple[bool, ...] = settings
         else:
-            self.settings = [False for _ in Settings]
+            self.settings = tuple([False for _ in Settings])
         # The AS object that this routing policy is associated with
-        self.as_: CallableProxyType[AS] = proxy(as_)
+        # Casting this so we don't ened to put callable proxy type everywhere
+        self.as_: AS = cast("AS", proxy(as_))
 
     def __eq__(self, other) -> bool:
         if isinstance(other, Policy):
@@ -124,7 +123,8 @@ class Policy:
             # This is a new best ann. Process it and add it to the local rib
             if og_ann != current_ann:
                 # Save to local rib
-                self.local_rib[current_ann.prefix] = current_ann
+                # mypy doesn't understand that this could never be None
+                self.local_rib[current_ann.prefix] = current_ann  # type: ignore
 
         # NOTE: all three of these have the same process_incoming_anns
         # which just adds ROV++ blackholes to the local RIB
@@ -254,18 +254,21 @@ class Policy:
 
         # When I had this as a list of funcs, it was 7x slower, resulting in bottlenecks
         # Gotta do it the ugly way unfortunately
+
+        # mypy also doesn't understand that current_ann can not be None for these funcs
         final_ann = (
             (new_ann if current_ann is None else None)
-            or self._get_best_ann_by_local_pref(current_ann, new_ann)
-            or self._get_best_ann_by_as_path(current_ann, new_ann)
+            or self._get_best_ann_by_local_pref(current_ann, new_ann)  # type: ignore
+            or self._get_best_ann_by_as_path(current_ann, new_ann)  # type: ignore
             # BGPSec is security third (see BGPSec class docstring)
             # NOTE: BGPiSec policies don't change path preference for easier deployment
             or (
                 self.settings[Settings.BGPSEC]
-                and BGPSec.get_best_ann_by_bgpsec(self, current_ann, new_ann)
+                and BGPSec.get_best_ann_by_bgpsec(self, current_ann, new_ann)  # type: ignore
             )
             or self._get_best_ann_by_lowest_neighbor_asn_tiebreaker(
-                current_ann, new_ann
+                current_ann,  # type: ignore
+                new_ann,
             )
         )
         if final_ann:
@@ -280,6 +283,9 @@ class Policy:
             return current_ann
         elif current_ann.recv_relationship.value < new_ann.recv_relationship.value:
             return new_ann
+        # mypy requires this and it can't be turned off
+        else:
+            return None
 
     def _get_best_ann_by_as_path(self, current_ann: Ann, new_ann: Ann) -> Ann | None:
         """Returns best announcement by as path length, or None if tie.
@@ -291,6 +297,9 @@ class Policy:
             return current_ann
         elif len(current_ann.as_path) > len(new_ann.as_path):
             return new_ann
+        # mypy requires this and it can't be turned off
+        else:
+            return None
 
     def _get_best_ann_by_lowest_neighbor_asn_tiebreaker(
         self, current_ann: Ann, new_ann: Ann
@@ -514,7 +523,7 @@ class Policy:
             "local_rib": {
                 str(prefix): ann.to_json() for prefix, ann in self.local_rib.items()
             },
-            "settings": self.settings,
+            "settings": list(self.settings),
         }
 
     @classmethod
@@ -525,5 +534,5 @@ class Policy:
                 Prefix(prefix): Ann.from_json(ann)
                 for prefix, ann in json_obj.get("local_rib", {}).items()
             },
-            settings=json_obj.get("settings", []),
+            settings=tuple(json_obj.get("settings", [])),
         )

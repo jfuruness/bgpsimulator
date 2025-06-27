@@ -63,7 +63,7 @@ class CAIDAASGraphJSONConverter:
         caida_as_graph_path: Path,
         json_cache_path: Path,
         additional_asn_group_filters: frozendict[
-            int, Callable[[dict[int, AS]], frozenset[AS]]
+            str, Callable[[dict[int, AS]], frozenset[int]]
         ],
         PolicyCls: type[Policy],
     ) -> None:
@@ -87,7 +87,7 @@ class CAIDAASGraphJSONConverter:
                 else:
                     self._extract_peers(line, asn_to_as)
 
-        final_json = {
+        final_json: dict[str, Any] = {
             "ases": {k: as_.to_json() for k, as_ in asn_to_as.items()},
         }
         ASGraphUtils.add_extra_setup(final_json, additional_asn_group_filters)
@@ -96,7 +96,6 @@ class CAIDAASGraphJSONConverter:
             # add separators to make JSON as short as possible
             # ensure_ascii set to false also gives a speed boost
             json.dump(final_json, f, separators=(",", ":"), ensure_ascii=False)
-        return final_json
 
     #################
     # Parsing funcs #

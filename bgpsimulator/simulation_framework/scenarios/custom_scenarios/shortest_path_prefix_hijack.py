@@ -71,7 +71,7 @@ class ShortestPathPrefixHijack(Scenario):
     def _get_attacker_seed_asn_ann_dict(
         self, engine: SimulationEngine
     ) -> dict[int, list[Ann]]:
-        all_used_settings = self.scenario_config.get_all_used_settings()
+        all_used_settings = self.scenario_config.all_used_settings
         # Go strongest to weakest
         if any(setting in all_used_settings for setting in self.bgpisec_settings):
             # See post_propagation_hook - this is where the attack takes place
@@ -144,7 +144,7 @@ class ShortestPathPrefixHijack(Scenario):
         """
 
         if not any(
-            setting in self.scenario_config.get_all_used_settings()
+            setting in self.scenario_config.all_used_settings
             for setting in self.bgpisec_settings
         ):
             return
@@ -194,13 +194,10 @@ class ShortestPathPrefixHijack(Scenario):
             for attacker_asn in self.attacker_asns:
                 seed_asn_ann_dict[attacker_asn] = [
                     best_ann.copy(
-                        {
-                            "as_path": (attacker_asn, *best_ann.as_path),
-                            "recv_relationship": Relationships.ORIGIN,
-                            "seed_asn": attacker_asn,
-                            "timestamp": Timestamps.ATTACKER.value,
-                            "next_hop_asn": attacker_asn,
-                        }
+                        as_path=(attacker_asn, *best_ann.as_path),
+                        recv_relationship=Relationships.ORIGIN,
+                        timestamp=Timestamps.ATTACKER.value,
+                        next_hop_asn=attacker_asn,
                     )
                 ]
 
@@ -291,7 +288,12 @@ class ShortestPathPrefixHijack(Scenario):
                 visited[as_.asn] = as_path
                 for provider_asn in engine.as_graph.as_dict[as_.asn].provider_asns:
                     if provider_asn not in visited:
-                        queue.append((provider_asn, (provider_asn, *as_path)))
+                        queue.append(
+                            (
+                                engine.as_graph.as_dict[provider_asn],
+                                (provider_asn, *as_path),
+                            )
+                        )
 
         # Then, go in order of provider relationships
         # This is a nice optimization, since the dictionary maintains order
@@ -405,7 +407,7 @@ class ShortestPathPrefixHijack(Scenario):
 
         root_asn = next(iter(self.legitimate_origin_asns))
         root_as_obj = engine.as_graph.as_dict[root_asn]
-        shortest_valid_path: tuple[int, ...] | None = None
+        shortest_valid_path: tuple[int, ...] = ()
         for first_provider_asn in root_as_obj.provider_asns:
             # You only need legit origin and their provider, you don't need three
             # for secondary_provider in first_provider.providers:
@@ -415,23 +417,22 @@ class ShortestPathPrefixHijack(Scenario):
 
         if not shortest_valid_path:
             # Some ASes don't have providers, and are stubs that are peered
-            for first_peer_asn in root_as_obj.peers:
+            for first_peer_asn in root_as_obj.peer_asns:
                 shortest_valid_path = (first_peer_asn, root_asn)
                 break
 
         if not shortest_valid_path:
             # Strange case but it could happen
-            for first_customer_asn in root_as_obj.customers:
+            for first_customer_asn in root_as_obj.customer_asns:
                 shortest_valid_path = (first_customer_asn, root_asn)
                 break
 
-        if shortest_valid_path is None:
+        if shortest_valid_path == ():
             warnings.warn(
                 "Shortest path against pathend is none? "
                 "This should only happen at full adoption...",
                 stacklevel=2,
             )
-            shortest_valid_path = ()
 
         seed_asn_ann_dict = dict()
         for attacker_asn in self.attacker_asns:

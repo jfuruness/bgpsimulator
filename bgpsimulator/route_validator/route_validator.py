@@ -21,7 +21,7 @@ class RouteValidator:
 
     def clear(self) -> None:
         """Clears the trie"""
-        self.__init__()
+        self.__init__()  # type: ignore
 
     def add_roa(self, roa: ROA) -> None:
         """Inserts a prefix into the trie"""
@@ -86,7 +86,7 @@ class RouteValidator:
             rv = sorted(
                 [x.get_outcome(prefix, origin) for x in relevant_roas],
                 key=lambda x: x[0],
-            )[0]  # type: ignore
+            )[0]
             return rv
         else:
             return ROAValidity.UNKNOWN, ROARouted.UNKNOWN

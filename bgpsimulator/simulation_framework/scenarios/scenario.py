@@ -40,9 +40,9 @@ class Scenario:
         engine: SimulationEngine,
         route_validator: RouteValidator,
         percent_ases_randomly_adopting: float = 0,
-        attacker_asns: frozenset[int] | None = None,
-        legitimate_origin_asns: frozenset[int] | None = None,
-        adopting_asns: frozenset[int] | None = None,
+        attacker_asns: set[int] | None = None,
+        legitimate_origin_asns: set[int] | None = None,
+        adopting_asns: set[int] | None = None,
     ):
         """inits attrs
 
@@ -76,9 +76,9 @@ class Scenario:
             engine,
         )
 
-        if self.scenario_config.override_announcements is not None:
+        if self.scenario_config.override_seed_asn_ann_dict is not None:
             self.seed_asn_ann_dict: dict[int, list[Ann]] = (
-                self.scenario_config.override_announcements.copy()
+                self.scenario_config.override_seed_asn_ann_dict.copy()
             )
         else:
             self.seed_asn_ann_dict = self._get_seed_asn_ann_dict(engine=engine)
@@ -363,6 +363,7 @@ class Scenario:
 
     def _get_roas(
         self,
+        *,
         seed_asn_ann_dict: dict[int, list[Ann]],
         engine: SimulationEngine,
     ) -> list[ROA]:

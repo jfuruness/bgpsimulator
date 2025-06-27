@@ -13,10 +13,8 @@ class ROA:
     ):
         self.prefix: Prefix = prefix
         self.origin: int = origin
-        self.max_length: int | None = max_length
+        self.max_length: int = max_length or self.prefix.prefixlen
         self.ta: str | None = ta
-        if self.max_length is None:
-            self.max_length = self.prefix.prefixlen
 
     def __hash__(self) -> int:
         return hash((self.prefix, self.origin, self.max_length, self.ta))

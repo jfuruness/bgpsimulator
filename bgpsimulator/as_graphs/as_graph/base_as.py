@@ -1,12 +1,13 @@
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Optional
-from weakref import CallableProxyType, proxy
+from typing import TYPE_CHECKING, Any, cast
+from weakref import proxy
 
 from bgpsimulator.shared import Relationships
 from bgpsimulator.simulation_engine import Policy
 
 if TYPE_CHECKING:
     from .as_graph import ASGraph
+
 
 class AS:
     """Autonomous System class. Contains attributes of an AS"""
@@ -21,7 +22,7 @@ class AS:
         propagation_rank: int | None = None,
         tier_1: bool = False,
         ixp: bool = False,
-        as_graph: Optional["ASGraph"] = None,
+        as_graph: "ASGraph | None" = None,
         policy_json: dict[str, Any] | None = None,
     ) -> None:
         # Make sure you're not accidentally passing in a string here
@@ -38,7 +39,7 @@ class AS:
         # Read Caida's paper to understand these
         self.tier_1: bool = tier_1
         self.ixp: bool = ixp
-        self.provider_cone_asns: set[int] | None = provider_cone_asns or set()
+        self.provider_cone_asns: set[int] = provider_cone_asns or set()
         # Propagation rank. 0 is a leaf, highest is the input clique/t1 ASes
         self.propagation_rank: int | None = propagation_rank
 
@@ -50,8 +51,9 @@ class AS:
         )
 
         # This is useful for some policies to have knowledge of the graph
+        # Cast this here to avoid having to write the weakref everywhere
         if as_graph is not None:
-            self.as_graph: CallableProxyType[ASGraph] = proxy(as_graph)
+            self.as_graph: ASGraph = cast("ASGraph", proxy(as_graph))
         else:
             # Ignoring this because it gets set properly immediatly
             self.as_graph = None  # type: ignore
@@ -130,13 +132,13 @@ class AS:
         )
 
     @cached_property
-    def stubs(self) -> tuple["AS", ...]:
+    def stubs(self) -> list["AS"]:
         """Returns a list of any stubs connected to that AS"""
 
-        return tuple([x for x in self.customers if x.stub])
+        return [x for x in self.customers if x.stub]
 
     @cached_property
-    def neighbors(self) -> tuple["AS", ...]:
+    def neighbors(self) -> list["AS"]:
         """Returns customers + peers + providers"""
 
         return self.customers + self.peers + self.providers

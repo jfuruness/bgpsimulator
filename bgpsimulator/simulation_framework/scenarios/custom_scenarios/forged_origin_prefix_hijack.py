@@ -1,4 +1,3 @@
-
 from bgpsimulator.route_validator import ROA
 from bgpsimulator.shared import IPAddr
 from bgpsimulator.shared.enums import CommonPrefixes, Relationships, Timestamps
@@ -25,13 +24,13 @@ class ForgedOriginPrefixHijack(Scenario):
                 )
             ]
 
-        victim_asn = next(iter(self.victim_asns))
+        legitimate_origin_asn = next(iter(self.legitimate_origin_asns))
 
         for attacker_asn in self.attacker_asns:
             anns[attacker_asn] = [
                 Ann(
                     prefix=CommonPrefixes.PREFIX.value,
-                    as_path=(attacker_asn, victim_asn),
+                    as_path=(attacker_asn, legitimate_origin_asn),
                     next_hop_asn=attacker_asn,
                     recv_relationship=Relationships.ORIGIN,
                     timestamp=Timestamps.ATTACKER,

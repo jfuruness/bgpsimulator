@@ -23,7 +23,7 @@ class ROVPPV1Lite:
     ) -> PolicyPropagateInfo:
         if ann.rovpp_blackhole:
             return PolicyPropagateInfo(
-                policy_propagate_bool=True, ann=None, send_ann_bool=False
+                policy_propagate_bool=True, ann=ann, send_ann_bool=False
             )
         else:
             return PolicyPropagateInfo(
@@ -61,14 +61,14 @@ class ROVPPV1Lite:
 
         non_routed_blackholes_to_add = []
         for roa in policy.route_validator.roas:
-            if not roa.routed:
+            if not roa.is_routed:
                 non_routed_blackholes_to_add.append(
                     Ann(
                         prefix=roa.prefix,
                         next_hop_asn=policy.as_.asn,
                         as_path=(policy.as_.asn,),
                         # Victim's timestamp since it's upon ROA creation pre-attacker
-                        timestamp=Timestamps.VICTIM,
+                        timestamp=Timestamps.LEGITIMATE_ORIGIN,
                         recv_relationship=Relationships.ORIGIN,
                         rovpp_blackhole=True,
                     )
@@ -103,7 +103,7 @@ class ROVPPV1Lite:
 
         # If we are the origin, then there are zero invalid anns from the same neighbor
         if ann.recv_relationship == Relationships.ORIGIN:
-            return ()
+            return
         # for each subprefix ann recieved (NOTE: these aren't in local RIB since
         # they're invalid) and dropped by default (but they are recieved so we can
         # check there)

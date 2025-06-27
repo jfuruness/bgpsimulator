@@ -111,14 +111,14 @@ class ASRA:
 
         # Must meet BOTH conditions to declare fake link:
         # 1) asn1 adopts ASPA and does NOT list asn2 as a provider
-        has_aspa_but_not_provider = (
+        has_aspa_but_not_provider = bool(
             asn1_obj
             and asn1_obj.policy.settings[Settings.ASPA]
             and asn2 not in asn1_obj.provider_asns
         )
 
         # 2) asn1 also adopts ASRA and does NOT list asn2 as neighbor
-        has_asra_but_not_neighbor = (
+        has_asra_but_not_neighbor = bool(
             asn1_obj
             and asn1_obj.policy.settings[Settings.ASRA]
             and asn2 not in asn1_obj.neighbor_asns

@@ -111,13 +111,13 @@ class Simulation:
         self.line_filters = line_filters
         if not self.line_filters:
             max_prop_rounds = max(x.propagation_rounds for x in self.scenario_configs)
-            line_filters: list[LineFilter] = []
+            line_filters_list: list[LineFilter] = []
             for as_group in [ASNGroups.ALL_WOUT_IXPS]:
                 for in_adopting_asns in InAdoptingASNs:
                     for outcome in Outcomes:
                         if outcome == Outcomes.UNDETERMINED:
                             continue
-                        line_filters.append(
+                        line_filters_list.append(
                             LineFilter(
                                 as_group=as_group,
                                 in_adopting_asns=in_adopting_asns,
@@ -126,7 +126,7 @@ class Simulation:
                                 outcome=outcome,
                             )
                         )
-            self.line_filters = tuple(line_filters)
+            self.line_filters = tuple(line_filters_list)
 
         # Can't delete this since it gets deleted in multiprocessing for some reason
         # NOTE: Once pypy gets to 3.12, just pass delete=False to this
@@ -167,7 +167,7 @@ class Simulation:
         prevents duplicate scenario labels and ensures no mixups using BGPFull
         """
 
-        scenario_labels = [x.scenario_label for x in self.scenario_configs]
+        scenario_labels = [x.label for x in self.scenario_configs]
 
         if len(set(scenario_labels)) != len(scenario_labels):
             raise ValueError(
@@ -499,7 +499,7 @@ class Simulation:
         scenario: "Scenario",
         propagation_round: int,
         data_tracker: DataTracker,
-    ) -> dict[int, dict[int, int]]:
+    ) -> dict[int, Outcomes]:
         # Save all engine run info
         # The reason we aggregate info right now, instead of saving
         # the engine and doing it later, is because doing it all
@@ -516,6 +516,7 @@ class Simulation:
             engine=engine,
             scenario=scenario,
             propagation_round=propagation_round,
+            # dict[int, int] == dict[int, outcomes] (int enum)
             asn_to_packet_outcome_dict=outcomes,
         )
         return outcomes

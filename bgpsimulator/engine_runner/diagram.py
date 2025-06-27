@@ -287,11 +287,11 @@ class Diagram:
     ) -> None:
         # TODO: Refactor
         if diagram_ranks:
-            for rank in diagram_ranks:
+            for diagram_rank in diagram_ranks:
                 with self.dot.subgraph() as s:
                     s.attr(rank="same")  # set all nodes to the same rank
                     previous_asn: str | None = None
-                    for asn in rank:
+                    for asn in diagram_rank:
                         assert isinstance(asn, int)
                         s.node(str(asn))
                         if previous_asn is not None:

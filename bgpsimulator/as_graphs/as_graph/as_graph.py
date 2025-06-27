@@ -39,7 +39,7 @@ class ASGraph:
         # populate objects
         self._populate_objects()
         # Add propagation ranks
-        self.propagation_ranks = [
+        self.propagation_ranks: list[list[AS]] = [
             [self.as_dict[int(asn)] for asn in rank]
             for rank in graph_data["propagation_rank_asns"]
         ]

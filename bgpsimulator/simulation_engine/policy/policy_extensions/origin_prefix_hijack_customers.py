@@ -16,7 +16,7 @@ class OriginPrefixHijackCustomers:
     """
 
     @staticmethod
-    def policy_propagate_vals(
+    def get_policy_propagate_vals(
         policy: "Policy",
         neighbor_as: "AS",
         ann: "Ann",

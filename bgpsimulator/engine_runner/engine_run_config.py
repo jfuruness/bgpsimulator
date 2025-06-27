@@ -19,7 +19,7 @@ class EngineRunConfig:
         as_graph: ASGraph,
         diagram_desc: str = "",
         text: str = "",
-        diagram_ranks: tuple[tuple[int, ...], ...] = (),
+        diagram_ranks: list[list[int]] | None = None,
     ):
         self.name = name
         if self.name in EngineRunConfig._used_names:
@@ -30,7 +30,7 @@ class EngineRunConfig:
         self.text = text
         self.scenario_config = scenario_config
         self.as_graph = as_graph
-        self.diagram_ranks = diagram_ranks
+        self.diagram_ranks = diagram_ranks or []
 
     def to_json(self) -> dict[str, Any]:
         """Converts the engine run config to a JSON object"""

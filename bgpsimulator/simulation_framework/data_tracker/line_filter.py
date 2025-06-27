@@ -24,7 +24,7 @@ class LineFilter:
     def __init__(
         self,
         as_group: ASNGroups,
-        in_adopting_asns: bool,
+        in_adopting_asns: InAdoptingASNs,
         prop_round: int,
         outcome: Outcomes,
     ) -> None:

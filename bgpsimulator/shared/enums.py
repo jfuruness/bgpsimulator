@@ -110,34 +110,34 @@ class CommonPrefixes(Enum):
     Prefixes tend to be in reference to the legitimate origin.
     """
 
-    SUPERPREFIX: Prefix = Prefix("1.0.0.0/8")
-    PREFIX: Prefix = Prefix("1.2.0.0/16")
-    SUBPREFIX: Prefix = Prefix("1.2.3.0/24")
+    SUPERPREFIX = Prefix("1.0.0.0/8")
+    PREFIX = Prefix("1.2.0.0/16")
+    SUBPREFIX = Prefix("1.2.3.0/24")
 
 
 class Timestamps(IntEnum):
     """Timestamps for announcements. Legitimate origin is always first."""
 
-    LEGITIMATE_ORIGIN: int = 0
-    ATTACKER: int = 1
+    LEGITIMATE_ORIGIN = 0
+    ATTACKER = 1
 
 
 class Outcomes(IntEnum):
-    ATTACKER_SUCCESS: int = 0
-    LEGITIMATE_ORIGIN_SUCCESS: int = 1
-    DISCONNECTED: int = 2
-    UNDETERMINED: int = 3
-    DATA_PLANE_LOOP: int = 4
+    ATTACKER_SUCCESS = 0
+    LEGITIMATE_ORIGIN_SUCCESS = 1
+    DISCONNECTED = 2
+    UNDETERMINED = 3
+    DATA_PLANE_LOOP = 4
 
 
 class InAdoptingASNs(StrEnum):
-    TRUE: str = "True"
-    FALSE: str = "False"
-    ANY: str = "Any"
+    TRUE = "True"
+    FALSE = "False"
+    ANY = "Any"
 
 
 class CommonASNs(IntEnum):
     """Common ASNs"""
 
-    ATTACKER: int = 666
-    VICTIM: int = 777
+    ATTACKER = 666
+    VICTIM = 777

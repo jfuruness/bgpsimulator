@@ -78,7 +78,7 @@ ex_config_004 = EngineRunConfig(
     as_graph=ASGraph(graph_data),
     diagram_desc="Subprefix hijack with ROV Simple",
     diagram_ranks=[
-        [CommonASNs.ATTACKER, CommonASNs.VICTIM],
+        [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],
         [5, 8, 9, 10],
         [11, 12],

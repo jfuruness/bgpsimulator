@@ -1,4 +1,3 @@
-
 from bgpsimulator.route_validator import ROA
 from bgpsimulator.shared import IPAddr
 from bgpsimulator.shared.enums import CommonPrefixes, Relationships, Timestamps
