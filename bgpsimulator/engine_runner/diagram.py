@@ -166,7 +166,9 @@ class Diagram:
             asn_str = "&#128520;" + asn_str + "&#128520;"
 
         used_settings = [
-            setting for setting, value in zip(Settings, as_obj.policy.settings, strict=False) if value
+            setting
+            for setting, value in zip(Settings, as_obj.policy.settings, strict=False)
+            if value
         ]
         policy_str = (
             "; ".join(x.name for x in used_settings) if used_settings else "BGP"

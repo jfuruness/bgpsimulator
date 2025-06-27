@@ -8,7 +8,9 @@ from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 
 
 class ForgedOriginPrefixHijack(Scenario):
-    """Victim announces a prefix covered by a ROA, attacker announces the same prefix but with a forged origin ASN, bypassing ROV"""
+    """Victim announces a prefix covered by a ROA, attacker announces the
+    same prefix but with a forged origin ASN, bypassing ROV
+    """
 
     def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
         anns = dict()

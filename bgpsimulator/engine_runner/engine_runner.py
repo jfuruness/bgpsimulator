@@ -90,7 +90,7 @@ class EngineRunner:
         self, engine: SimulationEngine, asn_to_packet_outcome_dict: dict[int, Outcomes]
     ):
         """Stores the engine and outcomes.
-        
+
         Always stores the guess, and optionally overwrites ground truth.
         """
         self.engine_guess_path.write_text(json.dumps(engine.to_json()))

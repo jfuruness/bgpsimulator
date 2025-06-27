@@ -5,7 +5,7 @@ from .prefix import Prefix
 
 class Relationships(IntEnum):
     """Relationships between ASes.
-    
+
     Higher numbers == higher priority for announcements
     """
 
@@ -106,7 +106,7 @@ class ROARouted(IntEnum):
 
 class CommonPrefixes(Enum):
     """Prefixes for attacks.
-    
+
     Prefixes tend to be in reference to the legitimate origin.
     """
 

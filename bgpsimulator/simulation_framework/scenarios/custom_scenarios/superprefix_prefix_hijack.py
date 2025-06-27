@@ -8,7 +8,9 @@ from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 
 
 class SuperprefixPrefixHijack(Scenario):
-    """Attacker announces a superprefix that is not covered by a ROA, as well as a prefix that is ROV invalid and IS routed by the legitimate origin"""
+    """Attacker announces a superprefix that is not covered by a ROA, as well as
+    a prefix that is ROV invalid and IS routed by the legitimate origin.
+    """
 
     def _get_seed_asn_ann_dict(self, engine: SimulationEngine) -> dict[int, list[Ann]]:
         anns = dict()

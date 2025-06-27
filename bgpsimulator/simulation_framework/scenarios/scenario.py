@@ -98,7 +98,7 @@ class Scenario:
 
     def _reset_and_add_roas_to_route_validator(self, route_validator) -> None:
         """Clears & adds ROAs to route_validator.
-        
+
         Which serves as RPKI+Routinator combo.
         """
 
@@ -344,7 +344,7 @@ class Scenario:
 
     def setup_engine(self, engine: SimulationEngine) -> None:
         """Nice hook func for setting up the engine.
-        
+
         With adopting ASes, routing policy settings, etc.
         """
         engine.setup(self)

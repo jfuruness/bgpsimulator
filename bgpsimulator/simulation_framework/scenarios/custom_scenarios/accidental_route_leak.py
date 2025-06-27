@@ -202,7 +202,8 @@ class AccidentalRouteLeak(Scenario):
     ) -> set[int]:
         """Returns possible legitimate_origin ASNs, defaulted from config
 
-        Removes attacker's customer cones from possible victims (or else there would be no leakage)
+        Removes attacker's customer cones from possible victims (or else
+        there would be no leakage)
         """
 
         possible_asns = super()._get_possible_legitimate_origin_asns(

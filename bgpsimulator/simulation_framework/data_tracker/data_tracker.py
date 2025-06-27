@@ -29,10 +29,14 @@ class DataTracker:
         """Format of the unaggregated_data below
 
 
-        You have the scenario label as the outer key, representing the scenario config
-        (who is attacking, defending, adopting, what routing policy settings they are using).
-        Then for each scenario config/label, you have filters for a line (as the next key), using a subset of the data from the scenario_config.
-        Within that there are the data points for each percent of ASes adopting, and their values.
+        You have the scenario label as the outer key, representing the
+        scenario config (who is attacking, defending, adopting, what routing
+        policy settings they are using).
+        Then for each scenario config/label, you have filters for a line
+        (as the next key), using a subset of the data from the
+        scenario_config.
+        Within that there are the data points for each percent of ASes
+        adopting, and their values.
         {
             # Name of the line from the scenario config
             scenario_label: {
@@ -41,7 +45,8 @@ class DataTracker:
                     # Data point in the line
                     percent_ases_randomly_adopting: [
                         {
-                            # Numerator = achieved outcome of graph filter and within the filter
+                            # Numerator = achieved outcome of graph filter
+                            # and within the filter
                             numerator: 0,
                             # Denominator = within the filter, disregarding outcome
                             denominator: 0
@@ -51,12 +56,16 @@ class DataTracker:
             }
         }
 
-        In aggregated_data (which is the final output), a list of numerators and denominators -> averagevalue, yerr (90% confidence interval)
+        In aggregated_data (which is the final output), a list of
+        numerators and denominators -> averagevalue, yerr (90% confidence
+        interval)
 
         This data structure has gone through many iterations.
         At first, it was a gigantic nested dictionary.
-        Then it become a multi nested dictionary using Python classes, which were hard to convert to JSON.
-        I think this will be the most usable, as it will be pure JSON, not a bunch of dataclasses
+        Then it become a multi nested dictionary using Python classes,
+        which were hard to convert to JSON.
+        I think this will be the most usable, as it will be pure JSON, not
+        a bunch of dataclasses
         and from a high level it makes sense.
         """
         self.line_filters = line_filters
@@ -83,7 +92,8 @@ class DataTracker:
                 # to create the line seen in the graph
                 line_filter: {
                     percent_ases_randomly_adopting: []
-                    for percent_ases_randomly_adopting in self.percent_ases_randomly_adopting
+                    for percent_ases_randomly_adopting
+                    in self.percent_ases_randomly_adopting
                 }
                 for line_filter in self.line_filters
             }
@@ -100,7 +110,9 @@ class DataTracker:
                         percent_ases_randomly_adopting,
                         _data_points,
                     ) in trial_data.items():
-                        new_data[label][line_filter][percent_ases_randomly_adopting] = (
+                        new_data[label][line_filter][
+                            percent_ases_randomly_adopting
+                        ] = (
                             self.unaggregated_data[label][line_filter][
                                 percent_ases_randomly_adopting
                             ]
@@ -139,7 +151,8 @@ class DataTracker:
         ]
 
         for line_filter in unaggregated_scenario_data:
-            # We don't need this (since this is also checked in LineFilter), but it saves some time
+            # We don't need this (since this is also checked in
+            # LineFilter), but it saves some time
             if line_filter.prop_round != propagation_round:
                 continue
             for as_obj in engine.as_graph:
@@ -150,7 +163,8 @@ class DataTracker:
                 if line_filter.as_in_denominator(
                     as_obj, engine.as_graph, scenario, propagation_round, outcome
                 ):
-                    # The default for the numerator simply checks that the outcome is the same as the line filter
+                    # The default for the numerator simply checks that the
+                    # outcome is the same as the line filter
                     if line_filter.as_in_numerator(
                         as_obj, engine.as_graph, scenario, propagation_round, outcome
                     ):
@@ -223,9 +237,17 @@ class DataTracker:
     def to_csv(self) -> str:
         """Converts the data to a CSV-friendly format"""
 
-        csv_data = "scenario_label,as_group,in_adopting_asns,prop_round,outcome,percent_ases_randomly_adopting,value,yerr,line_filter_json\n"
+        csv_data = (
+            "scenario_label,as_group,in_adopting_asns,prop_round,outcome,"
+            "percent_ases_randomly_adopting,value,yerr,line_filter_json\n"
+        )
         for label, inner_dict in self.aggregated_data.items():
             for line_filter, trial_data in inner_dict.items():
                 for percent_ases_randomly_adopting, data_point in trial_data.items():
-                    csv_data += f"{label},{line_filter.to_csv()},{percent_ases_randomly_adopting},{data_point['value']},{data_point['yerr']},{line_filter.to_json()}\n"
+                    csv_data += (
+                        f"{label},{line_filter.to_csv()},"
+                        f"{percent_ases_randomly_adopting},"
+                        f"{data_point['value']},{data_point['yerr']},"
+                        f"{line_filter.to_json()}\n"
+                    )
         return csv_data

@@ -17,8 +17,9 @@ class ASGraphUtils:
             str, Callable[[dict[int, AS]], frozenset[int]]
         ] = frozendict(),
     ) -> None:
-        """Adds cycles, provider cone, asn_groups, and propagation ranks 
-        to the AS graph"""
+        """Adds cycles, provider cone, asn_groups, and propagation ranks
+        to the AS graph
+        """
 
         if not as_graph_json.get("extra_setup_complete", False):
             # Conver to ints when pulling from JSON

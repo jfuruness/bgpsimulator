@@ -24,7 +24,7 @@ class ROVPPV2iLite:
         policy: "Policy", from_rel: Relationships, propagation_round: int
     ) -> None:
         """Additional processing for incoming announcements.
-        
+
         The same as ROV++v2 (adding blackholes).
         """
 
@@ -57,7 +57,7 @@ class ROVPPV2iLite:
         policy: "Policy", ann: "Ann", propagate_to: Relationships
     ) -> bool:
         """You can send blackhole to customers if from peer/provider.
-        
+
         And either subprefix or non-routed.
         """
 

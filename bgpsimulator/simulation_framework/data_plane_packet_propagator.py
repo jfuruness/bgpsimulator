@@ -15,7 +15,8 @@ class DataPlanePacketPropagator:
         attacker_asns: set[int],
         scenario: Scenario | None = None,
     ) -> dict[int, Outcomes]:
-        """For each AS, determine the outcome of a packet sent to the destination IP address
+        """For each AS, determine the outcome of a packet sent to the
+        destination IP address
 
         See ROV++ paper as to why the control plane is a bad metric;
         so we only focus on the data plane

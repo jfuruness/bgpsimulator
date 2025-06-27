@@ -397,7 +397,7 @@ class Simulation:
     @cached_property
     def reuse_attacker_asns(self) -> bool:
         """Reuse the same attacker ASes across all scenarios configs.
-        
+
         If they're from the same ASN group.
         """
         num_attackers_set = {x.num_attackers for x in self.scenario_configs}
@@ -407,7 +407,7 @@ class Simulation:
     @cached_property
     def reuse_legitimate_origin_asns(self) -> bool:
         """Reuse the same victim ASes across all scenarios configs.
-        
+
         If they're from the same ASN group.
         """
         num_legitimate_origins_set = {

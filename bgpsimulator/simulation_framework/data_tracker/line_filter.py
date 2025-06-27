@@ -9,11 +9,14 @@ from bgpsimulator.simulation_framework.scenarios.scenario import Scenario
 class LineFilter:
     """Filters for a line in a line chart
 
-    Checks for each AS whether it meets the filter criteria, aside from the outcome
+    Checks for each AS whether it meets the filter criteria, aside from
+    the outcome
 
-    The outcome is used only for the numerator of the data point, the denominator is always the total number of ASes in the group
+    The outcome is used only for the numerator of the data point, the
+    denominator is always the total number of ASes in the group
 
-    You can always subclass this and change your criteria for the numerator and denominator
+    You can always subclass this and change your criteria for the numerator
+    and denominator
     """
 
     __slots__ = ("asn_group", "in_adopting_asns", "prop_round", "outcome", "_hash")
@@ -41,7 +44,8 @@ class LineFilter:
     ) -> bool:
         """Checks if the AS meets the filter criteria, aside from the outcome
 
-        The outcome is used only for the numerator of the data point, the denominator is always the total number of ASes in the group
+        The outcome is used only for the numerator of the data point, the
+        denominator is always the total number of ASes in the group
         """
         if propagation_round != self.prop_round:
             return False
@@ -70,7 +74,8 @@ class LineFilter:
     ) -> bool:
         """Checks if the AS should be included in the numerator of the data point
 
-        NOTE: as_in_denominator is already checked before this function is called, so we don't need to check it again
+        NOTE: as_in_denominator is already checked before this function is
+        called, so we don't need to check it again
         """
 
         return outcome == self.outcome
@@ -103,7 +108,10 @@ class LineFilter:
 
     def to_csv(self) -> str:
         """Returns a CSV-friendly string"""
-        return f"{self.asn_group},{self.in_adopting_asns},{self.prop_round},{self.outcome.name}"
+        return (
+            f"{self.asn_group},{self.in_adopting_asns},"
+            f"{self.prop_round},{self.outcome.name}"
+        )
 
     @classmethod
     def from_json(cls, string: str) -> "LineFilter":

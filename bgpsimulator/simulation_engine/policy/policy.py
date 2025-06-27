@@ -283,7 +283,7 @@ class Policy:
 
     def _get_best_ann_by_as_path(self, current_ann: Ann, new_ann: Ann) -> Ann | None:
         """Returns best announcement by as path length, or None if tie.
-        
+
         Shorter is better.
         """
 

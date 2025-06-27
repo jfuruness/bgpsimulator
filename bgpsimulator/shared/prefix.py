@@ -19,15 +19,17 @@ class Prefix(IPv6Network):
         temp_prefix = ip_network(prefix)
         if temp_prefix.is_reserved:
             raise ReservedPrefixError(
-                f"Prefix {prefix} is reserved. Reserved prefixes can't be used since we map IPv4 prefixes to IPv6 prefixes."
+                f"Prefix {prefix} is reserved. Reserved prefixes can't be used "
+                "since we map IPv4 prefixes to IPv6 prefixes."
             )
         if temp_prefix.version == 4:
             prefix = (
                 f"::ffff:{temp_prefix.network_address}/{96 + temp_prefix.prefixlen}"
             )
 
-        # Prefix is used as a key in dicts, so hash it in advance as it gets called millions of times
-        # We multiply the network address by 1000 to avoid collisions with IPv6 prefix lengths (max 128)
+        # Prefix is used as a key in dicts, so hash it in advance as it gets
+        # called millions of times. We multiply the network address by 1000 to
+        # avoid collisions with IPv6 prefix lengths (max 128)
         self._hash: int = hash(
             int(ip_network(prefix).network_address) * 1000 + temp_prefix.prefixlen
         )

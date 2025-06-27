@@ -178,7 +178,8 @@ class ShortestPathPrefixHijack(Scenario):
                 # or when valid ann is in one of those disconnected ASes
                 # this happens if you run 1k trials
                 bgpsimulator_logger.info(
-                    f"Couldn't find best_ann at {percent_ases_randomly_adopting}% adoption"
+                    f"Couldn't find best_ann at "
+                    f"{percent_ases_randomly_adopting}% adoption"
                 )
                 # When this occurs, use victim's ann to at least do forged-origin
                 victim_as_obj = engine.as_graph.as_dict[
@@ -208,7 +209,8 @@ class ShortestPathPrefixHijack(Scenario):
             self.setup_engine(engine)
         elif propagation_round > 1:
             raise NotImplementedError(
-                "Shortest path prefix hijack is not supported for multiple propagation rounds with BGPiSec"
+                "Shortest path prefix hijack is not supported for "
+                "multiple propagation rounds with BGPiSec"
             )
 
     def _get_aspa_seed_asn_ann_dict(
