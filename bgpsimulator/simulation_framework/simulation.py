@@ -279,8 +279,10 @@ class Simulation:
             # return p.starmap(self._run_chunk, enumerate(self._get_chunks(parse_cpus)))
             chunks = self._get_chunks(self.parse_cpus)
             desc = f"Simulating {self.output_dir.name}"
-            total = sum(len(x) for x in chunks) * len(
-                self.percent_ases_randomly_adopting
+            total = (
+                sum(len(x) for x in chunks)
+                * len(self.percent_ases_randomly_adopting)
+                * len(self.scenario_configs)
             )
             with tqdm(total=total, desc=desc) as pbar:
                 tasks: list[ApplyResult[DataTracker]] = [
@@ -348,7 +350,7 @@ class Simulation:
             ):
                 # Use the same adopting asns across all scenarios configs
                 adopting_asns = None
-                for scenario_config in self.scenario_configs:
+                for scenario_config_index, scenario_config in enumerate(self.scenario_configs):
                     # Create the scenario for this trial
                     scenario = scenario_config.ScenarioCls(
                         scenario_config=scenario_config,
@@ -377,19 +379,21 @@ class Simulation:
                         trial_attacker_asns = scenario.attacker_asns
                     if self.reuse_legitimate_origin_asns:
                         trial_legitimate_origin_asns = scenario.legitimate_origin_asns
-                    # Use the same adopting ASes across all scenarios configs
+                    # Use the same adopting ASEs across all scenarios configs
                     if self.reuse_adopting_asns:
                         adopting_asns = scenario.adopting_asns
-                # Used to track progress with tqdm
-                total_completed = (
-                    trial_index * len(self.percent_ases_randomly_adopting)
-                    + percent_adopt_index
-                    + 1
-                )
-                self._write_tqdm_progress(chunk_id, total_completed)
+
+                    # Used to track progress with tqdm - update after each scenario_config
+                    total_completed = (
+                        trial_index * len(self.percent_ases_randomly_adopting) * len(self.scenario_configs)
+                        + percent_adopt_index * len(self.scenario_configs)
+                        + scenario_config_index
+                        + 1
+                    )
+                    self._write_tqdm_progress(chunk_id, total_completed)
 
         self._write_tqdm_progress(
-            chunk_id, len(trials) * len(self.percent_ases_randomly_adopting)
+            chunk_id, len(trials) * len(self.percent_ases_randomly_adopting) * len(self.scenario_configs)
         )
 
         return data_tracker
