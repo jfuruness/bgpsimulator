@@ -1,6 +1,5 @@
 from math import sqrt
 from statistics import stdev
-
 from typing import Any
 
 from bgpsimulator.shared import Outcomes

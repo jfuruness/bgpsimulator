@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bgpsimulator"
 version = "0.1.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 description = "Simulates BGP, ROV, ASPA, etc in an extensible manner"
 readme = "README.md"
 authors = [

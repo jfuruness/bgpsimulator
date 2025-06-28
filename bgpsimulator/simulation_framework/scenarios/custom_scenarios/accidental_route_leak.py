@@ -1,6 +1,5 @@
-from collections import deque
-
 import warnings
+from collections import deque
 
 from bgpsimulator.route_validator import ROA
 from bgpsimulator.shared import ASNGroups, IPAddr, bgpsimulator_logger
@@ -42,7 +41,7 @@ class AccidentalRouteLeak(Scenario):
                 " in the scenario config after importing like "
                 "from bgpsimulator.shared import ASNGroups"
             )
-            warning.warn(msg, RuntimeWarning, stacklevel=2)
+            warnings.warn(msg, RuntimeWarning, stacklevel=2)
 
     @property
     def warning_asn_groups(self) -> frozenset[str]:
