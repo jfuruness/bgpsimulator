@@ -1,6 +1,6 @@
 from collections import deque
 
-import warning
+import warnings
 
 from bgpsimulator.route_validator import ROA
 from bgpsimulator.shared import ASNGroups, IPAddr, bgpsimulator_logger

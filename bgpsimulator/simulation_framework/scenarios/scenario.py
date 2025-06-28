@@ -3,15 +3,13 @@ import random
 from functools import cached_property
 from typing import TYPE_CHECKING, ClassVar
 
-from bgpsimulator.route_validator import RouteValidator
-from bgpsimulator.route_validator.roa import ROA
+from bgpsimulator.route_validator import RouteValidator, ROA
 from bgpsimulator.shared import IPAddr, Settings
-from bgpsimulator.simulation_engine import Announcement as Ann
-from bgpsimulator.simulation_engine import SimulationEngine
-from bgpsimulator.simulation_framework.scenarios.scenario_config import ScenarioConfig
+from bgpsimulator.simulation_engine import Announcement as Ann, SimulationEngine
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
+    from .scenario_config import ScenarioConfig
 
 
 class Scenario:
@@ -36,7 +34,7 @@ class Scenario:
     def __init__(
         self,
         *,
-        scenario_config: ScenarioConfig,
+        scenario_config: "ScenarioConfig",
         engine: SimulationEngine,
         route_validator: RouteValidator,
         percent_ases_randomly_adopting: float = 0,
@@ -56,7 +54,7 @@ class Scenario:
             f"{self.__class__.__name__}"
         )
 
-        self.scenario_config: ScenarioConfig = scenario_config
+        self.scenario_config: "ScenarioConfig" = scenario_config
         self.percent_ases_randomly_adopting: float = percent_ases_randomly_adopting
 
         self.attacker_asns: set[int] = self._get_attacker_asns(
