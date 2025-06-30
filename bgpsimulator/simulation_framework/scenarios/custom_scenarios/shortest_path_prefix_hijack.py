@@ -237,7 +237,6 @@ class ShortestPathPrefixHijack(Scenario):
         shortest_valid_path = self._find_shortest_valley_free_non_aspa_adopting_path(
             root_asn=next(iter(self.legitimate_origin_asns)), engine=engine
         )
-
         seed_asn_ann_dict = dict()
         for attacker_asn in self.attacker_asns:
             # There are cases where the attacker is a part of this
@@ -399,14 +398,39 @@ class ShortestPathPrefixHijack(Scenario):
 
     def as_is_adopting_aspa(self, as_obj: AS) -> bool:
         """Returns True if the AS is adopting ASPA"""
-        return any(
-            as_obj.policy.settings[setting]
-            for setting in self.aspa_settings | self.asra_settings
-        )
+
+        return self.as_is_adopting_any_settings(as_obj, self.aspa_settings | self.asra_settings)
 
     def as_is_adopting_bgpisec(self, as_obj: AS) -> bool:
         """Returns True if the AS is adopting BGP-I-SEC"""
-        return any(as_obj.policy.settings[setting] for setting in self.bgpisec_settings)
+        return self.as_is_adopting_any_settings(as_obj, self.bgpisec_settings)
+
+    def as_is_adopting_any_settings(self, as_obj: AS, settings: set[Settings]) -> bool:
+        """Returns True if the AS is adopting any of the settings
+        
+        Unfortunately must operate this way since the engine is not yet set up, so the
+        settings are not available to the AS class
+        """
+
+        if as_obj.asn in self.attacker_asns:
+            if any(value for setting, value in self.scenario_config.attacker_settings.items() if setting in settings):
+                return True
+        if as_obj.asn in self.legitimate_origin_asns:
+            if any(value for setting, value in self.scenario_config.legitimate_origin_settings.items() if setting in settings):
+                return True
+        if as_obj.asn in self.adopting_asns:
+            if any(value for setting, value in self.scenario_config.override_adoption_settings.get(as_obj.asn, {}).items() if setting in settings):
+                return True
+        if as_obj.asn in self.adopting_asns:
+            if any(value for setting, value in self.scenario_config.default_adoption_settings.items() if setting in settings):
+                return True
+        if as_obj.asn not in self.adopting_asns:
+            if any(value for setting, value in self.scenario_config.override_base_settings.get(as_obj.asn, {}).items() if setting in settings):
+                return True
+        if as_obj.asn not in self.adopting_asns:
+            if any(value for setting, value in self.scenario_config.default_base_settings.items() if setting in settings):
+                return True
+        return False
 
     def _get_path_end_seed_asn_ann_dict(
         self, engine: SimulationEngine
