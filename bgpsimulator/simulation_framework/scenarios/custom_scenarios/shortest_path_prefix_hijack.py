@@ -399,7 +399,9 @@ class ShortestPathPrefixHijack(Scenario):
     def as_is_adopting_aspa(self, as_obj: AS) -> bool:
         """Returns True if the AS is adopting ASPA"""
 
-        return self.as_is_adopting_any_settings(as_obj, self.aspa_settings | self.asra_settings)
+        return self.as_is_adopting_any_settings(
+            as_obj, self.aspa_settings | self.asra_settings
+        )
 
     def as_is_adopting_bgpisec(self, as_obj: AS) -> bool:
         """Returns True if the AS is adopting BGP-I-SEC"""
@@ -412,24 +414,48 @@ class ShortestPathPrefixHijack(Scenario):
         settings are not available to the AS class
         """
 
-        if as_obj.asn in self.attacker_asns:
-            if any(value for setting, value in self.scenario_config.attacker_settings.items() if setting in settings):
-                return True
-        if as_obj.asn in self.legitimate_origin_asns:
-            if any(value for setting, value in self.scenario_config.legitimate_origin_settings.items() if setting in settings):
-                return True
-        if as_obj.asn in self.adopting_asns:
-            if any(value for setting, value in self.scenario_config.override_adoption_settings.get(as_obj.asn, {}).items() if setting in settings):
-                return True
-        if as_obj.asn in self.adopting_asns:
-            if any(value for setting, value in self.scenario_config.default_adoption_settings.items() if setting in settings):
-                return True
-        if as_obj.asn not in self.adopting_asns:
-            if any(value for setting, value in self.scenario_config.override_base_settings.get(as_obj.asn, {}).items() if setting in settings):
-                return True
-        if as_obj.asn not in self.adopting_asns:
-            if any(value for setting, value in self.scenario_config.default_base_settings.items() if setting in settings):
-                return True
+        if as_obj.asn in self.attacker_asns and any(
+            value
+            for setting, value in self.scenario_config.attacker_settings.items()
+            if setting in settings
+        ):
+            return True
+        if as_obj.asn in self.legitimate_origin_asns and any(
+            value
+            for setting, value in (
+                self.scenario_config.legitimate_origin_settings.items()
+            )
+            if setting in settings
+        ):
+            return True
+        if as_obj.asn in self.adopting_asns and any(
+            value
+            for setting, value in self.scenario_config.override_adoption_settings.get(
+                as_obj.asn, {}
+            ).items()
+            if setting in settings
+        ):
+            return True
+        if as_obj.asn in self.adopting_asns and any(
+            value
+            for setting, value in self.scenario_config.default_adoption_settings.items()
+            if setting in settings
+        ):
+            return True
+        if as_obj.asn not in self.adopting_asns and any(
+            value
+            for setting, value in self.scenario_config.override_base_settings.get(
+                as_obj.asn, {}
+            ).items()
+            if setting in settings
+        ):
+            return True
+        if as_obj.asn not in self.adopting_asns and any(
+            value
+            for setting, value in self.scenario_config.default_base_settings.items()
+            if setting in settings
+        ):
+            return True
         return False
 
     def _get_path_end_seed_asn_ann_dict(

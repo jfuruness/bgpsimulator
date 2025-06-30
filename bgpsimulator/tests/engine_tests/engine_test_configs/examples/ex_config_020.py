@@ -96,7 +96,11 @@ ex_config_020 = EngineRunConfig(
         },
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="accidental route leak against OnlyToCustomers. This policy sets the only_to_customers attribute specified in RFC 9234 which protects against simple route leaks",
+    diagram_desc=(
+        "accidental route leak against OnlyToCustomers. "
+        "This policy sets the only_to_customers attribute specified in RFC 9234 "
+        "which protects against simple route leaks"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

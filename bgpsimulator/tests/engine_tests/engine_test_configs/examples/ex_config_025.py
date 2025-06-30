@@ -99,7 +99,10 @@ ex_config_025 = EngineRunConfig(
         },
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="shortest path export all against ASPASimple from a customer\nAS 5 fails to detect the shortest path export all",
+    diagram_desc=(
+        "shortest path export all against ASPASimple from a customer\n"
+        "AS 5 fails to detect the shortest path export all"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

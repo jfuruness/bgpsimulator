@@ -91,7 +91,10 @@ ex_config_012 = EngineRunConfig(
         override_legitimate_origin_asns={CommonASNs.VICTIM},
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="Origin prefix hijack thwarting ROV. This also demonstrates the loop prevention mechanism at 777",
+    diagram_desc=(
+        "Origin prefix hijack thwarting ROV. "
+        "This also demonstrates the loop prevention mechanism at 777"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

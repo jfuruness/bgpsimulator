@@ -55,7 +55,10 @@ ex_config_024 = EngineRunConfig(
         },
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="Origin hijack against ASPASimple\nTesting that ASPA rejects from the upstream, but accepts from downstream",
+    diagram_desc=(
+        "Origin hijack against ASPASimple\n"
+        "Testing that ASPA rejects from the upstream, but accepts from downstream"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3],

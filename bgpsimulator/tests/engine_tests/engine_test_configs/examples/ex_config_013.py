@@ -94,7 +94,10 @@ ex_config_013 = EngineRunConfig(
         override_legitimate_origin_asns={CommonASNs.VICTIM},
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="Neighbor spoofing prefix hijack thwarting ROV. This attack reaches more ASes than just the origin hijack",
+    diagram_desc=(
+        "Neighbor spoofing prefix hijack thwarting ROV. "
+        "This attack reaches more ASes than just the origin hijack"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

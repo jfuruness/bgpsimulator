@@ -104,7 +104,10 @@ ex_config_026 = EngineRunConfig(
         },
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="shortest path export all against ASPASimple from a peer\nAS prevents the attack, this is merely to check attack functionality",
+    diagram_desc=(
+        "shortest path export all against ASPASimple from a peer\n"
+        "AS prevents the attack, this is merely to check attack functionality"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

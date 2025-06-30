@@ -96,7 +96,11 @@ ex_config_014 = EngineRunConfig(
         override_base_settings={CommonASNs.ATTACKER: {Settings.BGPSEC: False}},
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="Neighbor spoofing prefix hijack with bgpsec simple. BGPSec is security third, which doesn't amount to much. AS 2 is saved, but as long as the chain is broken, AS 5 is still hijacked",
+    diagram_desc=(
+        "Neighbor spoofing prefix hijack with bgpsec simple. "
+        "BGPSec is security third, which doesn't amount to much. "
+        "AS 2 is saved, but as long as the chain is broken, AS 5 is still hijacked"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

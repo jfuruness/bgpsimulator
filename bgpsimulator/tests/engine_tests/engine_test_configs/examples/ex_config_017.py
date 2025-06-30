@@ -95,7 +95,11 @@ ex_config_017 = EngineRunConfig(
         },
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="shortest path export all attack against pathend simple. PathEnd checks the end of the path for valid providers so anything beyond the third AS is not protected",
+    diagram_desc=(
+        "shortest path export all attack against pathend simple. "
+        "PathEnd checks the end of the path for valid providers "
+        "so anything beyond the third AS is not protected"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

@@ -112,12 +112,22 @@ class EngineRunner:
             return
 
         vals = [
-            (self.engine_guess_path, self.outcomes_guess_path, self.diagram_guess_path, ""),
+            (
+                self.engine_guess_path,
+                self.outcomes_guess_path,
+                self.diagram_guess_path,
+                "",
+            ),
         ]
         # Only write the ground truth if we're comparing against it
         if self.compare_against_ground_truth:
             vals.append(
-                (self.engine_gt_path, self.outcomes_gt_path, self.diagram_gt_path, " (ground truth) ")
+                (
+                    self.engine_gt_path,
+                    self.outcomes_gt_path,
+                    self.diagram_gt_path,
+                    " (ground truth) ",
+                )
             )
 
         for engine_path, packet_outcomes_path, diagram_path, name in vals:

@@ -105,7 +105,10 @@ ex_config_028 = EngineRunConfig(
         },
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="Route leak to check when v_max_complement==u_min\n (this is merely to check functionality)",
+    diagram_desc=(
+        "Route leak to check when v_max_complement==u_min\n"
+        " (this is merely to check functionality)"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

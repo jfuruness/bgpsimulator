@@ -95,7 +95,11 @@ ex_config_015 = EngineRunConfig(
         },
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="Origin prefix hijack with pathend simple. PathEnd checks the end of the path for valid providers and is thus protected against simple origin hijacks",
+    diagram_desc=(
+        "Origin prefix hijack with pathend simple. "
+        "PathEnd checks the end of the path for valid providers "
+        "and is thus protected against simple origin hijacks"
+    ),
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

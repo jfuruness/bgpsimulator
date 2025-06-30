@@ -305,7 +305,11 @@ class Policy:
             # NOTE: BGPiSec policies don't change path preference for easier deployment
             or (
                 self.settings[Settings.BGPSEC]
-                and BGPSec.get_best_ann_by_bgpsec(self, current_ann, new_ann)  # type: ignore
+                and BGPSec.get_best_ann_by_bgpsec(
+                    self,
+                    current_ann,  # type: ignore
+                    new_ann,
+                )
             )
             or self._get_best_ann_by_lowest_neighbor_asn_tiebreaker(
                 current_ann,  # type: ignore
