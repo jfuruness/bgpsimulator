@@ -67,7 +67,9 @@ class BGPSec:
     def process_ann(policy: "Policy", ann: "Ann", from_rel: Relationships) -> "Ann":
         """Sets the bgpsec_as_path. Prepends ASN if valid, otherwise clears"""
 
-        if BGPSec.bgpsec_valid(policy, ann):
+        # NOTE: must only look after the first ASN in the path, since the new ASN will
+        # already have been prepended in the Policy class.
+        if BGPSec.bgpsec_valid(policy, ann.copy(as_path=ann.as_path[1:])):
             return ann.copy(bgpsec_as_path=ann.as_path)
         else:
             return ann.copy(bgpsec_as_path=())
@@ -80,6 +82,7 @@ class BGPSec:
 
         current_ann_valid = BGPSec.bgpsec_valid(policy, current_ann)
         new_ann_valid = BGPSec.bgpsec_valid(policy, new_ann)
+
         if current_ann_valid and not new_ann_valid:
             return current_ann
         elif not current_ann_valid and new_ann_valid:

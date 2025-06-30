@@ -19,8 +19,8 @@ class AccidentalRouteLeak(Scenario):
     min_propagation_rounds: int = 2
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self._attackers_customer_cone_asns: set[int] = set()
+        super().__init__(*args, **kwargs)
         self._validate_attacker_asn_group()
 
     def _validate_attacker_asn_group(self):
@@ -102,7 +102,7 @@ class AccidentalRouteLeak(Scenario):
                 for _prefix, ann in engine.as_graph.as_dict[
                     attacker_asn
                 ].policy.local_rib.items():
-                    seed_asn_ann_dict[attacker_asn].append(
+                    seed_asn_ann_dict.setdefault(attacker_asn, []).append(
                         ann.copy(
                             recv_relationship=Relationships.ORIGIN,
                             timestamp=Timestamps.ATTACKER.value,

@@ -35,7 +35,7 @@ class Diagram:
         self._add_ases(engine, packet_outcomes, scenario, display_next_hop_asn)
         self._add_edges(engine)
         self._add_diagram_ranks(diagram_ranks, engine)
-        self._add_description(description, display_next_hop_asn)
+        self._add_description(name, description, display_next_hop_asn)
         self._render(path=path, view=view, dpi=dpi)
 
     def _add_legend(
@@ -306,14 +306,16 @@ class Diagram:
                     g.node(str(as_obj.asn))
                 self.dot.subgraph(g)
 
-    def _add_description(self, description: str, display_next_hop_asn: bool) -> None:
+    def _add_description(
+        self, name: str, description: str, display_next_hop_asn: bool
+    ) -> None:
         if display_next_hop_asn:
             description += (
                 "\nLocal RIB rows displayed as: prefix, as path, origin, next_hop"
             )
-        if description:
+        if name or description:
             # https://stackoverflow.com/a/57461245/8903959
-            self.dot.attr(label=description)
+            self.dot.attr(label=f"{name}\n{description}")
 
     def _render(
         self, path: Path | None = None, view: bool = False, dpi: int | None = None

@@ -7,33 +7,45 @@ graph_data = {
     "ases": {
         str(CommonASNs.VICTIM): {
             "asn": CommonASNs.VICTIM,
+            "customer_asns": [],
+            "peer_asns": [],
             "provider_asns": [2, 4, 10],
         },
         str(CommonASNs.ATTACKER): {
             "asn": CommonASNs.ATTACKER,
+            "customer_asns": [],
+            "peer_asns": [],
             "provider_asns": [1, 2],
         },
         "1": {
             "asn": 1,
+            "customer_asns": [CommonASNs.ATTACKER],
+            "peer_asns": [],
             "provider_asns": [5, 8],
         },
         "2": {
             "asn": 2,
             "customer_asns": [CommonASNs.ATTACKER, CommonASNs.VICTIM],
+            "peer_asns": [],
             "provider_asns": [8],
         },
         "3": {
             "asn": 3,
+            "customer_asns": [],
             "peer_asns": [9],
+            "provider_asns": [],
         },
         "4": {
             "asn": 4,
             "customer_asns": [CommonASNs.VICTIM],
+            "peer_asns": [],
             "provider_asns": [9],
         },
         "5": {
             "asn": 5,
             "customer_asns": [1],
+            "peer_asns": [],
+            "provider_asns": [],
         },
         "8": {
             "asn": 8,
@@ -56,10 +68,14 @@ graph_data = {
         "11": {
             "asn": 11,
             "customer_asns": [8, 9, 10],
+            "peer_asns": [],
+            "provider_asns": [],
         },
         "12": {
             "asn": 12,
             "customer_asns": [10],
+            "peer_asns": [],
+            "provider_asns": [],
         },
     },
 }
