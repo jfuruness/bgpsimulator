@@ -124,7 +124,9 @@ class Policy:
         """Process all announcements that were incoming from a specific rel"""
 
         if self.settings[Settings.ROST]:
-            ROST.preprocess_incoming_anns(self, from_rel=from_rel, propagation_round=propagation_round)
+            ROST.preprocess_incoming_anns(
+                self, from_rel=from_rel, propagation_round=propagation_round
+            )
 
         # For each prefix, get all anns recieved
         for prefix, ann_list in self.recv_q.items():
