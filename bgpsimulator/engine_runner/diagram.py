@@ -168,7 +168,7 @@ class Diagram:
         used_settings = [
             setting
             for setting, value in zip(Settings, as_obj.policy.settings, strict=False)
-            if value
+            if value and setting != Settings.BGP_FULL
         ]
         policy_str = (
             "; ".join(x.name for x in used_settings) if used_settings else "BGP"
