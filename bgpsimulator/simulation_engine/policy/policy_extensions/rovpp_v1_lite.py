@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Iterator
 
-from bgpsimulator.shared import PolicyPropagateInfo, Relationships, Timestamps
+from bgpsimulator.shared import PolicyPropagateInfo, Relationships, Settings, Timestamps
 from bgpsimulator.simulation_engine import Announcement as Ann
 
 from .rov import ROV
@@ -127,7 +127,13 @@ class ROVPPV1Lite:
         for blackhole_ann in blackhole_anns:
             existing_ann = policy.local_rib.get(blackhole_ann.prefix)
             # Don't overwrite existing valid announcements
-            if existing_ann is None or policy.ann_is_invalid_by_roa(existing_ann):
+            if existing_ann is None:
+                policy.local_rib[blackhole_ann.prefix] = blackhole_ann
+            elif policy.ann_is_invalid_by_roa(existing_ann):
+                # Not sure why anyone would ever need this so I'm not implementing it for now
+                # Also how would an existing ann be invalid in ROV++?
+                if policy.settings[Settings.BGP_FULL]:
+                    raise NotImplementedError("Withdrawals not supported for ROV++")
                 policy.local_rib[blackhole_ann.prefix] = blackhole_ann
 
     @staticmethod

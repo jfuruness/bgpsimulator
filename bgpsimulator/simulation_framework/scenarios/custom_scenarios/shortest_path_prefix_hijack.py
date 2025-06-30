@@ -81,6 +81,16 @@ class ShortestPathPrefixHijack(Scenario):
         elif any(setting in all_used_settings for setting in self.asra_settings):
             return self._get_aspa_seed_asn_ann_dict(engine)
         elif any(setting in all_used_settings for setting in self.aspa_settings):
+            if (
+                Settings.ORIGIN_PREFIX_HIJACK_CUSTOMERS
+                not in self.scenario_config.attacker_settings
+            ):
+                raise ValueError(
+                    "For a shortest path export all attack against ASPA, "
+                    "scenario_config.attacker_settings must be set to  "
+                    f"{Settings.ORIGIN_PREFIX_HIJACK_CUSTOMERS}, which you can import like "
+                    "from bgpsimulator.shared import Settings"
+                )
             return self._get_aspa_seed_asn_ann_dict(
                 engine, self.required_aspa_attacker_setting
             )

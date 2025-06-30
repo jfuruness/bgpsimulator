@@ -20,6 +20,8 @@ from .first_asn_stripping_prefix_hijack_customers import (
 )
 from .peer_rov import PeerROV
 from .aspapp import ASPAPP
+from .rost import ROST, RoSTTrustedRepository
+from .suppress_withdrawals import SuppressWithdrawals
 
 __all__ = [
     "ASPathEdgeFilter",
@@ -42,4 +44,7 @@ __all__ = [
     "FirstASNStrippingPrefixHijackCustomers",
     "PeerROV",
     "ASPAPP",
+    "ROST",
+    "RoSTTrustedRepository",
+    "SuppressWithdrawals",
 ]

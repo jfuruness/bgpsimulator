@@ -6,6 +6,8 @@ from bgpsimulator.route_validator import RouteValidator
 from bgpsimulator.shared import IPAddr, Prefix, Relationships, ROAValidity, Settings
 from bgpsimulator.shared.exceptions import GaoRexfordError
 from bgpsimulator.simulation_engine.announcement import Announcement as Ann
+from .ribs_in import RIBsIn, AnnInfo
+from .ribs_out import RIBsOut
 
 from .policy_extensions import (
     ASPA,
@@ -28,6 +30,8 @@ from .policy_extensions import (
     ROVPPV1Lite,
     ROVPPV2iLite,
     ROVPPV2Lite,
+    RoSTTrustedRepository,
+    ROST,
 )
 
 if TYPE_CHECKING:
@@ -35,15 +39,18 @@ if TYPE_CHECKING:
 
 
 class Policy:
-    __slots__ = ("local_rib", "recv_q", "settings", "as_")
+    __slots__ = ("local_rib", "recv_q", "settings", "as_", "ribs_in", "ribs_out")
 
     route_validator = RouteValidator()
+    rost_trusted_repository = RoSTTrustedRepository()
 
     def __init__(
         self,
         as_: "AS",
         settings: tuple[bool] | None = None,
         local_rib: dict[Prefix, Ann] | None = None,
+        ribs_in: RIBsIn | None = None,
+        ribs_out: RIBsOut | None = None,
     ) -> None:
         """Add local rib and data structures here
 
@@ -55,6 +62,9 @@ class Policy:
 
         self.local_rib: dict[Prefix, Ann] = local_rib or dict()
         self.recv_q: defaultdict[Prefix, list[Ann]] = defaultdict(list)
+        self.ribs_in: RIBsIn = ribs_in or RIBsIn()
+        self.ribs_out: RIBsOut = ribs_out or RIBsOut()
+        self.rost_trusted_repository.clear()
         if settings:
             self.settings: tuple[bool, ...] = settings
         else:
@@ -74,6 +84,8 @@ class Policy:
 
         self.local_rib.clear()
         self.recv_q.clear()
+        self.ribs_in.clear()
+        self.ribs_out.clear()
 
     #########################
     # Process Incoming Anns #
@@ -110,6 +122,9 @@ class Policy:
     ) -> None:
         """Process all announcements that were incoming from a specific rel"""
 
+        if self.settings[Settings.ROST]:
+            ROST.preprocess_incoming_anns(self, from_rel, propagation_round)
+
         # For each prefix, get all anns recieved
         for prefix, ann_list in self.recv_q.items():
             # Get announcement currently in local rib
@@ -118,13 +133,34 @@ class Policy:
 
             # For each announcement that was incoming
             for new_ann in ann_list:
-                current_ann = self._get_new_best_ann(current_ann, new_ann, from_rel)
+                if settings[Settings.BGP_FULL]:
+                    # If withdrawal remove from RIBsIn, otherwise add to RIBsIn
+                    self._process_new_ann_in_ribs_in(new_ann, prefix, from_rel)
+
+                # Process withdrawals even for invalid anns in the ribs_in
+                if new_ann.withdraw and settings[Settings.BGP_FULL]:
+                    current_ann = self._remove_from_local_rib_and_get_new_best_ann(
+                        new_ann, current_ann
+                    )
+                else:
+                    # Get new best ann
+                    current_ann = self._get_new_best_ann(
+                        current_ann, new_ann, from_rel
+                    )
 
             # This is a new best ann. Process it and add it to the local rib
             if og_ann != current_ann:
-                # Save to local rib
-                # mypy doesn't understand that this could never be None
-                self.local_rib[current_ann.prefix] = current_ann  # type: ignore
+                if current_ann:
+                    # Save to local rib
+                    # mypy doesn't understand that this could never be None
+                    self.local_rib[current_ann.prefix] = current_ann  # type: ignore
+                if og_ann and settings[Settings.BGP_FULL]:
+                    self.withdraw_ann_from_neighbors(
+                        og_ann.copy(
+                            next_hop_asn=self.as_.asn,
+                            withdraw=True,
+                        )
+                    )
 
         # NOTE: all three of these have the same process_incoming_anns
         # which just adds ROV++ blackholes to the local RIB
@@ -134,6 +170,9 @@ class Policy:
             or self.settings[Settings.ROVPP_V2I_LITE]
         ):
             ROVPPV1Lite.process_incoming_anns(self, from_rel, propagation_round)
+
+        if self.settings[Settings.ROST]:
+            ROST.postprocess_incoming_anns(self)
 
         self.recv_q.clear()
 
@@ -167,6 +206,8 @@ class Policy:
             )
         elif self.settings[Settings.BGPSEC]:
             new_ann_processed = BGPSec.process_ann(self, new_ann_processed, from_rel)
+        if self.settings[Settings.ROST]:
+            new_ann_processed = ROST.process_ann(self, new_ann_processed, from_rel)
         return new_ann_processed
 
     def valid_ann(self, ann: Ann, from_rel: Relationships) -> bool:
@@ -358,7 +399,10 @@ class Policy:
                 continue
 
             for neighbor_as in neighbor_ases:
-                if ann.recv_relationship in send_rels:
+                if ann.recv_relationship in send_rels and (
+                    not self.settings[Settings.BGP_FULL]
+                    or not self._prev_sent(neighbor_as, ann)
+                ):
                     # Policy took care of it's own propagation for this ann
                     if self.policy_propagate(neighbor_as, ann, propagate_to, send_rels):
                         continue
@@ -466,7 +510,18 @@ class Policy:
                 if not policy_propagate_info.send_ann_bool:
                     return True
 
+        if self.settings[Settings.SUPPRESS_WITHDRAWALS]:
+            policy_propagate_info = SuppressWithdrawals.get_policy_propagate_vals(
+                self, neighbor_as, ann, propagate_to, send_rels
+            )
+            if policy_propagate_info.policy_propagate_bool:
+                ann = policy_propagate_info.ann
+                if not policy_propagate_info.send_ann_bool:
+                    return True
+
         if og_ann != ann:
+            if not ann.withdraw and self.settings[Settings.BGP_FULL]:
+                self.ribs_out.add_ann(neighbor_as.asn, ann)
             self.process_outgoing_ann(neighbor_as, ann, propagate_to, send_rels)
             return True
         else:
@@ -513,6 +568,105 @@ class Policy:
 
         return True
 
+    ##################################################
+    # BGPFull (withdrawals, ribs in, ribs out) funcs #
+    ##################################################
+
+    def _process_new_ann_in_ribs_in(
+        self, unprocessed_ann: Ann, prefix: Prefix, from_rel: Relationships
+    ) -> None:
+        """Adds ann to ribs in if the ann is not a withdrawal"""
+
+        # Remove ann using withdrawal from RIBsIn
+        if unprocessed_ann.withdraw:
+            neighbor = unprocessed_ann.as_path[0]
+            # Remove ann from Ribs in
+            self.ribs_in.remove_entry(neighbor, prefix)
+        # Add ann to RIBsIn
+        else:
+            self.ribs_in.add_unprocessed_ann(unprocessed_ann, from_rel)
+
+    def _remove_from_local_rib_and_get_new_best_ann(
+        self, new_ann: "Ann", local_rib_ann: "Ann | None"
+    ) -> "Ann | None":
+        # This is for removing the original local RIB ann
+        if (
+            local_rib_ann
+            and new_ann.prefix == local_rib_ann.prefix
+            # new_ann is unproccessed
+            and new_ann.as_path == local_rib_ann.as_path[1:]
+            and local_rib_ann.recv_relationship != Relationships.ORIGIN
+        ):
+            # Withdrawal exists in the local RIB, so remove it and reset current ann
+            self.local_rib.pop(new_ann.prefix, None)
+            local_rib_ann = None
+            # Get the new best ann thus far
+            processed_best_ribs_in_ann = self._get_and_process_best_ribs_in_ann(
+                new_ann.prefix
+            )
+            if processed_best_ribs_in_ann:
+                local_rib_ann = self._get_best_ann_by_gao_rexford(
+                    local_rib_ann,
+                    processed_best_ribs_in_ann,
+                )
+
+        return local_rib_ann
+
+    def withdraw_ann_from_neighbors(self, withdraw_ann: Ann) -> None:
+        """Withdraw a route from all neighbors.
+
+        This function will not remove an announcement from the local rib, that
+        should be done before calling this function.
+
+        Note that withdraw_ann is a deep copied ann
+        """
+        assert withdraw_ann.withdraw is True
+        assert withdraw_ann.next_hop_asn == self.as_.asn
+        if self.settings[Settings.ROST]:
+            ROST.withdraw_ann_from_neighbors(self, withdraw_ann)
+        # Check ribs_out to see where the withdrawn ann was sent
+        for send_neighbor_asn in self.ribs_out.populated_neighbors():
+            # Delete ann from ribs out
+            removed = self.ribs_out.remove_entry(send_neighbor_asn, withdraw_ann.prefix)
+            # If the announcement was sent to that neighbor
+            if removed:
+                send_rels = set(Relationships)
+                if send_neighbor_asn in self.as_.customer_asns:
+                    propagate_to = Relationships.CUSTOMERS
+                elif send_neighbor_asn in self.as_.provider_asns:
+                    propagate_to = Relationships.PROVIDERS
+                elif send_neighbor_asn in self.as_.peer_asns:
+                    propagate_to = Relationships.PEERS
+                else:
+                    raise NotImplementedError("Case not accounted for")
+                send_neighbor = self.as_.as_graph.as_dict[send_neighbor_asn]
+                # Policy took care of it's own propagation for this ann
+                if self._policy_propagate(
+                    send_neighbor, withdraw_ann, propagate_to, send_rels
+                ):
+                    continue
+                else:
+                    self.process_outgoing_ann(
+                        send_neighbor, withdraw_ann, propagate_to, send_rels
+                    )
+
+    def _get_and_process_best_ribs_in_ann(self, prefix: Prefix) -> "Ann | None":
+        """Selects best ann from ribs in (remember, RIBsIn is unprocessed"""
+
+        # Get the best announcement
+        best_ann: Ann | None = None
+        for ann_info in self.ribs_in.get_ann_infos(prefix):
+            # This also processes the announcement
+            best_ann = self._get_new_best_ann(
+                best_ann, ann_info.unprocessed_ann, ann_info.recv_relationship
+            )
+        return best_ann
+
+    def _prev_sent(self, neighbor: "AS", ann: Ann) -> bool:
+        """Don't send what we've already sent"""
+
+        return ann == self.ribs_out.get_ann(neighbor.asn, ann.prefix)
+
     ##############
     # JSON funcs #
     ##############
@@ -524,6 +678,8 @@ class Policy:
                 str(prefix): ann.to_json() for prefix, ann in self.local_rib.items()
             },
             "settings": list(self.settings),
+            "ribs_in": self.ribs_in.to_json(),
+            "ribs_out": self.ribs_out.to_json(),
         }
 
     @classmethod
@@ -534,5 +690,7 @@ class Policy:
                 Prefix(prefix): Ann.from_json(ann)
                 for prefix, ann in json_obj.get("local_rib", {}).items()
             },
+            ribs_in=RIBsIn.from_json(json_obj.get("ribs_in", {})),
+            ribs_out=RIBsOut.from_json(json_obj.get("ribs_out", {})),
             settings=tuple(json_obj.get("settings", [])),
         )

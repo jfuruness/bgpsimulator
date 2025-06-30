@@ -165,13 +165,18 @@ class ScenarioConfig:
             for x in [Settings.ROVPP_V2_LITE, Settings.ROVPP_V2I_LITE]
         ):
             new_settings[Settings.ROVPP_V1_LITE] = True
+            new_settings[Settings.ROV] = True
         if policy_settings.get(Settings.ROVPP_V1_LITE, False):
             new_settings[Settings.ROV] = True
         if any(policy_settings.get(x) for x in [Settings.ASRA, Settings.ASPA_W_N]):
             new_settings[Settings.ASPA] = True
         if any(policy_settings.get(x) for x in [Settings.ASPAPP]):
-            # TODO for later - add all three
-            raise NotImplementedError("ASPAPP is not supported yet")
+            new_settings[Settings.ASPA] = True
+            new_settings[Settings.ASRA] = True
+            new_settings[Settings.PROVIDER_CONE_ID] = True
+        if any(policy_settings.get(x) for x in [Settings.ROST, Settings.SUPPRESS_WITHDRAWALS]):
+            new_settings[Settings.ROST] = True
+            new_settings[Settings.SUPPRESS_WITHDRAWALS] = True
         return new_settings
 
     @cached_property

@@ -16,6 +16,7 @@ class Announcement:
         "bgpsec_as_path",
         "only_to_customers",
         "rovpp_blackhole",
+        "rost_ids",
     )
 
     def __init__(
@@ -29,6 +30,7 @@ class Announcement:
         bgpsec_as_path: tuple[int, ...] | None = None,
         only_to_customers: int | None = None,
         rovpp_blackhole: bool = False,
+        rost_ids: tuple[int, ...] | None = None,
     ):
         self.prefix: Prefix = prefix
         self.as_path: tuple[int, ...] = as_path
@@ -40,7 +42,7 @@ class Announcement:
         self.bgpsec_as_path: tuple[int, ...] = bgpsec_as_path or ()
         self.only_to_customers: int | None = only_to_customers
         self.rovpp_blackhole: bool = rovpp_blackhole
-
+        self.rost_ids: tuple[int, ...] = rost_ids or ()
         if self.next_hop_asn is None:
             # next hop defaults to None, messing up the type
             if len(self.as_path) == 1:  # type: ignore
@@ -69,6 +71,7 @@ class Announcement:
         bgpsec_as_path: tuple[int, ...] | None = None,
         only_to_customers: int | None = None,
         rovpp_blackhole: bool | None = None,
+        rost_ids: tuple[int, ...] | None = None,
     ) -> "Announcement":
         """Creates a new announcement with the same attributes"""
         return Announcement(
@@ -94,6 +97,7 @@ class Announcement:
             rovpp_blackhole=rovpp_blackhole
             if rovpp_blackhole is not None
             else self.rovpp_blackhole,
+            rost_ids=rost_ids if rost_ids is not None else self.rost_ids,
         )
 
     def __repr__(self) -> str:
@@ -117,6 +121,7 @@ class Announcement:
             "bgpsec_as_path": list(self.bgpsec_as_path),
             "only_to_customers": self.only_to_customers,
             "rovpp_blackhole": self.rovpp_blackhole,
+            "rost_ids": list(self.rost_ids),
         }
 
     @classmethod
@@ -131,4 +136,5 @@ class Announcement:
             bgpsec_as_path=tuple(json_obj["bgpsec_as_path"]),
             only_to_customers=json_obj["only_to_customers"],
             rovpp_blackhole=json_obj["rovpp_blackhole"],
+            rost_ids=tuple(json_obj["rost_ids"]),
         )
