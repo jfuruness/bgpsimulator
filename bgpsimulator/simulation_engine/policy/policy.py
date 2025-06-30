@@ -124,7 +124,7 @@ class Policy:
         """Process all announcements that were incoming from a specific rel"""
 
         if self.settings[Settings.ROST]:
-            ROST.preprocess_incoming_anns(self, from_rel, propagation_round)
+            ROST.preprocess_incoming_anns(self, from_rel=from_rel, propagation_round=propagation_round)
 
         # For each prefix, get all anns recieved
         for prefix, ann_list in self.recv_q.items():
@@ -151,8 +151,7 @@ class Policy:
             if og_ann != current_ann:
                 if current_ann:
                     # Save to local rib
-                    # mypy doesn't understand that this could never be None
-                    self.local_rib[current_ann.prefix] = current_ann  # type: ignore
+                    self.local_rib[current_ann.prefix] = current_ann
                 if og_ann and self.settings[Settings.BGP_FULL]:
                     self.withdraw_ann_from_neighbors(
                         og_ann.copy(
@@ -640,7 +639,7 @@ class Policy:
                     raise NotImplementedError("Case not accounted for")
                 send_neighbor = self.as_.as_graph.as_dict[send_neighbor_asn]
                 # Policy took care of it's own propagation for this ann
-                if self._policy_propagate(
+                if self.policy_propagate(
                     send_neighbor, withdraw_ann, propagate_to, send_rels
                 ):
                     continue

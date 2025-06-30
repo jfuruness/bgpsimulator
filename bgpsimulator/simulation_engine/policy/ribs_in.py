@@ -1,5 +1,6 @@
 import dataclasses
 from collections import UserDict
+from typing import Any
 
 from bgpsimulator.shared import Prefix, Relationships
 from bgpsimulator.simulation_engine import Announcement as Ann
@@ -27,12 +28,12 @@ class AnnInfo:
         }
 
     @classmethod
-    def from_json(cls, json: dict[str, Ann | Relationships]) -> "AnnInfo":
+    def from_json(cls, json: dict[str, Any]) -> "AnnInfo":
         """Returns an AnnInfo from a JSON representation"""
 
         return cls(
-            unprocessed_ann=json["unprocessed_ann"],
-            recv_relationship=json["recv_relationship"],
+            unprocessed_ann=Ann.from_json(json["unprocessed_ann"]),
+            recv_relationship=Relationships(json["recv_relationship"]),
         )
 
 
@@ -69,7 +70,7 @@ class RIBsIn(UserDict[int, dict[Prefix, AnnInfo]]):
                 unprocessed_ann=unprocessed_ann, recv_relationship=recv_relationship
             )
 
-    def get_ann_infos(self, prefix: str) -> list[AnnInfo]:
+    def get_ann_infos(self, prefix: Prefix) -> list[AnnInfo]:
         """Returns AnnInfos for a given prefix"""
 
         ann_infos = []

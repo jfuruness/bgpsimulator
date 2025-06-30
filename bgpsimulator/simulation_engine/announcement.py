@@ -17,6 +17,7 @@ class Announcement:
         "only_to_customers",
         "rovpp_blackhole",
         "rost_ids",
+        "withdraw",
     )
 
     def __init__(
@@ -31,6 +32,7 @@ class Announcement:
         only_to_customers: int | None = None,
         rovpp_blackhole: bool = False,
         rost_ids: tuple[int, ...] | None = None,
+        withdraw: bool = False,
     ):
         self.prefix: Prefix = prefix
         self.as_path: tuple[int, ...] = as_path
@@ -43,6 +45,7 @@ class Announcement:
         self.only_to_customers: int | None = only_to_customers
         self.rovpp_blackhole: bool = rovpp_blackhole
         self.rost_ids: tuple[int, ...] = rost_ids or ()
+        self.withdraw: bool = withdraw
         if self.next_hop_asn is None:
             # next hop defaults to None, messing up the type
             if len(self.as_path) == 1:  # type: ignore
@@ -72,6 +75,7 @@ class Announcement:
         only_to_customers: int | None = None,
         rovpp_blackhole: bool | None = None,
         rost_ids: tuple[int, ...] | None = None,
+        withdraw: bool | None = None,
     ) -> "Announcement":
         """Creates a new announcement with the same attributes"""
         return Announcement(
@@ -98,6 +102,7 @@ class Announcement:
             if rovpp_blackhole is not None
             else self.rovpp_blackhole,
             rost_ids=rost_ids if rost_ids is not None else self.rost_ids,
+            withdraw=withdraw if withdraw is not None else self.withdraw,
         )
 
     def __repr__(self) -> str:
@@ -122,6 +127,7 @@ class Announcement:
             "only_to_customers": self.only_to_customers,
             "rovpp_blackhole": self.rovpp_blackhole,
             "rost_ids": list(self.rost_ids),
+            "withdraw": self.withdraw,
         }
 
     @classmethod
@@ -137,4 +143,5 @@ class Announcement:
             only_to_customers=json_obj["only_to_customers"],
             rovpp_blackhole=json_obj["rovpp_blackhole"],
             rost_ids=tuple(json_obj["rost_ids"]),
+            withdraw=json_obj["withdraw"],
         )
