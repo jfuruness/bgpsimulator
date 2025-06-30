@@ -1,6 +1,6 @@
 from bgpsimulator.as_graphs.as_graph import ASGraph
 from bgpsimulator.engine_runner import EngineRunConfig
-from bgpsimulator.shared import CommonASNs
+from bgpsimulator.shared import CommonASNs, Settings
 from bgpsimulator.simulation_framework import ScenarioConfig, SubprefixHijack
 
 graph_data = {
@@ -66,15 +66,16 @@ graph_data = {
 
 # Create the engine run config
 ex_config_003 = EngineRunConfig(
-    name="ex_003_subprefix_hijack_bgp",
+    name="ex_003_subprefix_hijack_bgp_full",
     scenario_config=ScenarioConfig(
-        label="bgp",
+        label="bgp_full",
         ScenarioCls=SubprefixHijack,
+        default_base_settings={Settings.BGP_FULL: True},
         override_attacker_asns={CommonASNs.ATTACKER},
         override_legitimate_origin_asns={CommonASNs.VICTIM},
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="Subprefix hijack with BGP",
+    diagram_desc="Subprefix hijack with BGP Full",
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

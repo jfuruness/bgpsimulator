@@ -19,11 +19,11 @@ class AnnInfo:
     unprocessed_ann: "Ann"
     recv_relationship: "Relationships"
 
-    def to_json(self) -> dict[str, Ann | Relationships]:
+    def to_json(self) -> dict[str, Any]:
         """Returns a JSON representation of the AnnInfo"""
 
         return {
-            "unprocessed_ann": self.unprocessed_ann,
+            "unprocessed_ann": self.unprocessed_ann.to_json(),
             "recv_relationship": self.recv_relationship,
         }
 
