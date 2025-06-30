@@ -6,14 +6,13 @@ from bgpsimulator.route_validator import RouteValidator
 from bgpsimulator.shared import IPAddr, Prefix, Relationships, ROAValidity, Settings
 from bgpsimulator.shared.exceptions import GaoRexfordError
 from bgpsimulator.simulation_engine.announcement import Announcement as Ann
-from .ribs_in import RIBsIn, AnnInfo
-from .ribs_out import RIBsOut
 
 from .policy_extensions import (
     ASPA,
     ASPAPP,
     ASRA,
     BGP,
+    ROST,
     ROV,
     ASPathEdgeFilter,
     ASPAwN,
@@ -27,12 +26,14 @@ from .policy_extensions import (
     PeerLockLite,
     PeerROV,
     ProviderConeID,
+    RoSTTrustedRepository,
     ROVPPV1Lite,
     ROVPPV2iLite,
     ROVPPV2Lite,
-    RoSTTrustedRepository,
-    ROST,
+    SuppressWithdrawals,
 )
+from .ribs_in import RIBsIn
+from .ribs_out import RIBsOut
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
@@ -133,20 +134,18 @@ class Policy:
 
             # For each announcement that was incoming
             for new_ann in ann_list:
-                if settings[Settings.BGP_FULL]:
+                if self.settings[Settings.BGP_FULL]:
                     # If withdrawal remove from RIBsIn, otherwise add to RIBsIn
                     self._process_new_ann_in_ribs_in(new_ann, prefix, from_rel)
 
                 # Process withdrawals even for invalid anns in the ribs_in
-                if new_ann.withdraw and settings[Settings.BGP_FULL]:
+                if new_ann.withdraw and self.settings[Settings.BGP_FULL]:
                     current_ann = self._remove_from_local_rib_and_get_new_best_ann(
                         new_ann, current_ann
                     )
                 else:
                     # Get new best ann
-                    current_ann = self._get_new_best_ann(
-                        current_ann, new_ann, from_rel
-                    )
+                    current_ann = self._get_new_best_ann(current_ann, new_ann, from_rel)
 
             # This is a new best ann. Process it and add it to the local rib
             if og_ann != current_ann:
@@ -154,7 +153,7 @@ class Policy:
                     # Save to local rib
                     # mypy doesn't understand that this could never be None
                     self.local_rib[current_ann.prefix] = current_ann  # type: ignore
-                if og_ann and settings[Settings.BGP_FULL]:
+                if og_ann and self.settings[Settings.BGP_FULL]:
                     self.withdraw_ann_from_neighbors(
                         og_ann.copy(
                             next_hop_asn=self.as_.asn,

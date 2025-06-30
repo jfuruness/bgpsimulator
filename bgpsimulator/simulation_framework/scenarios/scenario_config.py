@@ -174,7 +174,10 @@ class ScenarioConfig:
             new_settings[Settings.ASPA] = True
             new_settings[Settings.ASRA] = True
             new_settings[Settings.PROVIDER_CONE_ID] = True
-        if any(policy_settings.get(x) for x in [Settings.ROST, Settings.SUPPRESS_WITHDRAWALS]):
+        if any(
+            policy_settings.get(x)
+            for x in [Settings.ROST, Settings.SUPPRESS_WITHDRAWALS]
+        ):
             new_settings[Settings.ROST] = True
             new_settings[Settings.SUPPRESS_WITHDRAWALS] = True
         return new_settings

@@ -1,7 +1,10 @@
 from collections import defaultdict
+from typing import TYPE_CHECKING
 
 from bgpsimulator.simulation_engine.announcement import Announcement as Ann
-from bgpsimulator.shared import Prefix
+
+if TYPE_CHECKING:
+    from bgpsimulator.shared import Prefix
 
 
 class RoSTTrustedRepository:

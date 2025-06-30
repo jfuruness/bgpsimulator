@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from bgpsimulator.shared import Relationships
 
 if TYPE_CHECKING:
+    from bgpsimulator.simulation_engine import Announcement as Ann
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
 
@@ -13,7 +14,9 @@ class ROST:
     def withdraw_ann_from_neighbors(policy: "Policy", withdraw_ann: "Ann") -> None:
         """Adds withdrawals you create to RoST Trusted Repo"""
 
-        policy.rost_trusted_repository.add_ann(withdraw_ann, policy.as_.asn, active=False)
+        policy.rost_trusted_repository.add_ann(
+            withdraw_ann, policy.as_.asn, active=False
+        )
 
     @staticmethod
     def preprocess_incoming_anns(

@@ -130,8 +130,10 @@ class ROVPPV1Lite:
             if existing_ann is None:
                 policy.local_rib[blackhole_ann.prefix] = blackhole_ann
             elif policy.ann_is_invalid_by_roa(existing_ann):
-                # Not sure why anyone would ever need this so I'm not implementing it for now
+                # Not sure why anyone would ever need this
+                # so I'm not implementing it for now
                 # Also how would an existing ann be invalid in ROV++?
+                # TODO: Implement this
                 if policy.settings[Settings.BGP_FULL]:
                     raise NotImplementedError("Withdrawals not supported for ROV++")
                 policy.local_rib[blackhole_ann.prefix] = blackhole_ann

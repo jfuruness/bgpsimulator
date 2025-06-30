@@ -1,11 +1,8 @@
-from collections import UserDict
 import dataclasses
-from typing import TYPE_CHECKING
+from collections import UserDict
 
-
-if TYPE_CHECKING:
-    from bgpsimulator.shared import Relationships, Prefix
-    from bgpsimulator.simulation_engine import Announcement as Ann
+from bgpsimulator.shared import Prefix, Relationships
+from bgpsimulator.simulation_engine import Announcement as Ann
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -29,7 +26,7 @@ class AnnInfo:
             "recv_relationship": self.recv_relationship,
         }
 
-    @classmethod    
+    @classmethod
     def from_json(cls, json: dict[str, Ann | Relationships]) -> "AnnInfo":
         """Returns an AnnInfo from a JSON representation"""
 
@@ -42,7 +39,7 @@ class AnnInfo:
 class RIBsIn(UserDict[int, dict[Prefix, AnnInfo]]):
     """Incomming announcements for a BGP AS
 
-    neighbor: {prefix: (unprocessed_ann, relationship)}
+    neighbor_asn: {prefix: (unprocessed_ann, relationship)}
     """
 
     def get_unprocessed_ann_recv_rel(
@@ -97,20 +94,25 @@ class RIBsIn(UserDict[int, dict[Prefix, AnnInfo]]):
     def to_json(self) -> dict[int, dict[str, dict[str, Ann | Relationships]]]:
         """Returns a JSON representation of the RIBsIn"""
 
-        return {
-            neighbor_asn: {
+        json_obj = {}
+        for neighbor_asn, prefix_ann_info in self.data.items():
+            json_obj[neighbor_asn] = {
                 str(prefix): ann_info.to_json()
-                for prefix, ann_info in self.data.items()
+                for prefix, ann_info in prefix_ann_info.items()
             }
-        }
+        return json_obj
 
     @classmethod
-    def from_json(cls, json: dict[int, dict[str, dict[str, dict[str, Ann | Relationships]]]]) -> "RIBsIn":
+    def from_json(
+        cls, json: dict[int, dict[str, dict[str, dict[str, Ann | Relationships]]]]
+    ) -> "RIBsIn":
         """Returns a RIBsIn from a JSON representation"""
 
         ribs_in = cls()
-        for neighbor_asn, prefix_ann_infos in json.items():
-            for prefix, ann_info_json in prefix_ann_infos.items():
+        for _neighbor_asn, prefix_ann_infos in json.items():
+            for _prefix, ann_info_json in prefix_ann_infos.items():
                 ann_info = AnnInfo.from_json(ann_info_json)
-                ribs_in.add_unprocessed_ann(ann_info.unprocessed_ann, ann_info.recv_relationship)
+                ribs_in.add_unprocessed_ann(
+                    ann_info.unprocessed_ann, ann_info.recv_relationship
+                )
         return ribs_in
