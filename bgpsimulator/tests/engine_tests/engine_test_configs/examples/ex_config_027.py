@@ -1,7 +1,7 @@
 from bgpsimulator.as_graphs.as_graph import ASGraph
 from bgpsimulator.engine_runner import EngineRunConfig
 from bgpsimulator.shared import CommonASNs, Settings
-from bgpsimulator.simulation_framework import ScenarioConfig, SubprefixHijack
+from bgpsimulator.simulation_framework import ScenarioConfig, ShortestPathPrefixHijack
 
 graph_data = {
     "ases": {
@@ -81,18 +81,31 @@ graph_data = {
 }
 
 # Create the engine run config
-ex_config_004 = EngineRunConfig(
-    name="ex_004_subprefix_hijack_rov_simple",
+ex_config_027 = EngineRunConfig(
+    name="ex_027_shortest_path_export_all_aspa_simple_provider",
     scenario_config=ScenarioConfig(
-        label="rov",
-        ScenarioCls=SubprefixHijack,
+        label="aspa",
+        ScenarioCls=ShortestPathPrefixHijack,
         override_attacker_asns={CommonASNs.ATTACKER},
         override_legitimate_origin_asns={CommonASNs.VICTIM},
-        # AS 9 uses ROV
-        override_base_settings={9: {Settings.ROV: True}},
+        # Attacker uses origin hijack to customers setting
+        attacker_settings={Settings.ORIGIN_PREFIX_HIJACK_CUSTOMERS: True},
+        # ASes 2, 3, 4, 5, 8, 9, 10, 11, 12, and VICTIM use ASPA
+        override_base_settings={
+            2: {Settings.ASPA: True},
+            3: {Settings.ASPA: True},
+            4: {Settings.ASPA: True},
+            5: {Settings.ASPA: True},
+            8: {Settings.ASPA: True},
+            9: {Settings.ASPA: True},
+            10: {Settings.ASPA: True},
+            11: {Settings.ASPA: True},
+            12: {Settings.ASPA: True},
+            CommonASNs.VICTIM: {Settings.ASPA: True},
+        },
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="Subprefix hijack with ROV Simple",
+    diagram_desc="shortest path export all against ASPASimple from a provider\nAS prevents the attack, this is merely to check attack functionality",
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

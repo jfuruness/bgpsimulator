@@ -25,6 +25,11 @@ from .ex_config_023 import ex_config_023
 from .ex_config_024 import ex_config_024
 from .ex_config_025 import ex_config_025
 from .ex_config_026 import ex_config_026
+from .ex_config_027 import ex_config_027
+from .ex_config_028 import ex_config_028
+from .ex_config_029 import ex_config_029
+from .ex_config_030 import ex_config_030
+from .ex_config_031 import ex_config_031
 
 example_configs = (
     ex_config_000,
@@ -54,6 +59,11 @@ example_configs = (
     ex_config_024,
     ex_config_025,
     ex_config_026,
+    ex_config_027,
+    ex_config_028,
+    ex_config_029,
+    ex_config_030,
+    ex_config_031,
 )
 
 __all__ = ["example_configs"]

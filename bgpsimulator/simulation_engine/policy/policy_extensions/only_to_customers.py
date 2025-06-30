@@ -34,7 +34,7 @@ class OnlyToCustomers:
     ) -> PolicyPropagateInfo:
         """If propagating to custmoers and only_to_customers isn't set, set it"""
 
-        if propagate_to in (Relationships.CUSTOMERS, Relationships.PROVIDERS):
+        if propagate_to in (Relationships.CUSTOMERS, Relationships.PEERS):
             ann = ann.copy(only_to_customers=policy.as_.asn)
             policy.process_outgoing_ann(neighbor_as_obj, ann, propagate_to, send_rels)
             return PolicyPropagateInfo(

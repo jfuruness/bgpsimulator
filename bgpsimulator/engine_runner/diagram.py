@@ -237,7 +237,7 @@ class Diagram:
         # If the as obj is the attacker
         if as_obj.asn in scenario.attacker_asns:
             kwargs.update({"fillcolor": "#ff6060", "shape": "doublecircle"})
-            if any(list(as_obj.policy.settings)):
+            if any(v for k, v in zip(Settings, as_obj.policy.settings, strict=False) if v and k != Settings.BGP_FULL):
                 kwargs["shape"] = "doubleoctagon"
             # If people complain about the red being too dark lol:
             kwargs.update({"fillcolor": "#FF7F7F"})
@@ -245,7 +245,7 @@ class Diagram:
         # As obj is the victim
         elif as_obj.asn in scenario.legitimate_origin_asns:
             kwargs.update({"fillcolor": "#90ee90", "shape": "doublecircle"})
-            if any(list(as_obj.policy.settings)):
+            if any(v for k, v in zip(Settings, as_obj.policy.settings, strict=False) if v and k != Settings.BGP_FULL):
                 kwargs["shape"] = "doubleoctagon"
 
         # As obj is not attacker or victim
@@ -259,7 +259,7 @@ class Diagram:
             elif packet_outcomes[as_obj.asn] == Outcomes.DISCONNECTED.value:
                 kwargs.update({"fillcolor": "grey:white"})
 
-            if any(list(as_obj.policy.settings)):
+            if any(v for k, v in zip(Settings, as_obj.policy.settings, strict=False) if v and k != Settings.BGP_FULL):
                 kwargs["shape"] = "octagon"
         return kwargs
 

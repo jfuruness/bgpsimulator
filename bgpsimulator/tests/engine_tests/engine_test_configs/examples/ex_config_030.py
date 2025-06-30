@@ -81,18 +81,22 @@ graph_data = {
 }
 
 # Create the engine run config
-ex_config_004 = EngineRunConfig(
-    name="ex_004_subprefix_hijack_rov_simple",
+ex_config_030 = EngineRunConfig(
+    name="ex_030_subprefix_hijack_against_rovpp",
     scenario_config=ScenarioConfig(
-        label="rov",
+        label="rovpp_v1_lite",
         ScenarioCls=SubprefixHijack,
         override_attacker_asns={CommonASNs.ATTACKER},
         override_legitimate_origin_asns={CommonASNs.VICTIM},
-        # AS 9 uses ROV
-        override_base_settings={9: {Settings.ROV: True}},
+        # ASes 8, 9, and VICTIM use ROV++V1Lite
+        override_base_settings={
+            8: {Settings.ROVPP_V1_LITE: True},
+            9: {Settings.ROVPP_V1_LITE: True},
+            CommonASNs.VICTIM: {Settings.ROVPP_V1_LITE: True},
+        },
     ),
     as_graph=ASGraph(graph_data),
-    diagram_desc="Subprefix hijack with ROV Simple",
+    diagram_desc="Subprefix Hijack against ROV++V1",
     diagram_ranks=[
         [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
         [1, 2, 3, 4],

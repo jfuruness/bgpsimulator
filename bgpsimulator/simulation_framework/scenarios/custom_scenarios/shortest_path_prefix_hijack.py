@@ -407,7 +407,7 @@ class ShortestPathPrefixHijack(Scenario):
 
     def as_is_adopting_any_settings(self, as_obj: AS, settings: set[Settings]) -> bool:
         """Returns True if the AS is adopting any of the settings
-        
+
         Unfortunately must operate this way since the engine is not yet set up, so the
         settings are not available to the AS class
         """
