@@ -63,9 +63,13 @@ class AS:
         if not self.as_graph:
             raise ValueError("AS graph not set")
 
-        self.peers = [self.as_graph[asn] for asn in self.peer_asns]
-        self.providers = [self.as_graph[asn] for asn in self.provider_asns]
-        self.customers = [self.as_graph[asn] for asn in self.customer_asns]
+        self.peers = [cast("AS", proxy(self.as_graph[asn])) for asn in self.peer_asns]
+        self.providers = [
+            cast("AS", proxy(self.as_graph[asn])) for asn in self.provider_asns
+        ]
+        self.customers = [
+            cast("AS", proxy(self.as_graph[asn])) for asn in self.customer_asns
+        ]
 
     def get_neighbor(self, rel: Relationships) -> list["AS"]:
         """Returns the neighbors of the AS based on the relationship enum"""
