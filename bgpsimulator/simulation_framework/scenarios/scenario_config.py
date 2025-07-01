@@ -212,8 +212,55 @@ class ScenarioConfig:
 
     def to_json(self) -> dict[str, Any]:
         """Converts the scenario config to a JSON object"""
-        vals = vars(self)
-        vals["ScenarioCls"] = vals["ScenarioCls"].__name__
+        # Only include fields that are constructor parameters
+        vals = {
+            "label": self.label,
+            "ScenarioCls": self.ScenarioCls.__name__,
+            "propagation_rounds": self.propagation_rounds,
+            "attacker_settings": self.attacker_settings,
+            "legitimate_origin_settings": self.legitimate_origin_settings,
+            "override_adoption_settings": self.override_adoption_settings,
+            "override_base_settings": self.override_base_settings,
+            "default_adoption_settings": self.default_adoption_settings,
+            "default_base_settings": self.default_base_settings,
+            "num_attackers": self.num_attackers,
+            "num_legitimate_origins": self.num_legitimate_origins,
+            "attacker_asn_group": self.attacker_asn_group,
+            "legitimate_origin_asn_group": self.legitimate_origin_asn_group,
+            "adoption_asn_groups": self.adoption_asn_groups,
+            "override_attacker_asns": self.override_attacker_asns,
+            "override_legitimate_origin_asns": self.override_legitimate_origin_asns,
+            "override_adopting_asns": self.override_adopting_asns,
+            "override_seed_asn_ann_dict": self.override_seed_asn_ann_dict,
+            "override_roas": self.override_roas,
+            "override_dest_ip_addr": self.override_dest_ip_addr,
+        }
+
+        # Handle override_seed_asn_ann_dict
+        if vals.get("override_seed_asn_ann_dict") is not None:
+            vals["override_seed_asn_ann_dict"] = {
+                str(asn): [ann.to_json() for ann in anns]
+                for asn, anns in vals["override_seed_asn_ann_dict"].items()  # type: ignore
+            }
+
+        # Handle override_roas
+        if vals.get("override_roas") is not None:
+            vals["override_roas"] = [roa.to_json() for roa in vals["override_roas"]]  # type: ignore
+
+        # Handle override_dest_ip_addr
+        if vals.get("override_dest_ip_addr") is not None:
+            vals["override_dest_ip_addr"] = str(vals["override_dest_ip_addr"])
+
+        # Convert sets to lists for JSON serialization
+        if vals.get("override_attacker_asns") is not None:
+            vals["override_attacker_asns"] = list(vals["override_attacker_asns"])  # type: ignore
+        if vals.get("override_legitimate_origin_asns") is not None:
+            vals["override_legitimate_origin_asns"] = list(  # type: ignore
+                vals["override_legitimate_origin_asns"]
+            )
+        if vals.get("override_adopting_asns") is not None:
+            vals["override_adopting_asns"] = list(vals["override_adopting_asns"])  # type: ignore
+
         return vals
 
     @classmethod
@@ -221,4 +268,36 @@ class ScenarioConfig:
         """Converts a JSON object to a scenario config"""
         vals = json_obj.copy()
         vals["ScenarioCls"] = Scenario.name_to_cls_dict[vals["ScenarioCls"]]
+
+        # Handle override_seed_asn_ann_dict
+        if vals.get("override_seed_asn_ann_dict") is not None:
+            vals["override_seed_asn_ann_dict"] = {
+                int(asn): [Ann.from_json(ann) for ann in anns]
+                for asn, anns in vals["override_seed_asn_ann_dict"].items()
+            }
+
+        # Handle override_roas
+        if vals.get("override_roas") is not None:
+            from bgpsimulator.route_validator import ROA
+
+            vals["override_roas"] = [
+                ROA.from_json(roa) for roa in vals["override_roas"]
+            ]
+
+        # Handle override_dest_ip_addr
+        if vals.get("override_dest_ip_addr") is not None:
+            from bgpsimulator.shared import IPAddr
+
+            vals["override_dest_ip_addr"] = IPAddr(vals["override_dest_ip_addr"])
+
+        # Convert lists back to sets
+        if vals.get("override_attacker_asns") is not None:
+            vals["override_attacker_asns"] = set(vals["override_attacker_asns"])
+        if vals.get("override_legitimate_origin_asns") is not None:
+            vals["override_legitimate_origin_asns"] = set(
+                vals["override_legitimate_origin_asns"]
+            )
+        if vals.get("override_adopting_asns") is not None:
+            vals["override_adopting_asns"] = set(vals["override_adopting_asns"])
+
         return cls(**vals)

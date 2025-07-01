@@ -1,4 +1,5 @@
 from functools import cached_property
+from typing import Any
 
 from bgpsimulator.shared import Prefix, ROARouted, ROAValidity
 
@@ -68,3 +69,22 @@ class ROA:
         """Returns outcome of prefix origin pair"""
 
         return self.get_validity(prefix, origin), self.routed_status
+
+    def to_json(self) -> dict[str, Any]:
+        """Converts the ROA to a JSON object"""
+        return {
+            "prefix": str(self.prefix),
+            "origin": self.origin,
+            "max_length": self.max_length,
+            "ta": self.ta,
+        }
+
+    @classmethod
+    def from_json(cls, json_obj: dict[str, Any]) -> "ROA":
+        """Converts a JSON object to a ROA"""
+        return cls(
+            prefix=Prefix(json_obj["prefix"]),
+            origin=int(json_obj["origin"]),
+            max_length=int(json_obj["max_length"]),
+            ta=json_obj["ta"],
+        )
