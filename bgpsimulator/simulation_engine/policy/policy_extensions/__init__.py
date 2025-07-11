@@ -22,6 +22,8 @@ from .peer_rov import PeerROV
 from .aspapp import ASPAPP
 from .rost import ROST, RoSTTrustedRepository
 from .suppress_withdrawals import SuppressWithdrawals
+from .leaker import Leaker
+from .announce_then_withdraw import AnnounceThenWithdraw
 
 __all__ = [
     "ASPathEdgeFilter",
@@ -47,4 +49,6 @@ __all__ = [
     "ROST",
     "RoSTTrustedRepository",
     "SuppressWithdrawals",
+    "Leaker",
+    "AnnounceThenWithdraw",
 ]

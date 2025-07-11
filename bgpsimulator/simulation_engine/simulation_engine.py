@@ -69,9 +69,19 @@ class SimulationEngine:
         2. customers
         """
 
+        self._pre_propagation_hook(propagation_round, scenario)
         self._propagate_to_providers(propagation_round, scenario)
         self._propagate_to_peers(propagation_round, scenario)
         self._propagate_to_customers(propagation_round, scenario)
+
+    def _pre_propagation_hook(self, propagation_round, scenario) -> None:
+        """Pre-propagation hook func in the policy
+
+        Mainly for policies like LEAKER and ANNOUNCE_THEN_WITHDRAW
+        """
+
+        for as_obj in self.as_graph.as_dict.values():
+            as_obj.policy.pre_propagation_hook(propagation_round, scenario)
 
     def _propagate_to_providers(
         self, propagation_round: int, scenario: "Scenario"

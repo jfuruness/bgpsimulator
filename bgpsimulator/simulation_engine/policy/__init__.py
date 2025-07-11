@@ -23,6 +23,8 @@ from .policy_extensions import (
     ROST,
     RoSTTrustedRepository,
     SuppressWithdrawals,
+    Leaker,
+    AnnounceThenWithdraw,
 )
 
 __all__ = [
@@ -50,4 +52,6 @@ __all__ = [
     "ROST",
     "RoSTTrustedRepository",
     "SuppressWithdrawals",
+    "Leaker",
+    "AnnounceThenWithdraw",
 ]

@@ -14,6 +14,8 @@ from .policy_extensions import (
     BGP,
     ROST,
     ROV,
+    AnnounceThenWithdraw,
+    Leaker,
     ASPathEdgeFilter,
     ASPAwN,
     BGPiSecTransitive,
@@ -359,6 +361,15 @@ class Policy:
         new_neighbor_asn = new_ann.as_path[min(len(new_ann.as_path), 1)]
 
         return current_ann if current_neighbor_asn <= new_neighbor_asn else new_ann
+
+    def pre_propagation_hook(self, propagation_round: int, scenario: "Scenario") -> None:
+        """Before propagating to anyone, pre-propagation hook"""
+
+        # Withdraws announcements round 2
+        if self.settings[Settings.ANNOUNCE_THEN_WITHDRAW]:
+            AnnounceThenWithdraw.pre_propagation_hook(self, propagation_round, scenario)
+        if self.settings[Settings.LEAKER]:
+            Leaker.pre_propagation_hook(self, propagation_round, scenario)
 
     def propagate_to_customers(self) -> None:
         """Propogates to customers anns that have a known recv_rel"""

@@ -190,7 +190,7 @@ class Diagram:
                 if display_full_prefix_bool:
                     prefix_display = str(prefix)
                 else:
-                    prefix_display = str(ann.prefix).split("/")[-1]
+                    prefix_display = "/" + str(ann.prefix).split("/")[-1]
                 path = "-".join(str(x) for x in ann.as_path)
                 html += f"""<TR>
                             <TD COLSPAN="1">{prefix_display}</TD>
