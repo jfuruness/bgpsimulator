@@ -146,9 +146,11 @@ class ScenarioConfig:
 
     def modify_for_withdrawals(self) -> bool:
         """Modifies the required settings for withdrawals"""
-        requires_bgp_full = (Settings.LEAKER, Settings.RoST)
+
+        # NOTE: ROST also deals with withdrawals, must be in this list
+        requires_bgp_full = (Settings.LEAKER, Settings.ANNOUNCE_THEN_WITHDRAW, Settings.ROST)
         if any(setting in self.all_used_settings for setting in requires_bgp_full):
-            self.default_base_settings[Settings.BGPFull] = True
+            self.default_base_settings[Settings.BGP_FULL] = True
             if self.propagation_rounds == 1:
                 self.propagation_rounds = 2
 
@@ -182,12 +184,6 @@ class ScenarioConfig:
             new_settings[Settings.ASPA] = True
             new_settings[Settings.ASRA] = True
             new_settings[Settings.PROVIDER_CONE_ID] = True
-        if any(
-            policy_settings.get(x)
-            for x in [Settings.ROST, Settings.SUPPRESS_WITHDRAWALS]
-        ):
-            new_settings[Settings.ROST] = True
-            new_settings[Settings.SUPPRESS_WITHDRAWALS] = True
         return new_settings
 
     @cached_property

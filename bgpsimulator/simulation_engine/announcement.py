@@ -106,7 +106,7 @@ class Announcement:
         )
 
     def __repr__(self) -> str:
-        return f"{self.prefix} {self.as_path} {self.recv_relationship}"
+        return f"{self.prefix} {self.as_path} {self.recv_relationship.name}"
 
     @property
     def origin(self) -> int:

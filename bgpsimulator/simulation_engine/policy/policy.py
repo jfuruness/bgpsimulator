@@ -138,6 +138,10 @@ class Policy:
 
             # For each announcement that was incoming
             for new_ann in ann_list:
+                # Ignore all withdrawals
+                if self.settings[Settings.SUPPRESS_WITHDRAWALS] and new_ann.withdraw:
+                    continue
+
                 if self.settings[Settings.BGP_FULL]:
                     # If withdrawal remove from RIBsIn, otherwise add to RIBsIn
                     self._process_new_ann_in_ribs_in(new_ann, prefix, from_rel)
@@ -551,6 +555,8 @@ class Policy:
     ) -> None:
         """Adds ann to the neighbors recv q"""
 
+        if not ann.withdraw and self.settings[Settings.BGP_FULL]:
+            self.ribs_out.add_ann(neighbor_as.asn, ann)
         # Add the new ann to the incoming anns for that prefix
         neighbor_as.policy.receive_ann(ann)
 

@@ -56,6 +56,9 @@ class Diagram:
         disconnect_count = sum(
             1 for x in packet_outcomes.values() if x == Outcomes.DISCONNECTED.value
         )
+        looping_count = sum(
+            1 for x in packet_outcomes.values() if x == Outcomes.DATA_PLANE_LOOP.value
+        )
         html = f"""<
               <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
               <TR>
@@ -69,11 +72,21 @@ class Diagram:
          <TD BGCOLOR="#90ee90:white">&#128519; LEGITIMATE ORIGIN SUCCESS &#128519;</TD>
                 <TD>{victim_success_count}</TD>
               </TR>
-              <TR>
-                <TD BGCOLOR="grey:white">&#10041; DISCONNECTED &#10041;</TD>
-                <TD>{disconnect_count}</TD>
-              </TR>
         """
+        if disconnect_count:
+            html += f"""
+            <TR>
+            <TD BGCOLOR="grey:white">&#10041; DISCONNECTED &#10041;</TD>
+                    <TD>{disconnect_count}</TD>
+                  </TR>
+            """
+        if looping_count:
+            html += f"""
+            <TR>
+            <TD BGCOLOR="yellow:white">&#8734; LOOPING &#8734;</TD>
+                    <TD>{disconnect_count}</TD>
+                  </TR>
+            """
 
         # ROAs takes up the least space right underneath the legend
         # which is why we have this here instead of a separate node
@@ -246,6 +259,8 @@ class Diagram:
                 kwargs.update({"fillcolor": "#90ee90:white"})
             elif packet_outcomes[as_obj.asn] == Outcomes.DISCONNECTED.value:
                 kwargs.update({"fillcolor": "grey:white"})
+            elif packet_outcomes[as_obj.asn] == Outcomes.DATA_PLANE_LOOP.value:
+                kwargs.update({"fillcolor": "yellow:white"})
 
             if any(
                 v
