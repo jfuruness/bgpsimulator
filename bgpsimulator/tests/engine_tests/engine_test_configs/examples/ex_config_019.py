@@ -100,10 +100,4 @@ ex_config_019 = EngineRunConfig(
         "This policy sets the only_to_customers attribute specified in RFC 9234 "
         "which protects against simple route leaks"
     ),
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3, 4],
-        [5, 8, 9, 10],
-        [11, 12],
-    ],
 )

@@ -67,10 +67,4 @@ ex_config_029 = EngineRunConfig(
     ),
     as_graph=ASGraph(graph_data),
     diagram_desc="ASPA weirdness. rejects upstream, accepts downstream",
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3],
-        [4],
-        [5],
-    ],
 )

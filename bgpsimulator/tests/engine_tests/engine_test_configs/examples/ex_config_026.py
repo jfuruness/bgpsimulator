@@ -108,10 +108,4 @@ ex_config_026 = EngineRunConfig(
         "shortest path export all against ASPASimple from a peer\n"
         "AS prevents the attack, this is merely to check attack functionality"
     ),
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3, 4],
-        [5, 8, 9, 10],
-        [11, 12],
-    ],
 )

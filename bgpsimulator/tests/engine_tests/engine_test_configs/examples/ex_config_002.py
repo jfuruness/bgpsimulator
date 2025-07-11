@@ -107,10 +107,4 @@ ex_config_002 = EngineRunConfig(
     ),
     as_graph=ASGraph(graph_data),
     diagram_desc=desc,
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3, 4],
-        [5, 8, 9, 10],
-        [11, 12],
-    ],
 )

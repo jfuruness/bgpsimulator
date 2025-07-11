@@ -103,10 +103,4 @@ ex_config_025 = EngineRunConfig(
         "shortest path export all against ASPASimple from a customer\n"
         "AS 5 fails to detect the shortest path export all"
     ),
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3, 4],
-        [5, 8, 9, 10],
-        [11, 12],
-    ],
 )

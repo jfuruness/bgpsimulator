@@ -95,10 +95,4 @@ ex_config_012 = EngineRunConfig(
         "Origin prefix hijack thwarting ROV. "
         "This also demonstrates the loop prevention mechanism at 777"
     ),
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3, 4],
-        [5, 8, 9, 10],
-        [11, 12],
-    ],
 )

@@ -59,8 +59,4 @@ ex_config_024 = EngineRunConfig(
         "Origin hijack against ASPASimple\n"
         "Testing that ASPA rejects from the upstream, but accepts from downstream"
     ),
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3],
-    ],
 )

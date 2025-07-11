@@ -44,7 +44,4 @@ ex_config_031 = EngineRunConfig(
     ),
     as_graph=ASGraph(graph_data),
     diagram_desc="Accidental route leak to a peer with OTC Simple",
-    diagram_ranks=[
-        [CommonASNs.LEGITIMATE_ORIGIN.value, CommonASNs.ATTACKER.value, 1],
-    ],
 )

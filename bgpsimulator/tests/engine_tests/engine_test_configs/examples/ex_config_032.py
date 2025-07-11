@@ -125,5 +125,4 @@ ex_config_032 = EngineRunConfig(
     ),
     as_graph=ASGraph(graph_data),
     diagram_desc="Testing the graph display algorithm",
-    diagram_ranks=(),
 )

@@ -101,10 +101,4 @@ ex_config_016 = EngineRunConfig(
         "PathEnd checks the end of the path for valid providers "
         "and is thus protected against simple origin hijacks"
     ),
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3, 4],
-        [5, 8, 9, 10],
-        [11, 12],
-    ],
 )

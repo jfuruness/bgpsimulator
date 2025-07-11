@@ -101,10 +101,4 @@ ex_config_014 = EngineRunConfig(
         "BGPSec is security third, which doesn't amount to much. "
         "AS 2 is saved, but as long as the chain is broken, AS 5 is still hijacked"
     ),
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3, 4],
-        [5, 8, 9, 10],
-        [11, 12],
-    ],
 )

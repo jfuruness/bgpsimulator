@@ -98,10 +98,4 @@ ex_config_013 = EngineRunConfig(
         "Neighbor spoofing prefix hijack thwarting ROV. "
         "This attack reaches more ASes than just the origin hijack"
     ),
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3, 4],
-        [5, 8, 9, 10],
-        [11, 12],
-    ],
 )

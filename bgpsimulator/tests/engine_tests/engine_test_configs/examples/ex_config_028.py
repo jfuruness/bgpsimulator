@@ -109,10 +109,4 @@ ex_config_028 = EngineRunConfig(
         "Route leak to check when v_max_complement==u_min\n"
         " (this is merely to check functionality)"
     ),
-    diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
-        [1, 2, 3, 4],
-        [5, 8, 9, 10],
-        [11, 12],
-    ],
 )
