@@ -94,13 +94,13 @@ graph_data = {
           5
         ]
       },
-      "CommonASNs.ATTACKER": {
+      CommonASNs.ATTACKER: {
         "asn": CommonASNs.ATTACKER,
         "provider_asns": [
           9
         ]
       },
-      "CommonASNs.LEGITIMATE_ORIGIN": {
+      CommonASNs.LEGITIMATE_ORIGIN: {
         "asn": CommonASNs.LEGITIMATE_ORIGIN,
         "provider_asns": [
           9

@@ -35,6 +35,7 @@ class Diagram:
         display_full_prefix_bool = self._get_display_full_prefix_bool(scenario)
         self._add_ases(engine, packet_outcomes, scenario, display_full_prefix_bool)
         self._add_edges(engine)
+        diagram_ranks = diagram_ranks or self._get_default_diagram_ranks(engine)
         self._add_diagram_ranks(diagram_ranks, engine)
         self._add_description(name, description)
         self._render(path=path, view=view, dpi=dpi)
@@ -189,7 +190,7 @@ class Diagram:
                 if display_full_prefix_bool:
                     prefix_display = str(prefix)
                 else:
-                    prefix_display = ann.prefix.prefixlen
+                    prefix_display = str(ann.prefix).split("/")[-1]
                 path = "-".join(str(x) for x in ann.as_path)
                 html += f"""<TR>
                             <TD COLSPAN="1">{prefix_display}</TD>
@@ -275,42 +276,36 @@ class Diagram:
 
     def _get_default_diagram_ranks(self, engine) -> list[list[int]]:
         """
-        Compute drawing ranks for the AS graph.
+        Return ranks (list of ASN lists) for drawing the AS graph.
 
-        Returns
-        -------
-        list[list[int]]
-            Outer index = vertical level (0 is top tier);
-            inner lists contain the ASNs that must share that level.
-
-        Guarantees
-        ----------
-        * Peered ASNs stay on exactly the same level.
+        * Peered ASNs share a rank.
         * A provider is always strictly above each customer.
-        * A multi-homed customer is placed just below its highest provider.
-        * Output ordering is stable and deterministic.
+        * Multihomed customers sit just below their highest provider.
+        * Output ordering is deterministic.
         """
-        # ------------------------------------------------------------------
-        # 1.  Extract graph edges from the engine
-        # ------------------------------------------------------------------
-        as_dict = engine.as_graph.as_dict  # dict[int, ASNode]
-
+        # --------------------------------------------------------------
+        # 1.  Gather raw edges (ASNs only, no AS objects)
+        # --------------------------------------------------------------
+        as_dict = engine.as_graph.as_dict            # dict[int, ASNode]
         peer_edges: set[tuple[int, int]] = set()
         provider_edges: set[tuple[int, int]] = set()   # (provider, customer)
 
         for asn, node in as_dict.items():
-            # --- peers (undirected) ---
-            for peer in node.peers:
-                if peer in as_dict:
-                    peer_edges.add(tuple(sorted((asn, peer))))
-            # --- providers (directed) ---
-            for prov in node.providers:
-                if prov in as_dict:
-                    provider_edges.add((prov, asn))
+            # Peers (undirected) – store ints (node.peers is a set of AS-objects)
+            for peer_obj in node.peers:
+                peer_asn = peer_obj.asn
+                if peer_asn in as_dict:                          # ignore external ASNs
+                    peer_edges.add(tuple(sorted((asn, peer_asn))))
 
-        # ------------------------------------------------------------------
+            # Providers (directed) – provider ➜ customer (= asn)
+            for prov_obj in node.providers:
+                prov_asn = prov_obj.asn
+                if prov_asn in as_dict:
+                    provider_edges.add((prov_asn, asn))
+
+        # --------------------------------------------------------------
         # 2.  Collapse peer clusters with Union–Find
-        # ------------------------------------------------------------------
+        # --------------------------------------------------------------
         parent: dict[int, int] = {}
 
         def find(x: int) -> int:
@@ -327,18 +322,17 @@ class Diagram:
         for u, v in peer_edges:
             union(u, v)
 
-        # Map every ASN to its cluster representative
         cluster_of = {asn: find(asn) for asn in as_dict}
 
-        # ------------------------------------------------------------------
-        # 3.  Build the provider-customer DAG between clusters
-        # ------------------------------------------------------------------
+        # --------------------------------------------------------------
+        # 3.  Build provider-customer DAG between clusters
+        # --------------------------------------------------------------
         children: dict[int, set[int]] = defaultdict(set)
         indeg: dict[int, int] = defaultdict(int)
 
-        for prov, cust in provider_edges:
-            cp, cc = cluster_of[prov], cluster_of[cust]
-            if cp == cc:        # provider inside its own peer-cluster → ignore
+        for prov_asn, cust_asn in provider_edges:
+            cp, cc = cluster_of[prov_asn], cluster_of[cust_asn]
+            if cp == cc:          # provider inside its own peer-cluster → ignore
                 continue
             if cc not in children[cp]:
                 children[cp].add(cc)
@@ -347,9 +341,9 @@ class Diagram:
         all_clusters = set(cluster_of.values())
         rank: dict[int, int] = defaultdict(int)
 
-        # ------------------------------------------------------------------
-        # 4.  Longest-path layering (topological)
-        # ------------------------------------------------------------------
+        # --------------------------------------------------------------
+        # 4.  Longest-path layering
+        # --------------------------------------------------------------
         queue = deque(cl for cl in all_clusters if indeg[cl] == 0)
 
         while queue:
@@ -360,20 +354,19 @@ class Diagram:
                 if indeg[child] == 0:
                     queue.append(child)
 
-        # Any cluster still with indeg > 0 is in a cycle; place it at the top
+        # Any cluster still showing indegree > 0 is in a cycle → push to top
         for cl, d in indeg.items():
-            if d:   # d > 0
+            if d:        # d > 0
                 rank[cl] = 0
 
-        # ------------------------------------------------------------------
-        # 5.  Expand clusters back to ASNs and sort deterministically
-        # ------------------------------------------------------------------
+        # --------------------------------------------------------------
+        # 5.  Expand clusters back to ASNs and sort
+        # --------------------------------------------------------------
         levels: dict[int, list[int]] = defaultdict(list)
         for asn, cl in cluster_of.items():
             levels[rank[cl]].append(asn)
 
         max_rank = max(levels) if levels else -1
-        # Sort ASNs within each level so layout is repeatable
         return [sorted(levels[r]) for r in range(max_rank + 1)]
 
     def _add_diagram_ranks(
