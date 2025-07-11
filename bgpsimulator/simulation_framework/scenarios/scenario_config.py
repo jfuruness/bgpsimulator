@@ -116,8 +116,8 @@ class ScenarioConfig:
         self.override_dest_ip_addr: IPAddr | None = override_dest_ip_addr
 
         # Below this point 99% of devs will not need to touch
-
-        if propagation_rounds is None:
+        self.propagation_rounds = propagation_rounds
+        if self.propagation_rounds is None:
             # BGP-iSec needs this.
             if any(
                 x in self.all_used_settings
@@ -134,8 +134,7 @@ class ScenarioConfig:
                     self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
             else:
                 self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
-        else:
-            self.propagation_rounds = propagation_rounds
+
         if self.ScenarioCls.min_propagation_rounds > self.propagation_rounds:
             raise ValueError(
                 f"{self.ScenarioCls.__name__} requires a minimum of "
@@ -143,6 +142,15 @@ class ScenarioConfig:
                 f"but this scenario_config has only {self.propagation_rounds} "
                 "propagation rounds"
             )
+        self.modify_for_withdrawals()
+
+    def modify_for_withdrawals(self) -> bool:
+        """Modifies the required settings for withdrawals"""
+        requires_bgp_full = (Settings.LEAKER, Settings.RoST)
+        if any(setting in self.all_used_settings for setting in requires_bgp_full):
+            self.default_base_settings[Settings.BGPFull] = True
+            if self.propagation_rounds == 1:
+                self.propagation_rounds = 2
 
     @staticmethod
     def update_supersets(
