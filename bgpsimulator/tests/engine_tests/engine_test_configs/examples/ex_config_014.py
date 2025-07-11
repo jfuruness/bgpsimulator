@@ -8,8 +8,8 @@ from bgpsimulator.simulation_framework import (
 
 graph_data = {
     "ases": {
-        str(CommonASNs.VICTIM): {
-            "asn": CommonASNs.VICTIM,
+        str(CommonASNs.LEGITIMATE_ORIGIN): {
+            "asn": CommonASNs.LEGITIMATE_ORIGIN,
             "customer_asns": [],
             "peer_asns": [],
             "provider_asns": [2, 4, 10],
@@ -28,7 +28,7 @@ graph_data = {
         },
         "2": {
             "asn": 2,
-            "customer_asns": [CommonASNs.ATTACKER, CommonASNs.VICTIM],
+            "customer_asns": [CommonASNs.ATTACKER, CommonASNs.LEGITIMATE_ORIGIN],
             "peer_asns": [],
             "provider_asns": [8],
         },
@@ -40,7 +40,7 @@ graph_data = {
         },
         "4": {
             "asn": 4,
-            "customer_asns": [CommonASNs.VICTIM],
+            "customer_asns": [CommonASNs.LEGITIMATE_ORIGIN],
             "peer_asns": [],
             "provider_asns": [9],
         },
@@ -64,7 +64,7 @@ graph_data = {
         },
         "10": {
             "asn": 10,
-            "customer_asns": [CommonASNs.VICTIM],
+            "customer_asns": [CommonASNs.LEGITIMATE_ORIGIN],
             "peer_asns": [9],
             "provider_asns": [11, 12],
         },
@@ -91,7 +91,7 @@ ex_config_014 = EngineRunConfig(
         ScenarioCls=FirstASNStrippingPrefixHijack,
         default_base_settings={Settings.BGPSEC: True},
         override_attacker_asns={CommonASNs.ATTACKER},
-        override_legitimate_origin_asns={CommonASNs.VICTIM},
+        override_legitimate_origin_asns={CommonASNs.LEGITIMATE_ORIGIN},
         # Attacker uses BGP instead of BGPSec
         override_base_settings={CommonASNs.ATTACKER: {Settings.BGPSEC: False}},
     ),
@@ -102,7 +102,7 @@ ex_config_014 = EngineRunConfig(
         "AS 2 is saved, but as long as the chain is broken, AS 5 is still hijacked"
     ),
     diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
+        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
         [1, 2, 3, 4],
         [5, 8, 9, 10],
         [11, 12],

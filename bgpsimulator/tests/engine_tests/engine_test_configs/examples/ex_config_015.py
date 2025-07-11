@@ -5,8 +5,8 @@ from bgpsimulator.simulation_framework import ForgedOriginPrefixHijack, Scenario
 
 graph_data = {
     "ases": {
-        str(CommonASNs.VICTIM): {
-            "asn": CommonASNs.VICTIM,
+        str(CommonASNs.LEGITIMATE_ORIGIN): {
+            "asn": CommonASNs.LEGITIMATE_ORIGIN,
             "customer_asns": [],
             "peer_asns": [],
             "provider_asns": [2, 4, 10],
@@ -25,7 +25,7 @@ graph_data = {
         },
         "2": {
             "asn": 2,
-            "customer_asns": [CommonASNs.ATTACKER, CommonASNs.VICTIM],
+            "customer_asns": [CommonASNs.ATTACKER, CommonASNs.LEGITIMATE_ORIGIN],
             "peer_asns": [],
             "provider_asns": [8],
         },
@@ -37,7 +37,7 @@ graph_data = {
         },
         "4": {
             "asn": 4,
-            "customer_asns": [CommonASNs.VICTIM],
+            "customer_asns": [CommonASNs.LEGITIMATE_ORIGIN],
             "peer_asns": [],
             "provider_asns": [9],
         },
@@ -61,7 +61,7 @@ graph_data = {
         },
         "10": {
             "asn": 10,
-            "customer_asns": [CommonASNs.VICTIM],
+            "customer_asns": [CommonASNs.LEGITIMATE_ORIGIN],
             "peer_asns": [9],
             "provider_asns": [11, 12],
         },
@@ -87,11 +87,11 @@ ex_config_015 = EngineRunConfig(
         label="pathend",
         ScenarioCls=ForgedOriginPrefixHijack,
         override_attacker_asns={CommonASNs.ATTACKER},
-        override_legitimate_origin_asns={CommonASNs.VICTIM},
+        override_legitimate_origin_asns={CommonASNs.LEGITIMATE_ORIGIN},
         # AS 1 and VICTIM use PathEnd
         override_base_settings={
             1: {Settings.PATH_END: True},
-            CommonASNs.VICTIM: {Settings.PATH_END: True},
+            CommonASNs.LEGITIMATE_ORIGIN: {Settings.PATH_END: True},
         },
     ),
     as_graph=ASGraph(graph_data),
@@ -101,7 +101,7 @@ ex_config_015 = EngineRunConfig(
         "and is thus protected against simple origin hijacks"
     ),
     diagram_ranks=[
-        [CommonASNs.ATTACKER.value, CommonASNs.VICTIM.value],
+        [CommonASNs.ATTACKER.value, CommonASNs.LEGITIMATE_ORIGIN.value],
         [1, 2, 3, 4],
         [5, 8, 9, 10],
         [11, 12],

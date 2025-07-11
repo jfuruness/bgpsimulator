@@ -1,3 +1,4 @@
+from collections import defaultdict, deque
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -31,11 +32,11 @@ class Diagram:
     ) -> None:
         """Runs the diagram"""
         self._add_legend(packet_outcomes, scenario)
-        display_next_hop_asn = self._display_next_hop_asn(engine, scenario)
-        self._add_ases(engine, packet_outcomes, scenario, display_next_hop_asn)
+        display_full_prefix_bool = self._get_display_full_prefix_bool(scenario)
+        self._add_ases(engine, packet_outcomes, scenario, display_full_prefix_bool)
         self._add_edges(engine)
         self._add_diagram_ranks(diagram_ranks, engine)
-        self._add_description(name, description, display_next_hop_asn)
+        self._add_description(name, description)
         self._render(path=path, view=view, dpi=dpi)
 
     def _add_legend(
@@ -57,7 +58,7 @@ class Diagram:
         html = f"""<
               <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="4">
               <TR>
-          <TD COLSPAN="2" BORDER="0">(For most specific prefix only)</TD>
+          <TD COLSPAN="2" BORDER="0">(For Destination of {scenario.dest_ip_addr})</TD>
               </TR>
               <TR>
           <TD BGCOLOR="#ff6060:white">&#128520; ATTACKER SUCCESS &#128520;</TD>
@@ -98,39 +99,30 @@ class Diagram:
             fillcolor="white",
         )
 
-    def _display_next_hop_asn(
-        self, engine: SimulationEngine, scenario: Scenario
-    ) -> bool:
-        """Displays the next hop ASN
+    def _get_display_full_prefix_bool(self, scenario: Scenario) -> bool:
+        """If there are multiple prefixes for the same prefixlen, display full prefix
 
-        We want to display the next hop ASN any time it has been manipulated
-        That only happens when the next_hop_asn is not equal to the as object's ASN
-        (which occurs when the AS is the origin) or the next ASN in the path
+        else just display the prefix len as an abbreviation
         """
 
-        for as_obj in engine.as_graph:
-            for ann in as_obj.policy.local_rib.values():
-                if (len(ann.as_path) == 1 and ann.as_path[0] != ann.next_hop_asn) or (
-                    len(ann.as_path) > 1 and ann.as_path[1] != ann.next_hop_asn
-                ):
-                    return True
-        return False
+        prefix_len_to_addr = defaultdict(set)
+        for asn, anns_list in scenario.seed_asn_ann_dict.items():
+            for ann in anns_list:
+                prefix_len_to_addr[ann.prefix.prefixlen].add(ann.prefix.network_address)
+        return any(len(v) > 1 for v in prefix_len_to_addr.values())
 
     def _add_ases(
         self,
         engine: SimulationEngine,
         packet_outcomes: dict[int, Outcomes],
         scenario: Scenario,
-        display_next_hop_asn: bool,
+        display_full_prefix_bool: bool
     ) -> None:
         """Adds the ASes to the graph"""
-        pass
 
         # First add all nodes to the graph
         for as_obj in engine.as_graph:
-            self._encode_as_obj_as_node(
-                as_obj, engine, packet_outcomes, scenario, display_next_hop_asn
-            )
+            self._encode_as_obj_as_node(as_obj, engine, packet_outcomes, scenario, display_full_prefix_bool)
 
     def _encode_as_obj_as_node(
         self,
@@ -138,13 +130,11 @@ class Diagram:
         engine: SimulationEngine,
         packet_outcomes: dict[int, Outcomes],
         scenario: Scenario,
-        display_next_hop_asn: bool,
+        display_full_prefix_bool: bool,
     ) -> None:
         kwargs = dict()
 
-        html = self._get_html(
-            as_obj, engine, packet_outcomes, scenario, display_next_hop_asn
-        )
+        html = self._get_html(as_obj, engine, packet_outcomes, scenario, display_full_prefix_bool)
 
         kwargs = self._get_kwargs(as_obj, engine, packet_outcomes, scenario)
 
@@ -156,9 +146,9 @@ class Diagram:
         engine: SimulationEngine,
         packet_outcomes: dict[int, Outcomes],
         scenario: Scenario,
-        display_next_hop_asn: bool,
+        display_full_prefix_bool: bool
     ) -> str:
-        colspan = 5 if display_next_hop_asn else 4
+        colspan = 3
         asn_str = str(as_obj.asn)
         if as_obj.asn in scenario.legitimate_origin_asns:
             asn_str = "&#128519;" + asn_str + "&#128519;"
@@ -170,17 +160,17 @@ class Diagram:
             for setting, value in zip(Settings, as_obj.policy.settings, strict=False)
             if value and setting != Settings.BGP_FULL
         ]
-        policy_str = (
-            "; ".join(x.name for x in used_settings) if used_settings else "BGP"
-        )
 
         html = f"""<
             <TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="{colspan}">
             <TR>
             <TD COLSPAN="{colspan}" BORDER="0">{asn_str}</TD>
             </TR>
+            """
+        for setting in used_settings:
+            html += f"""
             <TR>
-            <TD COLSPAN="{colspan}" BORDER="0">({policy_str})</TD>
+            <TD COLSPAN="{colspan}" BORDER="0">({setting.name})</TD>
             </TR>"""
         local_rib_anns = tuple(as_obj.policy.local_rib.values())
         local_rib_anns = tuple(
@@ -196,26 +186,15 @@ class Diagram:
                       </TR>"""
 
             for ann in local_rib_anns:
-                mask = "/" + str(ann.prefix).split("/")[-1]
-                path = ", ".join(str(x) for x in ann.as_path)
-                ann_help = ""
-                if getattr(ann, "rovpp_blackhole", False):
-                    ann_help = "&#10041;"
-                elif getattr(ann, "preventive", False):
-                    ann_help = "&#128737;"
-                elif any(x in ann.as_path for x in scenario.attacker_asns):
-                    ann_help = "&#128520;"
-                elif any(x == ann.origin for x in scenario.legitimate_origin_asns):
-                    ann_help = "&#128519;"
+                if display_full_prefix_bool:
+                    prefix_display = str(prefix)
                 else:
-                    raise NotImplementedError
-
+                    prefix_display = ann.prefix.prefixlen
+                path = "-".join(str(x) for x in ann.as_path)
                 html += f"""<TR>
-                            <TD>{mask}</TD>
-                            <TD>{path}</TD>
-                            <TD>{ann_help}</TD>"""
-                if display_next_hop_asn:
-                    html += f"""<TD>{ann.next_hop_asn}</TD>"""
+                            <TD COLSPAN="1">{prefix_display}</TD>
+                            <TD COLSPAN="2">{path}</TD>
+                            """
                 html += """</TR>"""
         html += "</TABLE>>"
         return html
@@ -294,6 +273,109 @@ class Diagram:
                         penwidth="2",
                     )
 
+    def _get_default_diagram_ranks(self, engine) -> list[list[int]]:
+        """
+        Compute drawing ranks for the AS graph.
+
+        Returns
+        -------
+        list[list[int]]
+            Outer index = vertical level (0 is top tier);
+            inner lists contain the ASNs that must share that level.
+
+        Guarantees
+        ----------
+        * Peered ASNs stay on exactly the same level.
+        * A provider is always strictly above each customer.
+        * A multi-homed customer is placed just below its highest provider.
+        * Output ordering is stable and deterministic.
+        """
+        # ------------------------------------------------------------------
+        # 1.  Extract graph edges from the engine
+        # ------------------------------------------------------------------
+        as_dict = engine.as_graph.as_dict  # dict[int, ASNode]
+
+        peer_edges: set[tuple[int, int]] = set()
+        provider_edges: set[tuple[int, int]] = set()   # (provider, customer)
+
+        for asn, node in as_dict.items():
+            # --- peers (undirected) ---
+            for peer in node.peers:
+                if peer in as_dict:
+                    peer_edges.add(tuple(sorted((asn, peer))))
+            # --- providers (directed) ---
+            for prov in node.providers:
+                if prov in as_dict:
+                    provider_edges.add((prov, asn))
+
+        # ------------------------------------------------------------------
+        # 2.  Collapse peer clusters with Union–Find
+        # ------------------------------------------------------------------
+        parent: dict[int, int] = {}
+
+        def find(x: int) -> int:
+            parent.setdefault(x, x)
+            if parent[x] != x:
+                parent[x] = find(parent[x])
+            return parent[x]
+
+        def union(a: int, b: int) -> None:
+            pa, pb = find(a), find(b)
+            if pa != pb:
+                parent[pb] = pa
+
+        for u, v in peer_edges:
+            union(u, v)
+
+        # Map every ASN to its cluster representative
+        cluster_of = {asn: find(asn) for asn in as_dict}
+
+        # ------------------------------------------------------------------
+        # 3.  Build the provider-customer DAG between clusters
+        # ------------------------------------------------------------------
+        children: dict[int, set[int]] = defaultdict(set)
+        indeg: dict[int, int] = defaultdict(int)
+
+        for prov, cust in provider_edges:
+            cp, cc = cluster_of[prov], cluster_of[cust]
+            if cp == cc:        # provider inside its own peer-cluster → ignore
+                continue
+            if cc not in children[cp]:
+                children[cp].add(cc)
+                indeg[cc] += 1
+
+        all_clusters = set(cluster_of.values())
+        rank: dict[int, int] = defaultdict(int)
+
+        # ------------------------------------------------------------------
+        # 4.  Longest-path layering (topological)
+        # ------------------------------------------------------------------
+        queue = deque(cl for cl in all_clusters if indeg[cl] == 0)
+
+        while queue:
+            cl = queue.popleft()
+            for child in children.get(cl, ()):
+                rank[child] = max(rank[child], rank[cl] + 1)
+                indeg[child] -= 1
+                if indeg[child] == 0:
+                    queue.append(child)
+
+        # Any cluster still with indeg > 0 is in a cycle; place it at the top
+        for cl, d in indeg.items():
+            if d:   # d > 0
+                rank[cl] = 0
+
+        # ------------------------------------------------------------------
+        # 5.  Expand clusters back to ASNs and sort deterministically
+        # ------------------------------------------------------------------
+        levels: dict[int, list[int]] = defaultdict(list)
+        for asn, cl in cluster_of.items():
+            levels[rank[cl]].append(asn)
+
+        max_rank = max(levels) if levels else -1
+        # Sort ASNs within each level so layout is repeatable
+        return [sorted(levels[r]) for r in range(max_rank + 1)]
+
     def _add_diagram_ranks(
         self, diagram_ranks: list[list[int]], engine: SimulationEngine
     ) -> None:
@@ -318,13 +400,7 @@ class Diagram:
                     g.node(str(as_obj.asn))
                 self.dot.subgraph(g)
 
-    def _add_description(
-        self, name: str, description: str, display_next_hop_asn: bool
-    ) -> None:
-        if display_next_hop_asn:
-            description += (
-                "\nLocal RIB rows displayed as: prefix, as path, origin, next_hop"
-            )
+    def _add_description(self, name: str, description: str) -> None:
         if name or description:
             # https://stackoverflow.com/a/57461245/8903959
             self.dot.attr(label=f"{name}\n{description}")

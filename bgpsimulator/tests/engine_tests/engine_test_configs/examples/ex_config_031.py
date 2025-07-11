@@ -7,8 +7,8 @@ from bgpsimulator.simulation_framework import AccidentalRouteLeak, ScenarioConfi
 # 777 - 666 - 1
 graph_data = {
     "ases": {
-        str(CommonASNs.VICTIM): {
-            "asn": CommonASNs.VICTIM,
+        str(CommonASNs.LEGITIMATE_ORIGIN): {
+            "asn": CommonASNs.LEGITIMATE_ORIGIN,
             "customer_asns": [],
             "peer_asns": [CommonASNs.ATTACKER],
             "provider_asns": [],
@@ -16,7 +16,7 @@ graph_data = {
         str(CommonASNs.ATTACKER): {
             "asn": CommonASNs.ATTACKER,
             "customer_asns": [],
-            "peer_asns": [CommonASNs.VICTIM, 1],
+            "peer_asns": [CommonASNs.LEGITIMATE_ORIGIN, 1],
             "provider_asns": [],
         },
         "1": {
@@ -35,16 +35,16 @@ ex_config_031 = EngineRunConfig(
         label="otc",
         ScenarioCls=AccidentalRouteLeak,
         override_attacker_asns={CommonASNs.ATTACKER},
-        override_legitimate_origin_asns={CommonASNs.VICTIM},
+        override_legitimate_origin_asns={CommonASNs.LEGITIMATE_ORIGIN},
         # AS 1 and VICTIM use OnlyToCustomers
         override_base_settings={
             1: {Settings.ONLY_TO_CUSTOMERS: True},
-            CommonASNs.VICTIM: {Settings.ONLY_TO_CUSTOMERS: True},
+            CommonASNs.LEGITIMATE_ORIGIN: {Settings.ONLY_TO_CUSTOMERS: True},
         },
     ),
     as_graph=ASGraph(graph_data),
     diagram_desc="Accidental route leak to a peer with OTC Simple",
     diagram_ranks=[
-        [CommonASNs.VICTIM.value, CommonASNs.ATTACKER.value, 1],
+        [CommonASNs.LEGITIMATE_ORIGIN.value, CommonASNs.ATTACKER.value, 1],
     ],
 )

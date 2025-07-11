@@ -143,4 +143,4 @@ class CommonASNs(IntEnum):
     """Common ASNs"""
 
     ATTACKER = 666
-    VICTIM = 777
+    LEGITIMATE_ORIGIN = 777
