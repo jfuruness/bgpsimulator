@@ -23,7 +23,7 @@ from .policy import (
     ASPAPP,
     ROST,
     RoSTTrustedRepository,
-    SuppressWithdrawals,
+    NeverPropagateWithdrawals,
     AnnounceThenWithdraw,
     Leaker,
 )
@@ -55,7 +55,7 @@ __all__ = [
     "ASPAPP",
     "ROST",
     "RoSTTrustedRepository",
-    "SuppressWithdrawals",
+    "NeverPropagateWithdrawals",
     "AnnounceThenWithdraw",
     "Leaker",
 ]

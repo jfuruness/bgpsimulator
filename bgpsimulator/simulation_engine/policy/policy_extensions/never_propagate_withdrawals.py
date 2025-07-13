@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from bgpsimulator.simulation_engine.policy.policy import Policy
 
 
-class SuppressWithdrawals:
+class NeverPropagateWithdrawals:
     """A Policy that suppresses withdrawals"""
 
     @staticmethod

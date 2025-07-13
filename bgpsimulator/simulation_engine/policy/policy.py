@@ -32,7 +32,7 @@ from .policy_extensions import (
     ROVPPV1Lite,
     ROVPPV2iLite,
     ROVPPV2Lite,
-    SuppressWithdrawals,
+    NeverPropagateWithdrawals,
 )
 from .ribs_in import RIBsIn
 from .ribs_out import RIBsOut
@@ -139,7 +139,7 @@ class Policy:
             # For each announcement that was incoming
             for new_ann in ann_list:
                 # Ignore all withdrawals
-                if self.settings[Settings.SUPPRESS_WITHDRAWALS] and new_ann.withdraw:
+                if self.settings[Settings.NEVER_WITHDRAW] and new_ann.withdraw:
                     continue
 
                 if self.settings[Settings.BGP_FULL]:
@@ -529,8 +529,8 @@ class Policy:
                 if not policy_propagate_info.send_ann_bool:
                     return True
 
-        if self.settings[Settings.SUPPRESS_WITHDRAWALS]:
-            policy_propagate_info = SuppressWithdrawals.get_policy_propagate_vals(
+        if self.settings[Settings.NEVER_PROPAGATE_WITHDRAWALS]:
+            policy_propagate_info = NeverPropagateWithdrawals.get_policy_propagate_vals(
                 self, neighbor_as, ann, propagate_to, send_rels
             )
             if policy_propagate_info.policy_propagate_bool:

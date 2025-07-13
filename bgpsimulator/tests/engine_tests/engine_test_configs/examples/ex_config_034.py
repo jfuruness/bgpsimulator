@@ -69,7 +69,8 @@ ex_config_034 = EngineRunConfig(
                 Settings.ANNOUNCE_THEN_WITHDRAW: True
             },
             CommonASNs.ATTACKER: {
-                Settings.SUPPRESS_WITHDRAWALS: True
+                Settings.NEVER_PROPAGATE_WITHDRAWALS: True,
+                Settings.NEVER_WITHDRAW: True
             },
         },
     ),

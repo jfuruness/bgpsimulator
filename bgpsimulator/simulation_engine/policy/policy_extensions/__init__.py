@@ -21,7 +21,7 @@ from .first_asn_stripping_prefix_hijack_customers import (
 from .peer_rov import PeerROV
 from .aspapp import ASPAPP
 from .rost import ROST, RoSTTrustedRepository
-from .suppress_withdrawals import SuppressWithdrawals
+from .never_propagate_withdrawals import NeverPropagateWithdrawals
 from .leaker import Leaker
 from .announce_then_withdraw import AnnounceThenWithdraw
 
@@ -48,7 +48,7 @@ __all__ = [
     "ASPAPP",
     "ROST",
     "RoSTTrustedRepository",
-    "SuppressWithdrawals",
+    "NeverPropagateWithdrawals",
     "Leaker",
     "AnnounceThenWithdraw",
 ]
