@@ -4,7 +4,7 @@ from bgpsimulator.shared import Prefix
 from bgpsimulator.simulation_engine import Announcement as Ann
 
 
-class RIBsOut(UserDict[int, dict[Prefix, Ann]]):
+class AdjRIBsOut(UserDict[int, dict[Prefix, Ann]]):
     """Incomming announcements for a BGP AS
 
     neighbor: {prefix: announcement}
@@ -38,7 +38,7 @@ class RIBsOut(UserDict[int, dict[Prefix, Ann]]):
         return list(self.data.keys())
 
     def to_json(self) -> dict[int, dict[str, dict[str, dict[str, Ann]]]]:
-        """Returns a JSON representation of the RIBsOut"""
+        """Returns a JSON representation of the AdjRIBsOut"""
 
         return {
             neighbor_asn: {
@@ -50,11 +50,11 @@ class RIBsOut(UserDict[int, dict[Prefix, Ann]]):
     @classmethod
     def from_json(
         cls, json: dict[int, dict[str, dict[str, dict[str, Ann]]]]
-    ) -> "RIBsOut":
-        """Returns a RIBsOut from a JSON representation"""
+    ) -> "AdjRIBsOut":
+        """Returns a AdjRIBsOut from a JSON representation"""
 
-        ribs_out = cls()
+        adj_ribs_out = cls()
         for neighbor_asn, prefix_anns in json.items():
             for _prefix, ann_json in prefix_anns.items():
-                ribs_out.add_ann(neighbor_asn, Ann.from_json(ann_json))
-        return ribs_out
+                adj_ribs_out.add_ann(neighbor_asn, Ann.from_json(ann_json))
+        return adj_ribs_out

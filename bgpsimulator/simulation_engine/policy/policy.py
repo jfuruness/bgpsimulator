@@ -34,15 +34,15 @@ from .policy_extensions import (
     ROVPPV2Lite,
     NeverPropagateWithdrawals,
 )
-from .ribs_in import RIBsIn
-from .ribs_out import RIBsOut
+from .adj_ribs_in import AdjRIBsIn
+from .adj_ribs_out import AdjRIBsOut
 
 if TYPE_CHECKING:
     from bgpsimulator.as_graphs import AS
 
 
 class Policy:
-    __slots__ = ("local_rib", "recv_q", "settings", "as_", "ribs_in", "ribs_out")
+    __slots__ = ("local_rib", "recv_q", "settings", "as_", "adj_ribs_in", "adj_ribs_out")
 
     route_validator = RouteValidator()
     rost_trusted_repository = RoSTTrustedRepository()
@@ -52,8 +52,8 @@ class Policy:
         as_: "AS",
         settings: tuple[bool] | None = None,
         local_rib: dict[Prefix, Ann] | None = None,
-        ribs_in: RIBsIn | None = None,
-        ribs_out: RIBsOut | None = None,
+        adj_ribs_in: AdjRIBsIn | None = None,
+        adj_ribs_out: AdjRIBsOut | None = None,
     ) -> None:
         """Add local rib and data structures here
 
@@ -65,8 +65,8 @@ class Policy:
 
         self.local_rib: dict[Prefix, Ann] = local_rib or dict()
         self.recv_q: defaultdict[Prefix, list[Ann]] = defaultdict(list)
-        self.ribs_in: RIBsIn = ribs_in or RIBsIn()
-        self.ribs_out: RIBsOut = ribs_out or RIBsOut()
+        self.adj_ribs_in: AdjRIBsIn = adj_ribs_in or AdjRIBsIn()
+        self.adj_ribs_out: AdjRIBsOut = adj_ribs_out or AdjRIBsOut()
         self.rost_trusted_repository.clear()
         if settings:
             self.settings: tuple[bool, ...] = settings
@@ -87,8 +87,8 @@ class Policy:
 
         self.local_rib.clear()
         self.recv_q.clear()
-        self.ribs_in.clear()
-        self.ribs_out.clear()
+        self.adj_ribs_in.clear()
+        self.adj_ribs_out.clear()
 
     #########################
     # Process Incoming Anns #
@@ -143,10 +143,10 @@ class Policy:
                     continue
 
                 if self.settings[Settings.BGP_FULL]:
-                    # If withdrawal remove from RIBsIn, otherwise add to RIBsIn
-                    self._process_new_ann_in_ribs_in(new_ann, prefix, from_rel)
+                    # If withdrawal remove from AdjRIBsIn, otherwise add to AdjRIBsIn
+                    self._process_new_ann_in_adj_ribs_in(new_ann, prefix, from_rel)
 
-                # Process withdrawals even for invalid anns in the ribs_in
+                # Process withdrawals even for invalid anns in the adj_ribs_in
                 if new_ann.withdraw and self.settings[Settings.BGP_FULL]:
                     current_ann = self._remove_from_local_rib_and_get_new_best_ann(
                         new_ann, current_ann
@@ -194,7 +194,7 @@ class Policy:
             return current_ann
 
     def process_ann(self, unprocessed_ann: Ann, from_rel: Relationships) -> Ann:
-        """Processes an announcement going from recv_q or ribs_in to local rib.
+        """Processes an announcement going from recv_q or adj_ribs_in to local rib.
 
         Must prepend yourself to the AS-path, change the recv_relationship, and add
         policy info if needed.
@@ -540,7 +540,7 @@ class Policy:
 
         if og_ann != ann:
             if not ann.withdraw and self.settings[Settings.BGP_FULL]:
-                self.ribs_out.add_ann(neighbor_as.asn, ann)
+                self.adj_ribs_out.add_ann(neighbor_as.asn, ann)
             self.process_outgoing_ann(neighbor_as, ann, propagate_to, send_rels)
             return True
         else:
@@ -556,7 +556,7 @@ class Policy:
         """Adds ann to the neighbors recv q"""
 
         if not ann.withdraw and self.settings[Settings.BGP_FULL]:
-            self.ribs_out.add_ann(neighbor_as.asn, ann)
+            self.adj_ribs_out.add_ann(neighbor_as.asn, ann)
         # Add the new ann to the incoming anns for that prefix
         neighbor_as.policy.receive_ann(ann)
 
@@ -593,19 +593,19 @@ class Policy:
     # BGPFull (withdrawals, ribs in, ribs out) funcs #
     ##################################################
 
-    def _process_new_ann_in_ribs_in(
+    def _process_new_ann_in_adj_ribs_in(
         self, unprocessed_ann: Ann, prefix: Prefix, from_rel: Relationships
     ) -> None:
         """Adds ann to ribs in if the ann is not a withdrawal"""
 
-        # Remove ann using withdrawal from RIBsIn
+        # Remove ann using withdrawal from AdjRIBsIn
         if unprocessed_ann.withdraw:
             neighbor = unprocessed_ann.as_path[0]
             # Remove ann from Ribs in
-            self.ribs_in.remove_entry(neighbor, prefix)
-        # Add ann to RIBsIn
+            self.adj_ribs_in.remove_entry(neighbor, prefix)
+        # Add ann to AdjRIBsIn
         else:
-            self.ribs_in.add_unprocessed_ann(unprocessed_ann, from_rel)
+            self.adj_ribs_in.add_unprocessed_ann(unprocessed_ann, from_rel)
 
     def _remove_from_local_rib_and_get_new_best_ann(
         self, new_ann: "Ann", local_rib_ann: "Ann | None"
@@ -622,13 +622,13 @@ class Policy:
             self.local_rib.pop(new_ann.prefix, None)
             local_rib_ann = None
             # Get the new best ann thus far
-            processed_best_ribs_in_ann = self._get_and_process_best_ribs_in_ann(
+            processed_best_adj_ribs_in_ann = self._get_and_process_best_adj_ribs_in_ann(
                 new_ann.prefix
             )
-            if processed_best_ribs_in_ann:
+            if processed_best_adj_ribs_in_ann:
                 local_rib_ann = self._get_best_ann_by_gao_rexford(
                     local_rib_ann,
-                    processed_best_ribs_in_ann,
+                    processed_best_adj_ribs_in_ann,
                 )
 
         return local_rib_ann
@@ -645,10 +645,10 @@ class Policy:
         assert withdraw_ann.next_hop_asn == self.as_.asn
         if self.settings[Settings.ROST]:
             ROST.withdraw_ann_from_neighbors(self, withdraw_ann)
-        # Check ribs_out to see where the withdrawn ann was sent
-        for send_neighbor_asn in self.ribs_out.populated_neighbors():
+        # Check adj_ribs_out to see where the withdrawn ann was sent
+        for send_neighbor_asn in self.adj_ribs_out.populated_neighbors():
             # Delete ann from ribs out
-            removed = self.ribs_out.remove_entry(send_neighbor_asn, withdraw_ann.prefix)
+            removed = self.adj_ribs_out.remove_entry(send_neighbor_asn, withdraw_ann.prefix)
             # If the announcement was sent to that neighbor
             if removed:
                 send_rels = set(Relationships)
@@ -671,12 +671,12 @@ class Policy:
                         send_neighbor, withdraw_ann, propagate_to, send_rels
                     )
 
-    def _get_and_process_best_ribs_in_ann(self, prefix: Prefix) -> "Ann | None":
-        """Selects best ann from ribs in (remember, RIBsIn is unprocessed"""
+    def _get_and_process_best_adj_ribs_in_ann(self, prefix: Prefix) -> "Ann | None":
+        """Selects best ann from ribs in (remember, AdjRIBsIn is unprocessed"""
 
         # Get the best announcement
         best_ann: Ann | None = None
-        for ann_info in self.ribs_in.get_ann_infos(prefix):
+        for ann_info in self.adj_ribs_in.get_ann_infos(prefix):
             # This also processes the announcement
             best_ann = self._get_new_best_ann(
                 best_ann, ann_info.unprocessed_ann, ann_info.recv_relationship
@@ -686,7 +686,7 @@ class Policy:
     def _prev_sent(self, neighbor: "AS", ann: Ann) -> bool:
         """Don't send what we've already sent"""
 
-        return ann == self.ribs_out.get_ann(neighbor.asn, ann.prefix)
+        return ann == self.adj_ribs_out.get_ann(neighbor.asn, ann.prefix)
 
     ##############
     # JSON funcs #
@@ -699,8 +699,8 @@ class Policy:
                 str(prefix): ann.to_json() for prefix, ann in self.local_rib.items()
             },
             "settings": list(self.settings),
-            "ribs_in": self.ribs_in.to_json(),
-            "ribs_out": self.ribs_out.to_json(),
+            "adj_ribs_in": self.adj_ribs_in.to_json(),
+            "adj_ribs_out": self.adj_ribs_out.to_json(),
         }
 
     @classmethod
@@ -711,7 +711,7 @@ class Policy:
                 Prefix(prefix): Ann.from_json(ann)
                 for prefix, ann in json_obj.get("local_rib", {}).items()
             },
-            ribs_in=RIBsIn.from_json(json_obj.get("ribs_in", {})),
-            ribs_out=RIBsOut.from_json(json_obj.get("ribs_out", {})),
+            adj_ribs_in=AdjRIBsIn.from_json(json_obj.get("adj_ribs_in", {})),
+            adj_ribs_out=AdjRIBsOut.from_json(json_obj.get("adj_ribs_out", {})),
             settings=tuple(json_obj.get("settings", [])),
         )

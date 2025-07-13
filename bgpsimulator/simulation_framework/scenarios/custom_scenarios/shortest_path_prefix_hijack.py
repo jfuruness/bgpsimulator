@@ -139,7 +139,7 @@ class ShortestPathPrefixHijack(Scenario):
         has some drawbacks. Then the attacker must deploy BGPFull
         (that uses withdrawals) and the entire graph has to propagate again.
         BGPFull (and subclasses of it) are MUCH slower than BGP due to all the extra
-        computations for withdrawals, RIBsIn, RIBsOut, etc. Additionally,
+        computations for withdrawals, AdjRIBsIn, AdjRIBsOut, etc. Additionally,
         propagating a second round after the ASGraph is __already__ full
         is wayyy more expensive than propagating when the AS graph is empty.
 

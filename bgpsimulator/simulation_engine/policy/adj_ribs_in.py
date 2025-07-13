@@ -37,7 +37,7 @@ class AnnInfo:
         )
 
 
-class RIBsIn(UserDict[int, dict[Prefix, AnnInfo]]):
+class AdjRIBsIn(UserDict[int, dict[Prefix, AnnInfo]]):
     """Incomming announcements for a BGP AS
 
     neighbor_asn: {prefix: (unprocessed_ann, relationship)}
@@ -93,7 +93,7 @@ class RIBsIn(UserDict[int, dict[Prefix, AnnInfo]]):
             pass
 
     def to_json(self) -> dict[int, dict[str, dict[str, Ann | Relationships]]]:
-        """Returns a JSON representation of the RIBsIn"""
+        """Returns a JSON representation of the AdjRIBsIn"""
 
         json_obj = {}
         for neighbor_asn, prefix_ann_info in self.data.items():
@@ -106,14 +106,14 @@ class RIBsIn(UserDict[int, dict[Prefix, AnnInfo]]):
     @classmethod
     def from_json(
         cls, json: dict[int, dict[str, dict[str, dict[str, Ann | Relationships]]]]
-    ) -> "RIBsIn":
-        """Returns a RIBsIn from a JSON representation"""
+    ) -> "AdjRIBsIn":
+        """Returns a AdjRIBsIn from a JSON representation"""
 
-        ribs_in = cls()
+        adj_ribs_in = cls()
         for _neighbor_asn, prefix_ann_infos in json.items():
             for _prefix, ann_info_json in prefix_ann_infos.items():
                 ann_info = AnnInfo.from_json(ann_info_json)
-                ribs_in.add_unprocessed_ann(
+                adj_ribs_in.add_unprocessed_ann(
                     ann_info.unprocessed_ann, ann_info.recv_relationship
                 )
-        return ribs_in
+        return adj_ribs_in

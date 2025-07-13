@@ -147,7 +147,7 @@ class ROVPPV1Lite:
         # Or there was previously an invalid subprefix
         # But later that invalid subprefix was removed
         # So we must recount the holes of each ann in local RIB
-        # NOTE June 22 2024: I think doing this may require the use of the RIBsIn
+        # NOTE June 22 2024: I think doing this may require the use of the AdjRIBsIn
         # because you could recieve a subprefix hijack round 1, and round 2 receive
         # the valid prefix from the same neighbor
         # not going to implement because of that, and because I don't think there's

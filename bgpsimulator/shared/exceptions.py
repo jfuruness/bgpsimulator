@@ -17,7 +17,7 @@ class GaoRexfordError(RuntimeError):
 class AnnouncementNotFoundError(RuntimeError):
     """Exception that covers when an Announcement isn't findable
 
-    ex: in local RIB, in RIBsIn, etc
+    ex: in local RIB, in AdjRIBsIn, etc
     """
 
     pass
