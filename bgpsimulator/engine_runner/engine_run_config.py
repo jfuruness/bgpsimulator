@@ -19,6 +19,7 @@ class EngineRunConfig:
         as_graph: ASGraph,
         diagram_desc: str = "",
         text: str = "",
+        lab_text: str = "",
         diagram_ranks: list[list[int]] | None = None,
     ):
         self.name = name
@@ -28,6 +29,7 @@ class EngineRunConfig:
         self.diagram_desc = diagram_desc
         # Displayed in the website giant text box
         self.text = text
+        self.lab_text = lab_text
         self.scenario_config = scenario_config
         self.as_graph = as_graph
         self.diagram_ranks = diagram_ranks or []
@@ -39,6 +41,7 @@ class EngineRunConfig:
             "name": self.name,
             "diagram_desc": self.diagram_desc,
             "text": self.text,
+            "lab_text": self.lab_text,
             "scenario_config": self.scenario_config.to_json(),
             "as_graph": self.as_graph.to_json(),
             "diagram_ranks": self.diagram_ranks,
@@ -51,6 +54,7 @@ class EngineRunConfig:
             name=json_obj["name"],
             diagram_desc=json_obj["diagram_desc"],
             text=json_obj["text"],
+            lab_text=json_obj["lab_text"],
             scenario_config=ScenarioConfig.from_json(json_obj["scenario_config"]),
             as_graph=ASGraph.from_json(json_obj["as_graph"]),
             diagram_ranks=json_obj["diagram_ranks"],
