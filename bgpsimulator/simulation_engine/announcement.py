@@ -132,16 +132,17 @@ class Announcement:
 
     @classmethod
     def from_json(cls, json_obj: dict[str, Any]) -> "Announcement":
+        """Sensible defaults help with the website"""
         return cls(
             prefix=Prefix(json_obj["prefix"]),
             as_path=tuple(json_obj["as_path"]),
-            next_hop_asn=json_obj["next_hop_asn"],
+            next_hop_asn=json_obj.get("next_hop_asn", json_obj["as_path"][0]),
             recv_relationship=Relationships(json_obj["recv_relationship"]),
-            timestamp=json_obj["timestamp"],
-            bgpsec_next_asn=json_obj["bgpsec_next_asn"],
-            bgpsec_as_path=tuple(json_obj["bgpsec_as_path"]),
-            only_to_customers=json_obj["only_to_customers"],
-            rovpp_blackhole=json_obj["rovpp_blackhole"],
-            rost_ids=tuple(json_obj["rost_ids"]),
-            withdraw=json_obj["withdraw"],
+            timestamp=json_obj.get("timestamp", 0),
+            bgpsec_next_asn=json_obj.get("bgpsec_next_asn")
+            bgpsec_as_path=tuple(json_obj.get("bgpsec_as_path", [])),
+            only_to_customers=json_obj.get("only_to_customers", False),
+            rovpp_blackhole=json_obj.get("rovpp_blackhole", False),
+            rost_ids=tuple(json_obj.get("rost_ids", [])),
+            withdraw=json_obj.get("withdraw", False),
         )
