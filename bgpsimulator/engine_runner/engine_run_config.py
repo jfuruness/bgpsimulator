@@ -21,9 +21,13 @@ class EngineRunConfig:
         text: str = "",
         lab_text: str = "",
         diagram_ranks: list[list[int]] | None = None,
+        prevent_naming_duplicates: bool = True
     ):
         self.name = name
-        if self.name in EngineRunConfig._used_names:
+        self.prevent_naming_duplicates: bool = prevent_naming_duplicates
+
+        # Useful for pytest, but turned off for the website
+        if self.name in EngineRunConfig._used_names and prevent_naming_duplicates:
             raise ValueError(f"Name {self.name} already used")
         EngineRunConfig._used_names.add(self.name)
         self.diagram_desc = diagram_desc
@@ -45,6 +49,7 @@ class EngineRunConfig:
             "scenario_config": self.scenario_config.to_json(),
             "as_graph": self.as_graph.to_json(),
             "diagram_ranks": self.diagram_ranks,
+            "prevent_naming_duplicates": self.prevent_naming_duplicates,
         }
 
     @classmethod
@@ -58,4 +63,5 @@ class EngineRunConfig:
             scenario_config=ScenarioConfig.from_json(json_obj["scenario_config"]),
             as_graph=ASGraph.from_json(json_obj["as_graph"]),
             diagram_ranks=json_obj["diagram_ranks"],
+            prevent_naming_duplicates=json_obj["prevent_naming_duplicates"],
         )
