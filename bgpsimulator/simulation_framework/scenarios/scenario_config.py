@@ -283,7 +283,7 @@ class ScenarioConfig:
         fields_to_convert_keys_to_ints = ("override_adoption_settings", "override_base_settings")
         for field in fields_to_convert_keys_to_ints:
             if vals.get(field):
-                vals[field] = {int(k): v for k, v in vals[field]}
+                vals[field] = {int(k): v for k, v in vals[field].items()}
 
 
         # Handle override_roas
