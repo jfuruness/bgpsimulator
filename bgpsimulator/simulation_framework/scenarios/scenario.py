@@ -406,3 +406,5 @@ class Scenario:
         pass
 
     # NOTE: No JSON funcs since you can't store the engine
+
+Scenario.name_to_cls_dict["Scenario"] = Scenario
