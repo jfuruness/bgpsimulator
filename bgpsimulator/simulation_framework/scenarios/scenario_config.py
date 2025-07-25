@@ -280,6 +280,12 @@ class ScenarioConfig:
                 for asn, anns in vals["override_seed_asn_ann_dict"].items()
             }
 
+        fields_to_convert_keys_to_ints = ("override_adoption_settings", "override_base_settings")
+        for field in fields_to_convert_keys_to_ints:
+            if vals.get(field):
+                vals[field] = {int(k): v for k, v in vals[field]}
+
+
         # Handle override_roas
         if vals.get("override_roas") is not None:
             from bgpsimulator.route_validator import ROA
