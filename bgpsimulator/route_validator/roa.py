@@ -86,5 +86,5 @@ class ROA:
             prefix=Prefix(json_obj["prefix"]),
             origin=int(json_obj["origin"]),
             max_length=int(json_obj["max_length"]),
-            ta=json_obj["ta"],
+            ta=json_obj.get("ta"),
         )

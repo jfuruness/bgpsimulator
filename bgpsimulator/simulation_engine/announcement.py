@@ -139,7 +139,7 @@ class Announcement:
             next_hop_asn=json_obj.get("next_hop_asn", json_obj["as_path"][0]),
             recv_relationship=Relationships(json_obj["recv_relationship"]),
             timestamp=json_obj.get("timestamp", 0),
-            bgpsec_next_asn=json_obj.get("bgpsec_next_asn")
+            bgpsec_next_asn=json_obj.get("bgpsec_next_asn"),
             bgpsec_as_path=tuple(json_obj.get("bgpsec_as_path", [])),
             only_to_customers=json_obj.get("only_to_customers", False),
             rovpp_blackhole=json_obj.get("rovpp_blackhole", False),
