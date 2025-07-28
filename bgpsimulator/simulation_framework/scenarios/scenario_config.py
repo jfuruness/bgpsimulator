@@ -11,6 +11,12 @@ from .scenario import Scenario
 class ScenarioConfig:
     """Config reused across trials to set up a scenario/attack"""
 
+    def __eq__(self, other):
+        if isinstance(other, ScenarioConfig):
+            return self.to_json() == other.to_json()
+        else:
+            return NotImplemented
+
     def __init__(
         self,
         label: str,
