@@ -180,13 +180,13 @@ class AS:
 
         return cls(
             as_graph=as_graph,
-            asn=json_obj["asn"],
-            customer_asns=set(json_obj.get("customer_asns", [])),
-            peer_asns=set(json_obj.get("peer_asns", [])),
-            provider_asns=set(json_obj.get("provider_asns", [])),
+            asn=int(json_obj["asn"]),
+            customer_asns=set([int(x) for x in json_obj.get("customer_asns", [])]),
+            peer_asns=set([int(x) for x in json_obj.get("peer_asns", [])]),
+            provider_asns=set([int(x) for x in json_obj.get("provider_asns", [])]),
             tier_1=json_obj.get("tier_1", False),
             ixp=json_obj.get("ixp", False),
-            provider_cone_asns=set(json_obj.get("provider_cone_asns", [])),
-            propagation_rank=json_obj.get("propagation_rank"),
+            provider_cone_asns=set([int(x) for x in json_obj.get("provider_cone_asns", [])]),
+            propagation_rank=int(json_obj.get("propagation_rank")) if json_obj.get("propagation_rank") else None,
             policy_json=json_obj.get("policy", {}),
         )
