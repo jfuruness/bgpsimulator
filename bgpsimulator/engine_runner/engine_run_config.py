@@ -56,12 +56,12 @@ class EngineRunConfig:
     def from_json(cls, json_obj: dict[str, Any]) -> "EngineRunConfig":
         """Converts a JSON object to an engine run config"""
         return cls(
-            name=json_obj["name"],
-            diagram_desc=json_obj["diagram_desc"],
-            text=json_obj["text"],
-            lab_text=json_obj["lab_text"],
+            name=json_obj.get("name", ""),
+            diagram_desc=json_obj.get("diagram_desc", ""),
+            text=json_obj.get("text", ""),
+            lab_text=json_obj.get("lab_text", ""),
             scenario_config=ScenarioConfig.from_json(json_obj["scenario_config"]),
             as_graph=ASGraph.from_json(json_obj["as_graph"]),
-            diagram_ranks=json_obj["diagram_ranks"],
-            prevent_naming_duplicates=json_obj["prevent_naming_duplicates"],
+            diagram_ranks=json_obj.get("diagram_ranks"),
+            prevent_naming_duplicates=json_obj.get("prevent_naming_duplicates", False),
         )
