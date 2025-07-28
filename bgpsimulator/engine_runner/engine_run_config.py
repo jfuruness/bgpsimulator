@@ -38,6 +38,12 @@ class EngineRunConfig:
         self.as_graph = as_graph
         self.diagram_ranks = diagram_ranks or []
 
+    def __eq__(self, other):
+        if isinstance(other, EngineRunConfig):
+            return self.scenario_config == other.scenario_config and self.as_graph == other.as_graph
+        else:
+            return NotImplemented
+
     def to_json(self) -> dict[str, Any]:
         """Converts the engine run config to a JSON object"""
 
