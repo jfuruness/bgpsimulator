@@ -15,6 +15,7 @@ class Prefix(IPv6Network):
     def __init__(self, prefix: str, *args, **kwargs):
         """Create a fast Prefix from a string."""
 
+        prefix = str(prefix)
         self._og_str_prefix = prefix
         temp_prefix = ip_network(prefix)
         if temp_prefix.is_reserved:
