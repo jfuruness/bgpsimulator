@@ -90,7 +90,8 @@ class ASGraph:
         # Convert back to sets
         json_obj["asn_groups"] = {
             asn_group_key: {int(x) for x in asn_group}
-            for asn_group_key, asn_group in json_obj["asn_groups"].items()
+            for asn_group_key, asn_group
+            in json_obj.get("asn_groups", dict()).items()
         }
         json_obj["ases"] = {int(asn): as_json for asn, as_json in json_obj.get("ases", dict()).items()}
         json_obj["propagation_rank_asns"] = [
