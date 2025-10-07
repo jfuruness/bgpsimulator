@@ -10,27 +10,16 @@ from bgpsimulator.simulation_engine import Announcement as Ann
 # CommonASNs.LEGITIMATE_ORIGIN - CommonASNs.ATTACKER - 1
 graph_data = {
     "ases": {
-      "1": {
-        "asn": 1,
-        "customer_asns": [
-          CommonASNs.ATTACKER
-        ]
-      },
-      CommonASNs.ATTACKER: {
-        "asn": CommonASNs.ATTACKER,
-        "customer_asns": [
-          CommonASNs.LEGITIMATE_ORIGIN
-        ],
-        "provider_asns": [
-          1
-        ]
-      },
-      CommonASNs.LEGITIMATE_ORIGIN: {
-        "asn": CommonASNs.LEGITIMATE_ORIGIN,
-        "provider_asns": [
-          CommonASNs.ATTACKER
-        ]
-      },
+        "1": {"asn": 1, "customer_asns": [CommonASNs.ATTACKER]},
+        CommonASNs.ATTACKER: {
+            "asn": CommonASNs.ATTACKER,
+            "customer_asns": [CommonASNs.LEGITIMATE_ORIGIN],
+            "provider_asns": [1],
+        },
+        CommonASNs.LEGITIMATE_ORIGIN: {
+            "asn": CommonASNs.LEGITIMATE_ORIGIN,
+            "provider_asns": [CommonASNs.ATTACKER],
+        },
     }
 }
 
@@ -58,19 +47,17 @@ ex_config_034 = EngineRunConfig(
                     recv_relationship=Relationships.ORIGIN,
                     timestamp=Timestamps.LEGITIMATE_ORIGIN,
                 ),
-            ]
+            ],
         },
         num_attackers=0,
-        override_attacker_asns=set(),#CommonASNs.ATTACKER},
+        override_attacker_asns=set(),  # CommonASNs.ATTACKER},
         override_legitimate_origin_asns={CommonASNs.LEGITIMATE_ORIGIN},
         # AS 1 and VICTIM use OnlyToCustomers
         override_base_settings={
-            1: {
-                Settings.ANNOUNCE_THEN_WITHDRAW: True
-            },
+            1: {Settings.ANNOUNCE_THEN_WITHDRAW: True},
             CommonASNs.ATTACKER: {
                 Settings.NEVER_PROPAGATE_WITHDRAWALS: True,
-                Settings.NEVER_WITHDRAW: True
+                Settings.NEVER_WITHDRAW: True,
             },
         },
     ),

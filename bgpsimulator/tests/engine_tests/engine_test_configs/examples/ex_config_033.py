@@ -7,45 +7,27 @@ from bgpsimulator.simulation_framework import PassiveHijack, ScenarioConfig
 # CommonASNs.LEGITIMATE_ORIGIN - CommonASNs.ATTACKER - 1
 graph_data = {
     "ases": {
-      "1": {
-        "asn": 1,
-        "customer_asns": [
-          CommonASNs.ATTACKER
-        ],
-        "provider_asns": [
-          3,
-        ]
-      },
-      "2": {
-        "asn": 2,
-        "customer_asns": [
-          CommonASNs.LEGITIMATE_ORIGIN,
-          CommonASNs.ATTACKER
-        ],
-        "provider_asns": [
-          3
-        ]
-      },
-      "3": {
-        "asn": 3,
-        "customer_asns": [
-          1,
-          2
-        ]
-      },
-      CommonASNs.ATTACKER: {
-        "asn": CommonASNs.ATTACKER,
-        "provider_asns": [
-          1,
-          2
-        ],
-      },
-      CommonASNs.LEGITIMATE_ORIGIN: {
-        "asn": CommonASNs.LEGITIMATE_ORIGIN,
-        "provider_asns": [
-          2
-        ],
-      },
+        "1": {
+            "asn": 1,
+            "customer_asns": [CommonASNs.ATTACKER],
+            "provider_asns": [
+                3,
+            ],
+        },
+        "2": {
+            "asn": 2,
+            "customer_asns": [CommonASNs.LEGITIMATE_ORIGIN, CommonASNs.ATTACKER],
+            "provider_asns": [3],
+        },
+        "3": {"asn": 3, "customer_asns": [1, 2]},
+        CommonASNs.ATTACKER: {
+            "asn": CommonASNs.ATTACKER,
+            "provider_asns": [1, 2],
+        },
+        CommonASNs.LEGITIMATE_ORIGIN: {
+            "asn": CommonASNs.LEGITIMATE_ORIGIN,
+            "provider_asns": [2],
+        },
     }
 }
 

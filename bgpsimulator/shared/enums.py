@@ -65,7 +65,6 @@ class Settings(IntEnum):
     ROVPP_V2_LITE = 25
 
 
-
 class ROAValidity(IntEnum):
     """ROAValidity values
 

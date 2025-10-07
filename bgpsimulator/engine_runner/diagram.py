@@ -130,13 +130,15 @@ class Diagram:
         engine: SimulationEngine,
         packet_outcomes: dict[int, Outcomes],
         scenario: Scenario,
-        display_full_prefix_bool: bool
+        display_full_prefix_bool: bool,
     ) -> None:
         """Adds the ASes to the graph"""
 
         # First add all nodes to the graph
         for as_obj in engine.as_graph:
-            self._encode_as_obj_as_node(as_obj, engine, packet_outcomes, scenario, display_full_prefix_bool)
+            self._encode_as_obj_as_node(
+                as_obj, engine, packet_outcomes, scenario, display_full_prefix_bool
+            )
 
     def _encode_as_obj_as_node(
         self,
@@ -148,7 +150,9 @@ class Diagram:
     ) -> None:
         kwargs = dict()
 
-        html = self._get_html(as_obj, engine, packet_outcomes, scenario, display_full_prefix_bool)
+        html = self._get_html(
+            as_obj, engine, packet_outcomes, scenario, display_full_prefix_bool
+        )
 
         kwargs = self._get_kwargs(as_obj, engine, packet_outcomes, scenario)
 
@@ -160,7 +164,7 @@ class Diagram:
         engine: SimulationEngine,
         packet_outcomes: dict[int, Outcomes],
         scenario: Scenario,
-        display_full_prefix_bool: bool
+        display_full_prefix_bool: bool,
     ) -> str:
         colspan = 3
         asn_str = str(as_obj.asn)
@@ -301,15 +305,15 @@ class Diagram:
         # --------------------------------------------------------------
         # 1.  Gather raw edges (ASNs only, no AS objects)
         # --------------------------------------------------------------
-        as_dict = engine.as_graph.as_dict            # dict[int, ASNode]
+        as_dict = engine.as_graph.as_dict  # dict[int, ASNode]
         peer_edges: set[tuple[int, int]] = set()
-        provider_edges: set[tuple[int, int]] = set()   # (provider, customer)
+        provider_edges: set[tuple[int, int]] = set()  # (provider, customer)
 
         for asn, node in as_dict.items():
             # Peers (undirected) – store ints (node.peers is a set of AS-objects)
             for peer_obj in node.peers:
                 peer_asn = peer_obj.asn
-                if peer_asn in as_dict:                          # ignore external ASNs
+                if peer_asn in as_dict:  # ignore external ASNs
                     peer_edges.add(tuple(sorted((asn, peer_asn))))
 
             # Providers (directed) – provider ➜ customer (= asn)
@@ -347,7 +351,7 @@ class Diagram:
 
         for prov_asn, cust_asn in provider_edges:
             cp, cc = cluster_of[prov_asn], cluster_of[cust_asn]
-            if cp == cc:          # provider inside its own peer-cluster → ignore
+            if cp == cc:  # provider inside its own peer-cluster → ignore
                 continue
             if cc not in children[cp]:
                 children[cp].add(cc)
@@ -371,7 +375,7 @@ class Diagram:
 
         # Any cluster still showing indegree > 0 is in a cycle → push to top
         for cl, d in indeg.items():
-            if d:        # d > 0
+            if d:  # d > 0
                 rank[cl] = 0
 
         # --------------------------------------------------------------

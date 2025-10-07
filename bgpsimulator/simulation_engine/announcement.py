@@ -37,7 +37,7 @@ class Announcement:
         self.prefix: Prefix = prefix
         self.as_path: tuple[int, ...] = as_path
         # Equivalent to the next hop in a normal BGP announcement
-        self.next_hop_asn: int = next_hop_asn or as_path[-1]
+        self.next_hop_asn: int = next_hop_asn or as_path[0]
         self.recv_relationship: Relationships = recv_relationship
         self.timestamp: int = timestamp
         self.bgpsec_next_asn: int | None = bgpsec_next_asn

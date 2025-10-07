@@ -7,105 +7,30 @@ from bgpsimulator.simulation_framework import PrefixHijack, ScenarioConfig
 # CommonASNs.LEGITIMATE_ORIGIN - CommonASNs.ATTACKER - 1
 graph_data = {
     "ases": {
-      "1": {
-        "asn": 1,
-        "customer_asns": [
-          3,
-          5
-        ]
-      },
-      "2": {
-        "asn": 2,
-        "customer_asns": [
-          4
-        ],
-        "peer_asns": [
-          5
-        ]
-      },
-      "3": {
-        "asn": 3,
-        "provider_asns": [
-          1
-        ],
-        "peer_asns": [
-          4
-        ]
-      },
-      "4": {
-        "asn": 4,
-        "provider_asns": [
-          2,
-          8
-        ],
-        "peer_asns": [
-          3
-        ]
-      },
-      "5": {
-        "asn": 5,
-        "provider_asns": [
-          1
-        ],
-        "customer_asns": [
-          8,
-          9
-        ],
-        "peer_asns": [
-          2,
-          11
-        ]
-      },
-      "8": {
-        "asn": 8,
-        "provider_asns": [
-          5
-        ],
-        "customer_asns": [
-          4
-        ],
-        "peer_asns": [
-          9
-        ]
-      },
-      "9": {
-        "asn": 9,
-        "provider_asns": [
-          5
-        ],
-        "customer_asns": [
-          10,
-          CommonASNs.ATTACKER,
-          CommonASNs.LEGITIMATE_ORIGIN
-        ],
-        "peer_asns": [
-          8
-        ]
-      },
-      "10": {
-        "asn": 10,
-        "provider_asns": [
-          9
-        ]
-      },
-      "11": {
-        "asn": 11,
-        "peer_asns": [
-          5
-        ]
-      },
-      CommonASNs.ATTACKER: {
-        "asn": CommonASNs.ATTACKER,
-        "provider_asns": [
-          9
-        ]
-      },
-      CommonASNs.LEGITIMATE_ORIGIN: {
-        "asn": CommonASNs.LEGITIMATE_ORIGIN,
-        "provider_asns": [
-          9
-        ]
-      }
+        "1": {"asn": 1, "customer_asns": [3, 5]},
+        "2": {"asn": 2, "customer_asns": [4], "peer_asns": [5]},
+        "3": {"asn": 3, "provider_asns": [1], "peer_asns": [4]},
+        "4": {"asn": 4, "provider_asns": [2, 8], "peer_asns": [3]},
+        "5": {
+            "asn": 5,
+            "provider_asns": [1],
+            "customer_asns": [8, 9],
+            "peer_asns": [2, 11],
+        },
+        "8": {"asn": 8, "provider_asns": [5], "customer_asns": [4], "peer_asns": [9]},
+        "9": {
+            "asn": 9,
+            "provider_asns": [5],
+            "customer_asns": [10, CommonASNs.ATTACKER, CommonASNs.LEGITIMATE_ORIGIN],
+            "peer_asns": [8],
+        },
+        "10": {"asn": 10, "provider_asns": [9]},
+        "11": {"asn": 11, "peer_asns": [5]},
+        CommonASNs.ATTACKER: {"asn": CommonASNs.ATTACKER, "provider_asns": [9]},
+        CommonASNs.LEGITIMATE_ORIGIN: {
+            "asn": CommonASNs.LEGITIMATE_ORIGIN,
+            "provider_asns": [9],
+        },
     }
 }
 

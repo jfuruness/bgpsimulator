@@ -42,7 +42,14 @@ if TYPE_CHECKING:
 
 
 class Policy:
-    __slots__ = ("local_rib", "recv_q", "settings", "as_", "adj_ribs_in", "adj_ribs_out")
+    __slots__ = (
+        "local_rib",
+        "recv_q",
+        "settings",
+        "as_",
+        "adj_ribs_in",
+        "adj_ribs_out",
+    )
 
     route_validator = RouteValidator()
     rost_trusted_repository = RoSTTrustedRepository()
@@ -366,7 +373,9 @@ class Policy:
 
         return current_ann if current_neighbor_asn <= new_neighbor_asn else new_ann
 
-    def pre_propagation_hook(self, propagation_round: int, scenario: "Scenario") -> None:
+    def pre_propagation_hook(
+        self, propagation_round: int, scenario: "Scenario"
+    ) -> None:
         """Before propagating to anyone, pre-propagation hook"""
 
         # Withdraws announcements round 2
@@ -648,7 +657,9 @@ class Policy:
         # Check adj_ribs_out to see where the withdrawn ann was sent
         for send_neighbor_asn in self.adj_ribs_out.populated_neighbors():
             # Delete ann from ribs out
-            removed = self.adj_ribs_out.remove_entry(send_neighbor_asn, withdraw_ann.prefix)
+            removed = self.adj_ribs_out.remove_entry(
+                send_neighbor_asn, withdraw_ann.prefix
+            )
             # If the announcement was sent to that neighbor
             if removed:
                 send_rels = set(Relationships)

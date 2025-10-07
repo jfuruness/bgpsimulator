@@ -21,7 +21,7 @@ class EngineRunConfig:
         text: str = "",
         lab_text: str = "",
         diagram_ranks: list[list[int]] | None = None,
-        prevent_naming_duplicates: bool = True
+        prevent_naming_duplicates: bool = True,
     ):
         self.name = name
         self.prevent_naming_duplicates: bool = prevent_naming_duplicates
@@ -40,7 +40,10 @@ class EngineRunConfig:
 
     def __eq__(self, other):
         if isinstance(other, EngineRunConfig):
-            return self.scenario_config == other.scenario_config and self.as_graph == other.as_graph
+            return (
+                self.scenario_config == other.scenario_config
+                and self.as_graph == other.as_graph
+            )
         else:
             return NotImplemented
 

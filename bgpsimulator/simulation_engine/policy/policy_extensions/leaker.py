@@ -15,7 +15,9 @@ class Leaker:
     """
 
     @staticmethod
-    def pre_propagation_hook(policy: "Policy", propagation_round: int, scenario: "Scenario") -> None:
+    def pre_propagation_hook(
+        policy: "Policy", propagation_round: int, scenario: "Scenario"
+    ) -> None:
         """Leak everything second round of propagation (which is zero indexed)"""
 
         if propagation_round == 1:
