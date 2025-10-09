@@ -96,6 +96,6 @@ class ASGraph:
             int(asn): as_json for asn, as_json in json_obj.get("ases", dict()).items()
         }
         json_obj["propagation_rank_asns"] = [
-            [int(x) for x in rank] for rank in json_obj.get("propagation_ranks", [])
+            [int(x) for x in rank] for rank in json_obj.get("propagation_rank_asns", [])
         ]
         return cls(json_obj)
