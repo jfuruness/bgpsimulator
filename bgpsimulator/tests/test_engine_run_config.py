@@ -79,4 +79,7 @@ class TestEngineRunConfig:
         json_obj2 = config2.to_json()
 
         # propagation_rank_asns should be preserved
-        assert json_obj["as_graph"]["propagation_rank_asns"] == json_obj2["as_graph"]["propagation_rank_asns"]
+        assert (
+            json_obj["as_graph"]["propagation_rank_asns"]
+            == json_obj2["as_graph"]["propagation_rank_asns"]
+        )
