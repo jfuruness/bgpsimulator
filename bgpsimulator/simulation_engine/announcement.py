@@ -108,6 +108,24 @@ class Announcement:
     def __repr__(self) -> str:
         return f"{self.prefix} {self.as_path} {self.recv_relationship.name}"
 
+    def __eq__(self, other) -> bool:
+        """Compare announcements by their attributes"""
+        if not isinstance(other, Announcement):
+            return NotImplemented
+        return (
+            self.prefix == other.prefix
+            and self.as_path == other.as_path
+            and self.next_hop_asn == other.next_hop_asn
+            and self.recv_relationship == other.recv_relationship
+            and self.timestamp == other.timestamp
+            and self.bgpsec_next_asn == other.bgpsec_next_asn
+            and self.bgpsec_as_path == other.bgpsec_as_path
+            and self.only_to_customers == other.only_to_customers
+            and self.rovpp_blackhole == other.rovpp_blackhole
+            and self.rost_ids == other.rost_ids
+            and self.withdraw == other.withdraw
+        )
+
     @property
     def origin(self) -> int:
         """Returns the origin of the announcement"""
