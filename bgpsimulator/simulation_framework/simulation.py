@@ -177,6 +177,17 @@ class Simulation:
                 "unique label name to your config"
             )
 
+        for scenario_config in self.scenario_configs:
+            if (
+                scenario_config.num_attackers == 0
+                and scenario_config.num_legitimate_origins == 0
+            ):
+                raise ValueError(
+                    "ScenarioConfig has no attackers or victims. "
+                    "Set num_attackers and/or num_legitimate_origins = 1 "
+                    "or more "
+                )
+
     def _validate_ram(self) -> None:
         """Validates that the RAM will not run out of bounds
 

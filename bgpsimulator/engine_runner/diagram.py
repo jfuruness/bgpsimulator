@@ -205,7 +205,7 @@ class Diagram:
 
             for ann in local_rib_anns:
                 if display_full_prefix_bool:
-                    prefix_display = str(prefix)
+                    prefix_display = str(ann.prefix)
                 else:
                     prefix_display = "/" + str(ann.prefix).split("/")[-1]
                 path = "-".join(str(x) for x in ann.as_path)

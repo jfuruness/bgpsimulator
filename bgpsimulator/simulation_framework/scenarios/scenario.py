@@ -200,7 +200,11 @@ class Scenario:
                 )
             )
 
-        err = "Number of legitimate_origins is different from legitimate_origin length"
+        err = (
+            "Number of legitimate_origins is different from "
+            f"legitimate_origin length {len(legitimate_origin_asns)} "
+            f"{self.scenario_config.num_legitimate_origins}"
+        )
         assert (
             len(legitimate_origin_asns) == self.scenario_config.num_legitimate_origins
         ), err

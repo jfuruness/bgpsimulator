@@ -28,8 +28,11 @@ class ScenarioConfig:
         override_base_settings: dict[int, dict[Settings, bool]] | None = None,
         default_adoption_settings: dict[Settings, bool] | None = None,
         default_base_settings: dict[Settings, bool] | None = None,
-        num_attackers: int = 1,
-        num_legitimate_origins: int = 1,
+        # NOTE: we don't want behavior where attackers and victims are
+        # randomly added... especially for the website. It was never
+        # proper behavior though, so we default to 0.
+        num_attackers: int = 0,
+        num_legitimate_origins: int = 0,
         attacker_asn_group: str = ASNGroups.STUBS_OR_MH.value,
         legitimate_origin_asn_group: str = ASNGroups.STUBS_OR_MH.value,
         adoption_asn_groups: list[str] | None = None,
@@ -88,10 +91,6 @@ class ScenarioConfig:
             self.update_supersets(default_base_settings) or dict()
         )
 
-        # Number of attackers/legitimate_origins/adopting ASes
-        self.num_attackers: int = num_attackers
-        self.num_legitimate_origins: int = num_legitimate_origins
-
         # Attackers are randomly selected from this ASN group
         self.attacker_asn_group: str = attacker_asn_group
         # Victims are randomly selected from this ASN group
@@ -103,12 +102,20 @@ class ScenarioConfig:
             ASNGroups.TIER_1.value,
         ]
 
+        # Number of attackers/legitimate_origins/adopting ASes
+        self.num_attackers: int = num_attackers
+        self.num_legitimate_origins: int = num_legitimate_origins
+
         # Forces the attackers/legitimate_origins/adopting ASes to be a specific set
         # of ASes rather than random
         self.override_attacker_asns: set[int] | None = override_attacker_asns
+        if self.override_attacker_asns is not None:
+            self.num_attackers = len(self.override_attacker_asns)
         self.override_legitimate_origin_asns: set[int] | None = (
             override_legitimate_origin_asns
         )
+        if self.override_legitimate_origin_asns is not None:
+            self.num_legitimate_origins = len(self.override_legitimate_origin_asns)
         self.override_adopting_asns: set[int] | None = override_adopting_asns
         # Forces the announcements/roas to be a specific set of announcements/roas
         # rather than generated dynamically based on attackers/legitimate_origins
@@ -140,7 +147,6 @@ class ScenarioConfig:
                     self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
             else:
                 self.propagation_rounds = self.ScenarioCls.min_propagation_rounds
-
         if self.ScenarioCls.min_propagation_rounds > self.propagation_rounds:
             raise ValueError(
                 f"{self.ScenarioCls.__name__} requires a minimum of "
