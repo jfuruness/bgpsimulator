@@ -103,20 +103,23 @@ class ScenarioConfig:
         ]
 
         # Number of attackers/legitimate_origins/adopting ASes
-        self.num_attackers: int = num_attackers
-        self.num_legitimate_origins: int = num_legitimate_origins
+        # Ensure consistency: empty sets should be treated as None, and num should be 0
+        if not override_attacker_asns:
+            self.override_attacker_asns = None
+            self.num_attackers = 0
+        else:
+            self.override_attacker_asns = override_attacker_asns
+            self.num_attackers = len(override_attacker_asns)
 
-        # Forces the attackers/legitimate_origins/adopting ASes to be a specific set
-        # of ASes rather than random
-        self.override_attacker_asns: set[int] | None = override_attacker_asns
-        if self.override_attacker_asns is not None:
-            self.num_attackers = len(self.override_attacker_asns)
-        self.override_legitimate_origin_asns: set[int] | None = (
-            override_legitimate_origin_asns
-        )
-        if self.override_legitimate_origin_asns is not None:
-            self.num_legitimate_origins = len(self.override_legitimate_origin_asns)
-        self.override_adopting_asns: set[int] | None = override_adopting_asns
+        if not override_legitimate_origin_asns:
+            self.override_legitimate_origin_asns = None
+            self.num_legitimate_origins = 0
+        else:
+            self.override_legitimate_origin_asns = override_legitimate_origin_asns
+            self.num_legitimate_origins = len(override_legitimate_origin_asns)
+
+        # Forces the adopting ASes to be a specific set rather than random
+        self.override_adopting_asns: set[int] | None = override_adopting_asns if override_adopting_asns else None
         # Forces the announcements/roas to be a specific set of announcements/roas
         # rather than generated dynamically based on attackers/legitimate_origins
 
@@ -272,14 +275,23 @@ class ScenarioConfig:
             vals["override_dest_ip_addr"] = str(vals["override_dest_ip_addr"])
 
         # Convert sets to lists for JSON serialization
-        if vals.get("override_attacker_asns") is not None:
+        # Only include non-empty sets (empty sets should be omitted/null)
+        if vals.get("override_attacker_asns") is not None and vals["override_attacker_asns"]:
             vals["override_attacker_asns"] = list(vals["override_attacker_asns"])  # type: ignore
-        if vals.get("override_legitimate_origin_asns") is not None:
+        else:
+            vals["override_attacker_asns"] = None
+
+        if vals.get("override_legitimate_origin_asns") is not None and vals["override_legitimate_origin_asns"]:
             vals["override_legitimate_origin_asns"] = list(  # type: ignore
                 vals["override_legitimate_origin_asns"]
             )
-        if vals.get("override_adopting_asns") is not None:
+        else:
+            vals["override_legitimate_origin_asns"] = None
+
+        if vals.get("override_adopting_asns") is not None and vals["override_adopting_asns"]:
             vals["override_adopting_asns"] = list(vals["override_adopting_asns"])  # type: ignore
+        else:
+            vals["override_adopting_asns"] = None
 
         return vals
 
