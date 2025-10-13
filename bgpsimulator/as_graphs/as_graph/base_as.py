@@ -162,12 +162,12 @@ class AS:
 
         return {
             "asn": self.asn,
-            "customer_asns": list(self.customer_asns),
-            "peer_asns": list(self.peer_asns),
-            "provider_asns": list(self.provider_asns),
+            "customer_asns": sorted(self.customer_asns),
+            "peer_asns": sorted(self.peer_asns),
+            "provider_asns": sorted(self.provider_asns),
             "tier_1": self.tier_1,
             "ixp": self.ixp,
-            "provider_cone_asns": list(self.provider_cone_asns),
+            "provider_cone_asns": sorted(self.provider_cone_asns),
             "propagation_rank": self.propagation_rank,
             "policy": self.policy.to_json(),
         }
