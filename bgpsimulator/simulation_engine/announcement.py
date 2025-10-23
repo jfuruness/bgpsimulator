@@ -126,6 +126,14 @@ class Announcement:
             and self.withdraw == other.withdraw
         )
 
+    def __hash__(self):
+        """Needed for the stupid website comparison
+
+        Due to the override_seed_ann_dict being with lists
+        """
+
+        return hash(str(self.to_json()))
+
     @property
     def origin(self) -> int:
         """Returns the origin of the announcement"""
