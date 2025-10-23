@@ -38,7 +38,7 @@ class ScenarioConfig:
                 "override_legitimate_origin_asns": self.override_legitimate_origin_asns,
                 "override_adopting_asns": self.override_adopting_asns,
                 "override_seed_asn_ann_dict": {
-                    k: set(v) for k, v in self.override_seed_asn_ann_dict
+                    k: set(v) for k, v in self.override_seed_asn_ann_dict.items()
                 } if self.override_seed_asn_ann_dict else None,
                 "override_roas": self.override_roas,
                 "override_dest_ip_addr": self.override_dest_ip_addr,
@@ -62,7 +62,7 @@ class ScenarioConfig:
                 "override_legitimate_origin_asns": other.override_legitimate_origin_asns,
                 "override_adopting_asns": other.override_adopting_asns,
                 "override_seed_asn_ann_dict": {
-                    k: set(v) for k, v in other.override_seed_asn_ann_dict
+                    k: set(v) for k, v in other.override_seed_asn_ann_dict.items()
                 } if other.override_seed_asn_ann_dict else None,
                 "override_roas": other.override_roas,
                 "override_dest_ip_addr": other.override_dest_ip_addr,
