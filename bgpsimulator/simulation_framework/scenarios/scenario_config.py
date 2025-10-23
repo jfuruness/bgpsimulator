@@ -12,8 +12,58 @@ class ScenarioConfig:
     """Config reused across trials to set up a scenario/attack"""
 
     def __eq__(self, other):
+        """MUST do it this way... some of these are sets
+
+        Before it was converted to JSON, but then the order mattered
+        And I don't want to implement special logic for ordering anns,
+        roas, etc. This just makes sense
+        """
         if isinstance(other, ScenarioConfig):
-            return self.to_json() == other.to_json()
+            self_vals = {
+                "label": self.label,
+                "ScenarioCls": self.ScenarioCls.__name__,
+                "propagation_rounds": self.propagation_rounds,
+                "attacker_settings": self.attacker_settings,
+                "legitimate_origin_settings": self.legitimate_origin_settings,
+                "override_adoption_settings": self.override_adoption_settings,
+                "override_base_settings": self.override_base_settings,
+                "default_adoption_settings": self.default_adoption_settings,
+                "default_base_settings": self.default_base_settings,
+                "num_attackers": self.num_attackers,
+                "num_legitimate_origins": self.num_legitimate_origins,
+                "attacker_asn_group": self.attacker_asn_group,
+                "legitimate_origin_asn_group": self.legitimate_origin_asn_group,
+                "adoption_asn_groups": self.adoption_asn_groups,
+                "override_attacker_asns": self.override_attacker_asns,
+                "override_legitimate_origin_asns": self.override_legitimate_origin_asns,
+                "override_adopting_asns": self.override_adopting_asns,
+                "override_seed_asn_ann_dict": self.override_seed_asn_ann_dict,
+                "override_roas": self.override_roas,
+                "override_dest_ip_addr": self.override_dest_ip_addr,
+            }
+            other_vals = {
+                "label": other.label,
+                "ScenarioCls": other.ScenarioCls.__name__,
+                "propagation_rounds": other.propagation_rounds,
+                "attacker_settings": other.attacker_settings,
+                "legitimate_origin_settings": other.legitimate_origin_settings,
+                "override_adoption_settings": other.override_adoption_settings,
+                "override_base_settings": other.override_base_settings,
+                "default_adoption_settings": other.default_adoption_settings,
+                "default_base_settings": other.default_base_settings,
+                "num_attackers": other.num_attackers,
+                "num_legitimate_origins": other.num_legitimate_origins,
+                "attacker_asn_group": other.attacker_asn_group,
+                "legitimate_origin_asn_group": other.legitimate_origin_asn_group,
+                "adoption_asn_groups": other.adoption_asn_groups,
+                "override_attacker_asns": other.override_attacker_asns,
+                "override_legitimate_origin_asns": other.override_legitimate_origin_asns,
+                "override_adopting_asns": other.override_adopting_asns,
+                "override_seed_asn_ann_dict": other.override_seed_asn_ann_dict,
+                "override_roas": other.override_roas,
+                "override_dest_ip_addr": other.override_dest_ip_addr,
+            }
+            return self_vals == other_vals
         else:
             return NotImplemented
 
